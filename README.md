@@ -77,7 +77,7 @@ SimpleAttendence/
 │       └── attendance.json
 └── frontend/
     ├── package.json
-    ├── .env / .env.example # Frontend settings (FRONTEND_PORT, API_URL, VITE_APP_TITLE)
+    ├── .env / .env.example # Frontend settings (API_URL, VITE_APP_TITLE)
     ├── vite.config.js     # Reads .env; forwards /api requests to the backend
     ├── index.html
     └── src/
@@ -128,12 +128,12 @@ defaults are used.
 
 | Setting          | Default                 | What it does |
 |------------------|-------------------------|--------------|
-| `FRONTEND_PORT`  | `5173`                  | Port for the Vite dev server |
-| `API_URL`        | `http://127.0.0.1:5050` | Where the backend runs. Must match `PORT`/`HOST` above |
+| `API_URL`        | (required)              | Backend the dev server forwards `/api` to: the live Railway URL, or `http://127.0.0.1:5050` for a local backend |
 | `VITE_APP_TITLE` | `Daily Attendance`      | Name shown in the browser tab, header and login page |
 
 - After changing a `.env` file, restart that server (`Ctrl + C`, then start it again).
-- If you change the backend `PORT`, change `API_URL` in `frontend/.env` to match.
+- To use a local backend instead of the live one, set `API_URL=http://127.0.0.1:5050`
+  in `frontend/.env` (and match the backend `PORT`).
 - `.env` files are ignored by git, and `.env.example` files are committed. On a new
   computer, copy each `.env.example` to `.env`.
 - Variables starting with `VITE_` are visible in the browser. Never put secrets in them.

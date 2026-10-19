@@ -17,7 +17,9 @@ module.exports = {
   PORT: Number(process.env.PORT) || 5050,
 
   // 127.0.0.1 keeps the prototype reachable only from this computer.
-  HOST: process.env.HOST || '127.0.0.1',
+  // On Railway (which sets RAILWAY_ENVIRONMENT) the app must listen on
+  // 0.0.0.0, otherwise Railway cannot reach it and answers 502.
+  HOST: process.env.HOST || (process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : '127.0.0.1'),
 
   // Folder holding users.json, classes.json, students.json, attendance.json.
   // A relative path is resolved from the backend folder.
