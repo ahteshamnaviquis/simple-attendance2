@@ -219,4 +219,5 @@ are recreated from `seedData.js`.
    already used in that class, edit, search, and remove.
 #   s i m p l e - a t t e n d a n c e  
  #   s i m p l e - a t t e n d a n c e  
+ #   s i m p l e - a t t e n d a n c e  
  
