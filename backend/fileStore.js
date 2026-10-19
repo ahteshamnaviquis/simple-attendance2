@@ -6,8 +6,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 const seedData = require('./seedData');
-
-const DATA_DIR = path.join(__dirname, 'data');
+const { DATA_DIR } = require('./config');
 
 // The data files we manage: name -> starting content
 const FILES = {

@@ -251,5 +251,4 @@ are recreated from `seedData.js`.
    already used in that class, edit, search, and remove.
 
 # simple-attendance
-#   s i m p l e - a t t e n d a n c e 2  
- 
+# simple-attendance2

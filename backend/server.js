@@ -5,6 +5,7 @@
 // at the bottom automatically, so routes do not need try/catch.
 
 const express = require('express');
+const { PORT, HOST, DATA_DIR } = require('./config');
 const { initDataFiles, readData } = require('./fileStore');
 const { publicUser, loadCurrentUser, requireAdmin } = require('./helpers');
 const teachersRouter = require('./routes/teachers');
@@ -12,7 +13,6 @@ const classesRouter = require('./routes/classes');
 const attendanceRouter = require('./routes/attendance');
 const studentsRouter = require('./routes/students');
 
-const PORT = 5050;
 const app = express();
 
 app.use(express.json());
@@ -71,9 +71,10 @@ app.use((err, req, res, next) => {
 
 initDataFiles()
   .then(() => {
-    // Listen on localhost only so the prototype is not reachable from other computers.
-    app.listen(PORT, '127.0.0.1', () => {
-      console.log(`API running at http://localhost:${PORT}`);
+    // HOST defaults to 127.0.0.1 so the prototype is not reachable from other computers.
+    app.listen(PORT, HOST, () => {
+      console.log(`API running at http://${HOST}:${PORT}`);
+      console.log(`Data folder: ${DATA_DIR}`);
     });
   })
   .catch((err) => {
