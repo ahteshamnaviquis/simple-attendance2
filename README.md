@@ -57,6 +57,8 @@ SimpleAttendence/
 ├── README.md
 ├── backend/
 │   ├── package.json
+│   ├── .env / .env.example # Backend settings (PORT, HOST, DATA_DIR)
+│   ├── config.js          # Reads .env and provides the settings
 │   ├── server.js          # Express app: login, health, users, error handling
 │   ├── helpers.js         # HttpError, ids, dates, role checks
 │   ├── fileStore.js       # Reads/writes JSON files through one write queue
@@ -75,12 +77,14 @@ SimpleAttendence/
 │       └── attendance.json
 └── frontend/
     ├── package.json
-    ├── vite.config.js     # Forwards /api requests to the backend
+    ├── .env / .env.example # Frontend settings (FRONTEND_PORT, API_URL, VITE_APP_TITLE)
+    ├── vite.config.js     # Reads .env; forwards /api requests to the backend
     ├── index.html
     └── src/
         ├── main.jsx
         ├── App.jsx        # Picks the screen: login, admin or teacher
         ├── api.js         # All backend calls live here
+        ├── config.js      # Settings the browser can read (VITE_APP_TITLE)
         ├── session.js     # Remembers the logged-in user (sessionStorage)
         ├── utils.js       # Date helpers
         ├── index.css      # All styles, including the print layout
@@ -104,7 +108,35 @@ SimpleAttendence/
 
 ## Requirements
 
-- Node.js 18 or newer (check with `node -v` in PowerShell)
+- Node.js 20.12 or newer (check with `node -v` in PowerShell)
+
+## Configuration (.env files)
+
+Settings live in two `.env` files. Each has a `.env.example` next to it listing every
+setting with its default. All settings are optional: if a `.env` file is missing, the
+defaults are used.
+
+**`backend/.env`**
+
+| Setting    | Default     | What it does |
+|------------|-------------|--------------|
+| `PORT`     | `5050`      | Port the API listens on |
+| `HOST`     | `127.0.0.1` | `127.0.0.1` = only this computer can reach the API |
+| `DATA_DIR` | `data`      | Folder for the JSON data files (relative to `backend/`, or a full path) |
+
+**`frontend/.env`**
+
+| Setting          | Default                 | What it does |
+|------------------|-------------------------|--------------|
+| `FRONTEND_PORT`  | `5173`                  | Port for the Vite dev server |
+| `API_URL`        | `http://127.0.0.1:5050` | Where the backend runs. Must match `PORT`/`HOST` above |
+| `VITE_APP_TITLE` | `Daily Attendance`      | Name shown in the browser tab, header and login page |
+
+- After changing a `.env` file, restart that server (`Ctrl + C`, then start it again).
+- If you change the backend `PORT`, change `API_URL` in `frontend/.env` to match.
+- `.env` files are ignored by git, and `.env.example` files are committed. On a new
+  computer, copy each `.env.example` to `.env`.
+- Variables starting with `VITE_` are visible in the browser. Never put secrets in them.
 
 ## Install (once)
 
@@ -217,8 +249,7 @@ are recreated from `seedData.js`.
 8. Log in as `ali`. You don't see Sara's classes, reports or students.
 9. *My students* (teacher) or *Students* (admin): add a student, try a roll number that's
    already used in that class, edit, search, and remove.
-#   s i m p l e - a t t e n d a n c e  
- #   s i m p l e - a t t e n d a n c e  
- #   s i m p l e - a t t e n d a n c e  
- #   s i m p l e - a t t e n d a n c e  
+
+# simple-attendance
+#   s i m p l e - a t t e n d a n c e 2  
  
