@@ -1,27 +1,25 @@
-// All backend settings in one place.
-//
-// Values come from backend/.env (if the file exists), then fall back to the
-// defaults below. Real environment variables win over the .env file.
-// See .env.example for the list of settings.
+// Backend settings, read from backend/.env (real environment variables win).
 
 const fs = require('fs');
 const path = require('path');
 
 const envFile = path.join(__dirname, '.env');
 if (fs.existsSync(envFile)) {
-  process.loadEnvFile(envFile); // built into Node.js 20.12+, no extra library
+  process.loadEnvFile(envFile); // built into Node.js 20.12+
 }
 
 module.exports = {
-  // Port the API listens on. The frontend's API_URL must point here.
   PORT: Number(process.env.PORT) || 5050,
 
-  // 127.0.0.1 keeps the prototype reachable only from this computer.
-  // On Railway (which sets RAILWAY_ENVIRONMENT) the app must listen on
-  // 0.0.0.0, otherwise Railway cannot reach it and answers 502.
-  HOST: process.env.HOST || (process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : '127.0.0.1'),
+  // The website allowed to call this API from the browser (CORS).
+  // Several addresses can be listed, separated by commas.
+  FRONTEND_URLS: (process.env.FRONTEND_URL || 'http://localhost:5173')
+    .split(',')
+    .map((url) => url.trim().replace(/\/$/, '')),
 
-  // Folder holding users.json, classes.json, students.json, attendance.json.
-  // A relative path is resolved from the backend folder.
-  DATA_DIR: path.resolve(__dirname, process.env.DATA_DIR || 'data'),
+  // Railway (which sets RAILWAY_ENVIRONMENT) needs 0.0.0.0 to reach the app.
+  // Locally 127.0.0.1 keeps the API private to this computer.
+  HOST: process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : '127.0.0.1',
+
+  DATA_DIR: path.join(__dirname, 'data'),
 };

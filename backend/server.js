@@ -5,7 +5,7 @@
 // at the bottom automatically, so routes do not need try/catch.
 
 const express = require('express');
-const { PORT, HOST, DATA_DIR } = require('./config');
+const { PORT, HOST, DATA_DIR, FRONTEND_URLS } = require('./config');
 const { initDataFiles, readData } = require('./fileStore');
 const { publicUser, loadCurrentUser, requireAdmin } = require('./helpers');
 const teachersRouter = require('./routes/teachers');
@@ -14,6 +14,22 @@ const attendanceRouter = require('./routes/attendance');
 const studentsRouter = require('./routes/students');
 
 const app = express();
+
+// CORS: let the frontend (FRONTEND_URL in .env) call this API from the browser.
+app.use((req, res, next) => {
+  const origin = req.get('Origin');
+  if (FRONTEND_URLS.includes(origin)) {
+    res.set({
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
+      'Access-Control-Allow-Headers': 'Content-Type, X-User-Id',
+      Vary: 'Origin',
+    });
+  }
+  // The browser's "may I?" check before the real request.
+  if (req.method === 'OPTIONS') return res.sendStatus(204);
+  next();
+});
 
 app.use(express.json());
 app.use(loadCurrentUser);
@@ -71,9 +87,9 @@ app.use((err, req, res, next) => {
 
 initDataFiles()
   .then(() => {
-    // HOST defaults to 127.0.0.1 so the prototype is not reachable from other computers.
     app.listen(PORT, HOST, () => {
       console.log(`API running at http://${HOST}:${PORT}`);
+      console.log(`Allowed frontend: ${FRONTEND_URLS.join(', ')}`);
       console.log(`Data folder: ${DATA_DIR}`);
     });
   })

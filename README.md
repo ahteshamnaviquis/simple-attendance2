@@ -57,8 +57,8 @@ SimpleAttendence/
 ├── README.md
 ├── backend/
 │   ├── package.json
-│   ├── .env / .env.example # Backend settings (PORT, HOST, DATA_DIR)
-│   ├── config.js          # Reads .env and provides the settings
+│   ├── .env               # PORT, FRONTEND_URL
+│   ├── config.js          # Reads .env
 │   ├── server.js          # Express app: login, health, users, error handling
 │   ├── helpers.js         # HttpError, ids, dates, role checks
 │   ├── fileStore.js       # Reads/writes JSON files through one write queue
@@ -77,14 +77,13 @@ SimpleAttendence/
 │       └── attendance.json
 └── frontend/
     ├── package.json
-    ├── .env / .env.example # Frontend settings (API_URL, VITE_APP_TITLE)
-    ├── vite.config.js     # Reads .env; forwards /api requests to the backend
+    ├── .env               # VITE_API_URL
+    ├── vite.config.js
     ├── index.html
     └── src/
         ├── main.jsx
         ├── App.jsx        # Picks the screen: login, admin or teacher
         ├── api.js         # All backend calls live here
-        ├── config.js      # Settings the browser can read (VITE_APP_TITLE)
         ├── session.js     # Remembers the logged-in user (sessionStorage)
         ├── utils.js       # Date helpers
         ├── index.css      # All styles, including the print layout
@@ -112,31 +111,26 @@ SimpleAttendence/
 
 ## Configuration (.env files)
 
-Settings live in two `.env` files. Each has a `.env.example` next to it listing every
-setting with its default. All settings are optional: if a `.env` file is missing, the
-defaults are used.
+Each app has one small `.env` file:
 
 **`backend/.env`**
-
-| Setting    | Default     | What it does |
-|------------|-------------|--------------|
-| `PORT`     | `5050`      | Port the API listens on |
-| `HOST`     | `127.0.0.1` | `127.0.0.1` = only this computer can reach the API |
-| `DATA_DIR` | `data`      | Folder for the JSON data files (relative to `backend/`, or a full path) |
+```
+PORT=5050
+FRONTEND_URL=http://localhost:5173
+```
+- `PORT`: port the API listens on. Railway sets its own `PORT` automatically.
+- `FRONTEND_URL`: the website allowed to call the API from the browser (CORS). To
+  allow several, separate them with commas. On Railway, set this as a variable to
+  your deployed frontend's address. The default allows `http://localhost:5173`.
 
 **`frontend/.env`**
+```
+VITE_API_URL=https://simple-attendance2-production.up.railway.app
+```
+- `VITE_API_URL`: the backend the app calls. For a local backend, use
+  `http://127.0.0.1:5050`.
 
-| Setting          | Default                 | What it does |
-|------------------|-------------------------|--------------|
-| `API_URL`        | (required)              | Backend the dev server forwards `/api` to: the live Railway URL, or `http://127.0.0.1:5050` for a local backend |
-| `VITE_APP_TITLE` | `Daily Attendance`      | Name shown in the browser tab, header and login page |
-
-- After changing a `.env` file, restart that server (`Ctrl + C`, then start it again).
-- To use a local backend instead of the live one, set `API_URL=http://127.0.0.1:5050`
-  in `frontend/.env` (and match the backend `PORT`).
-- `.env` files are ignored by git, and `.env.example` files are committed. On a new
-  computer, copy each `.env.example` to `.env`.
-- Variables starting with `VITE_` are visible in the browser. Never put secrets in them.
+Restart the server after changing a `.env` file. `.env` files are not committed to git.
 
 ## Install (once)
 
