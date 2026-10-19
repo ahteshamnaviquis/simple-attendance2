@@ -218,4 +218,5 @@ are recreated from `seedData.js`.
 9. *My students* (teacher) or *Students* (admin): add a student, try a roll number that's
    already used in that class, edit, search, and remove.
 #   s i m p l e - a t t e n d a n c e  
+ #   s i m p l e - a t t e n d a n c e  
  
