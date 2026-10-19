@@ -73,7 +73,7 @@ export default function SubmissionTracker({ classes, reports, schoolDays, endDat
   if (showLate && lateTotal > 0) summary += ` ${lateTotal} submitted or edited late.`;
 
   return (
-    <section className="panel">
+    <section className="panel" id="tracker">
       <div className="panel-head">
         <div>
           <h2>{isAdmin ? 'Submission tracker' : 'My submissions'} · last 14 days</h2>

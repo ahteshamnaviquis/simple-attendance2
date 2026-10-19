@@ -1,88 +1,88 @@
-// Shows one attendance report. Also used as the printed layout.
+// One attendance report, shown in a panel beside the reports list.
+// Also the printed layout when "Print" is used on a single report.
 
-import { formatDateTime, lateInfo } from '../utils';
+import { formatDateTime, formatLongDate, lateInfo } from '../utils';
+import Icon from './Icon.jsx';
 
-export default function ReportDetails({ report }) {
+export default function ReportDetails({ report, showLate, onEdit, onPrint, onClose }) {
+  const late = showLate && lateInfo(report);
+  const counts = [
+    ['Total', report.totalStudents],
+    ['Present', report.present],
+    ['Absent', report.absent],
+    ['Added today', report.addedToday],
+    ['Left today', report.leftToday],
+  ];
+
   return (
-    <div className="report">
-      <h2>Daily Attendance Report</h2>
-      <table className="details">
-        <tbody>
-          <tr>
-            <th>Class</th>
-            <td>{report.className}</td>
-          </tr>
-          <tr>
-            <th>Date</th>
-            <td>
-              {report.date}
-              {lateInfo(report) && (
-                <>
-                  {' '}
-                  <span className="badge late">⏱ {lateInfo(report)}</span>
-                </>
-              )}
-            </td>
-          </tr>
-          <tr>
-            <th>Teacher</th>
-            <td>{report.teacherName || '—'}</td>
-          </tr>
-        </tbody>
-      </table>
+    <aside className="report-panel" aria-labelledby="report-title">
+      <div className="report-head">
+        <div>
+          <p className="eyebrow">Daily attendance report</p>
+          <h2 id="report-title">{report.className}</h2>
+          <p className="subtitle">
+            {formatLongDate(report.date)} · {report.teacherName || 'No teacher'}
+          </p>
+        </div>
+        {onClose && (
+          <button className="icon-button no-print" aria-label="Close report" onClick={onClose}>
+            <Icon name="close" />
+          </button>
+        )}
+      </div>
 
-      <h3>Counts</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Total</th>
-            <th>Present</th>
-            <th>Absent</th>
-            <th>Added today</th>
-            <th>Left today</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>{report.totalStudents}</td>
-            <td>{report.present}</td>
-            <td>{report.absent}</td>
-            <td>{report.addedToday}</td>
-            <td>{report.leftToday}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>
-        Absent students ({report.absentees.length} of {report.absent} named)
-      </h3>
-      {report.absentees.length === 0 ? (
-        <p>No names recorded.</p>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Name</th>
-              <th>Reason</th>
-            </tr>
-          </thead>
-          <tbody>
-            {report.absentees.map((a, i) => (
-              <tr key={i}>
-                <td>{i + 1}</td>
-                <td>{a.name}</td>
-                <td>{a.reason || '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {late && (
+        <div className="late-banner">
+          <Icon name="clock" size={16} strokeWidth={2.4} />
+          {late}
+        </div>
       )}
 
-      <p className="note">
+      <div className="count-grid">
+        {counts.map(([label, value]) => (
+          <div className="count-box" key={label}>
+            {label}
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+
+      <div>
+        <h3>
+          Absent students{' '}
+          <span className="note">
+            · {report.absentees.length} of {report.absent} named
+          </span>
+        </h3>
+        {report.absentees.length === 0 ? (
+          <p className="cell-sub">No names recorded.</p>
+        ) : (
+          <ol className="absent-list">
+            {report.absentees.map((a, i) => (
+              <li key={i}>
+                <span className="cell-main">{a.name}</span>
+                <span className="note">{a.reason || 'No reason given'}</span>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
+
+      <p className="cell-sub">
         Created by {report.createdBy} on {formatDateTime(report.createdAt)}. Last updated by{' '}
         {report.updatedBy} on {formatDateTime(report.updatedAt)}.
       </p>
-    </div>
+
+      {(onEdit || onPrint) && (
+        <div className="actions no-print">
+          {onEdit && <button onClick={onEdit}>Edit report</button>}
+          {onPrint && (
+            <button className="secondary" onClick={onPrint}>
+              Print
+            </button>
+          )}
+        </div>
+      )}
+    </aside>
   );
 }

@@ -1,30 +1,29 @@
 import { useState } from 'react';
-import Tabs from '../components/Tabs.jsx';
+import Layout from '../components/Layout.jsx';
 import Dashboard from '../components/Dashboard.jsx';
 import TeachersManager from './admin/TeachersManager.jsx';
 import ClassesManager from './admin/ClassesManager.jsx';
 import Reports from '../components/Reports.jsx';
 import StudentsManager from '../components/StudentsManager.jsx';
 
-const TABS = [
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'reports', label: 'Reports' },
-  { id: 'students', label: 'Students' },
-  { id: 'classes', label: 'Classes' },
-  { id: 'teachers', label: 'Teachers' },
+const MENU = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { id: 'reports', label: 'Reports', icon: 'reports' },
+  { id: 'students', label: 'Students', icon: 'students' },
+  { id: 'classes', label: 'Classes', icon: 'classes' },
+  { id: 'teachers', label: 'Teachers', icon: 'teachers' },
 ];
 
-export default function AdminHome({ user }) {
-  const [tab, setTab] = useState('dashboard');
+export default function AdminHome({ user, onLogout }) {
+  const [page, setPage] = useState('dashboard');
 
   return (
-    <div>
-      <Tabs tabs={TABS} current={tab} onChange={setTab} />
-      {tab === 'dashboard' && <Dashboard user={user} onShowReports={() => setTab('reports')} />}
-      {tab === 'reports' && <Reports user={user} />}
-      {tab === 'students' && <StudentsManager />}
-      {tab === 'classes' && <ClassesManager />}
-      {tab === 'teachers' && <TeachersManager />}
-    </div>
+    <Layout user={user} items={MENU} current={page} onNavigate={setPage} onLogout={onLogout}>
+      {page === 'dashboard' && <Dashboard user={user} onShowReports={() => setPage('reports')} />}
+      {page === 'reports' && <Reports user={user} />}
+      {page === 'students' && <StudentsManager />}
+      {page === 'classes' && <ClassesManager />}
+      {page === 'teachers' && <TeachersManager />}
+    </Layout>
   );
 }

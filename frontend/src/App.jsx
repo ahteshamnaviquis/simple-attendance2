@@ -9,7 +9,6 @@ import { useState } from 'react';
 import LoginPage from './pages/LoginPage.jsx';
 import AdminHome from './pages/AdminHome.jsx';
 import TeacherHome from './pages/TeacherHome.jsx';
-import Header from './components/Header.jsx';
 import { getSavedUser, saveUser, clearUser } from './session';
 
 export default function App() {
@@ -28,17 +27,11 @@ export default function App() {
   if (!user) {
     return <LoginPage onLogin={handleLogin} />;
   }
-
-  return (
-    <>
-      <Header user={user} onLogout={handleLogout} />
-      <main className="page">
-        {user.role === 'admin' && <AdminHome user={user} />}
-        {user.role === 'teacher' && <TeacherHome user={user} />}
-        {user.role !== 'admin' && user.role !== 'teacher' && (
-          <p className="error">Unknown role: {user.role}</p>
-        )}
-      </main>
-    </>
-  );
+  if (user.role === 'admin') {
+    return <AdminHome user={user} onLogout={handleLogout} />;
+  }
+  if (user.role === 'teacher') {
+    return <TeacherHome user={user} onLogout={handleLogout} />;
+  }
+  return <p className="error">Unknown role: {user.role}</p>;
 }

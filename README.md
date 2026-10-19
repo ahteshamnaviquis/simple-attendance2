@@ -75,6 +75,7 @@ SimpleAttendence/
 │       ├── classes.json
 │       ├── students.json
 │       └── attendance.json
+├── mobile/                # React Native (Expo) Android app, see "Mobile app"
 └── frontend/
     ├── package.json
     ├── .env               # VITE_API_URL
@@ -163,6 +164,41 @@ Open the address Vite prints (usually http://localhost:5173). If port 5173 is bu
 picks the next free one (5174, ...). Stop either server with `Ctrl + C`.
 
 While developing the backend, `npm run dev` restarts it automatically when you save a file.
+
+## Mobile app (Android)
+
+The `mobile` folder is a React Native app (Expo) with the same features as the web
+frontend: login, dashboards, submission tracker, attendance form, reports, students,
+classes and teachers. Print is web-only.
+
+**`mobile/.env`**
+```
+EXPO_PUBLIC_API_URL=https://simple-attendance2-production.up.railway.app
+```
+The backend address is built into the app, so set it before building. Use an `https`
+address: Android blocks plain `http` by default, and a phone cannot reach `127.0.0.1`
+on your computer.
+
+**Try it in a browser** (quick check, no Android tools needed):
+```powershell
+cd mobile
+npm install
+npm run web
+```
+The browser counts as a frontend, so add its address (shown by Expo) to the backend's
+`FRONTEND_URL`.
+
+**Build the APK** (needs JDK 17, Android SDK and `ANDROID_HOME` set up):
+```powershell
+cd mobile
+npx expo prebuild --platform android
+cd android
+.\gradlew.bat assembleRelease
+```
+The APK is `mobile\android\app\build\outputs\apk\release\app-release.apk`. Copy it to
+your phone and open it, allowing "Install unknown apps" when Android asks. The first
+build takes 10+ minutes while Gradle downloads its dependencies. The `android` folder is
+generated, so it's not committed; run `prebuild` again after changing `app.json`.
 
 ## Sample logins
 

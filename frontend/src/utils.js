@@ -32,6 +32,20 @@ export function formatLongDate(dateText) {
   });
 }
 
+// "2026-10-19" -> "19 Oct 2026"
+export function formatMediumDate(dateText) {
+  return fromDateString(dateText).toLocaleDateString(undefined, {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+// "2026-10-19" -> "Monday"
+export function weekdayName(dateText) {
+  return fromDateString(dateText).toLocaleDateString(undefined, { weekday: 'long' });
+}
+
 // "2026-10-19" -> "Mon 19"
 export function formatShortDay(dateText) {
   const d = fromDateString(dateText);

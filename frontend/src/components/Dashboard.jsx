@@ -20,6 +20,7 @@ import { getClasses, getTeachers, getStudents, getReports, getSchoolDays } from 
 import { todayString, addDays, formatLongDate, formatShortDay, attendanceRate } from '../utils';
 import SubmissionTracker from './SubmissionTracker.jsx';
 import AttendanceForm from './AttendanceForm.jsx';
+import Icon from './Icon.jsx';
 
 export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
   const isAdmin = user.role === 'admin';
@@ -145,8 +146,12 @@ export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
           <p className="subtitle">{formatLongDate(date)}</p>
         </div>
         <div className="date-controls">
-          <button className="secondary small" onClick={() => setDate(addDays(date, -1))}>
-            ‹ Prev
+          <button
+            className="secondary small"
+            aria-label="Previous day"
+            onClick={() => setDate(addDays(date, -1))}
+          >
+            <Icon name="prev" />
           </button>
           <input
             type="date"
@@ -156,10 +161,11 @@ export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
           />
           <button
             className="secondary small"
+            aria-label="Next day"
             onClick={() => setDate(addDays(date, 1))}
             disabled={date >= todayString()}
           >
-            Next ›
+            <Icon name="next" />
           </button>
           <button className="small" onClick={() => setDate(todayString())}>
             Today
@@ -209,7 +215,9 @@ export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
       {/* Pending reports warning */}
       {!loading && missing.length > 0 && (
         <div className="alert warning">
-          <span className="alert-icon" aria-hidden="true">!</span>
+          <span className="alert-icon">
+            <Icon name="alert" strokeWidth={2.6} />
+          </span>
           <div className="alert-body">
             <strong>
               {isAdmin
@@ -222,9 +230,16 @@ export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
                 .join(' · ')}
             </div>
           </div>
-          {onTakeAttendance && (
+          {onTakeAttendance ? (
             <button className="small" onClick={onTakeAttendance}>
               Take attendance
+            </button>
+          ) : (
+            <button
+              className="small"
+              onClick={() => document.getElementById('tracker')?.scrollIntoView({ behavior: 'smooth' })}
+            >
+              Review in tracker
             </button>
           )}
         </div>

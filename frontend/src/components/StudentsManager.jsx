@@ -110,7 +110,7 @@ export default function StudentsManager() {
   );
 
   return (
-    <div>
+    <>
       <div className="page-title">
         <div>
           <h1>Students</h1>
@@ -190,6 +190,7 @@ export default function StudentsManager() {
         </label>
       </div>
 
+      <div className="table-box">
       <table>
         <thead>
           <tr>
@@ -226,6 +227,7 @@ export default function StudentsManager() {
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

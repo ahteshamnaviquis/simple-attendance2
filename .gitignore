@@ -5,3 +5,4 @@ data-backup-*/
 .claude/
 .env
 .env.example
+mobile/

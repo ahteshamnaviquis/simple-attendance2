@@ -66,8 +66,13 @@ export default function TeachersManager() {
   }
 
   return (
-    <div>
-      <h1>Teachers</h1>
+    <>
+      <div className="page-title">
+        <div>
+          <h1>Teachers</h1>
+          <p className="subtitle">Teacher accounts and the classes they teach</p>
+        </div>
+      </div>
 
       <form className="card" onSubmit={handleSubmit}>
         <h2>{editingId ? 'Edit teacher' : 'Add teacher'}</h2>
@@ -107,6 +112,7 @@ export default function TeachersManager() {
 
       {message && <p className="success">{message}</p>}
 
+      <div className="table-box">
       <table>
         <thead>
           <tr>
@@ -136,6 +142,7 @@ export default function TeachersManager() {
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,4 +1,4 @@
-// List of attendance reports with filters, view, edit and print.
+// List of attendance reports with filters, a detail panel, edit and print.
 // Used by both admins (all classes) and teachers (the backend only returns
 // reports for their own classes).
 
@@ -6,9 +6,11 @@ import { useEffect, useState } from 'react';
 import { getClasses, getReports } from '../api';
 import AttendanceForm from './AttendanceForm.jsx';
 import ReportDetails from './ReportDetails.jsx';
-import { lateInfo } from '../utils';
+import Icon from './Icon.jsx';
+import { attendanceRate, formatMediumDate, lateInfo, weekdayName } from '../utils';
 
 export default function Reports({ user }) {
+  const isAdmin = user.role === 'admin';
   const [classes, setClasses] = useState([]);
   const [filters, setFilters] = useState({ date: '', classId: '' });
   const [reports, setReports] = useState([]);
@@ -44,44 +46,57 @@ export default function Reports({ user }) {
     loadReports();
   }
 
-  // One report: view or edit
-  if (mode === 'view' && selected) {
-    return (
-      <div>
-        <div className="actions no-print">
-          <button className="secondary" onClick={() => setMode('list')}>
-            ← Back to list
-          </button>
-          <button onClick={() => setMode('edit')}>Edit</button>
-          <button className="secondary" onClick={() => window.print()}>
-            Print
-          </button>
-        </div>
-        <ReportDetails report={selected} />
-      </div>
-    );
+  // Print only the open report (CSS hides the list while body has this class).
+  function printReport() {
+    document.body.classList.add('print-detail');
+    window.print();
+    document.body.classList.remove('print-detail');
   }
 
   if (mode === 'edit' && selected) {
     return (
-      <AttendanceForm
-        classes={classes}
-        report={selected}
-        onSaved={handleSaved}
-        onCancel={() => setMode('view')}
-      />
+      <>
+        <div className="page-title">
+          <div>
+            <h1>Edit report</h1>
+            <p className="subtitle">
+              {selected.className} · {formatMediumDate(selected.date)}
+            </p>
+          </div>
+          <button className="secondary" onClick={() => setMode('view')}>
+            Back to reports
+          </button>
+        </div>
+        <AttendanceForm
+          classes={classes}
+          report={selected}
+          onSaved={handleSaved}
+          onCancel={() => setMode('view')}
+        />
+      </>
     );
   }
 
-  // The list
   const totalPresent = reports.reduce((sum, r) => sum + r.present, 0);
   const totalAbsent = reports.reduce((sum, r) => sum + r.absent, 0);
-  const totalStudents = reports.reduce((sum, r) => sum + r.totalStudents, 0);
+  const lateCount = reports.filter((r) => lateInfo(r)).length;
   const className = classes.find((c) => c.id === filters.classId)?.name;
+  const showPanel = mode === 'view' && selected;
 
   return (
-    <div>
-      <h1 className="no-print">{user.role === 'admin' ? 'Attendance reports' : 'My reports'}</h1>
+    <>
+      <div className="page-title">
+        <div>
+          <h1>{isAdmin ? 'Attendance reports' : 'My reports'}</h1>
+          <p className="subtitle no-print">Every daily report, newest first</p>
+        </div>
+        <button className="secondary" onClick={() => window.print()}>
+          <span className="rate-cell">
+            <Icon name="print" />
+            Print list
+          </span>
+        </button>
+      </div>
 
       <div className="filters no-print">
         <label>
@@ -102,7 +117,6 @@ export default function Reports({ user }) {
         <button className="secondary" onClick={() => setFilters({ date: '', classId: '' })}>
           Clear filters
         </button>
-        <button onClick={() => window.print()}>Print list</button>
       </div>
 
       <div className="print-only">
@@ -113,76 +127,113 @@ export default function Reports({ user }) {
         </p>
       </div>
 
+      <div className="totals">
+        <div className="total">
+          Reports <strong>{reports.length}</strong>
+        </div>
+        <div className="total">
+          Present <strong>{totalPresent}</strong>
+        </div>
+        <div className="total">
+          Absent <strong>{totalAbsent}</strong>
+        </div>
+        {isAdmin && (
+          <div className="total">
+            Submitted late <strong>{lateCount}</strong>
+          </div>
+        )}
+      </div>
+
       {error && <p className="error">{error}</p>}
 
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Class</th>
-            <th>Teacher</th>
-            <th>Total</th>
-            <th>Present</th>
-            <th>Absent</th>
-            <th>Added</th>
-            <th>Left</th>
-            <th>Absent students</th>
-            <th className="no-print"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {reports.map((r) => (
-            <tr key={r.id}>
-              <td className="nowrap">
-                {r.date}
-                {user.role === 'admin' && lateInfo(r) && (
-                  <>
-                    {' '}
-                    <span className="badge late" title={lateInfo(r)}>
-                      ⏱ Late
-                    </span>
-                  </>
-                )}
-              </td>
-              <td>{r.className}</td>
-              <td>{r.teacherName || '—'}</td>
-              <td>{r.totalStudents}</td>
-              <td>{r.present}</td>
-              <td>{r.absent}</td>
-              <td>{r.addedToday}</td>
-              <td>{r.leftToday}</td>
-              <td className="absent-names">
-                {r.absentees.map((a) => (a.reason ? `${a.name} (${a.reason})` : a.name)).join(', ') ||
-                  '—'}
-              </td>
-              <td className="no-print nowrap">
-                <button className="secondary small" onClick={() => openReport(r, 'view')}>
-                  View
-                </button>{' '}
-                <button className="secondary small" onClick={() => openReport(r, 'edit')}>
-                  Edit
-                </button>
-              </td>
-            </tr>
-          ))}
-          {reports.length === 0 && (
-            <tr>
-              <td colSpan="10">No reports found.</td>
-            </tr>
-          )}
-        </tbody>
-        {reports.length > 0 && (
-          <tfoot>
-            <tr>
-              <th colSpan="3">Totals ({reports.length} reports)</th>
-              <th>{totalStudents}</th>
-              <th>{totalPresent}</th>
-              <th>{totalAbsent}</th>
-              <th colSpan="4"></th>
-            </tr>
-          </tfoot>
+      <div className="reports-layout">
+        <div className="reports-list table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Class</th>
+                <th>Attendance</th>
+                <th>Absent students</th>
+                {isAdmin && <th>Status</th>}
+                <th className="no-print num">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reports.map((r) => {
+                const late = lateInfo(r);
+                return (
+                  <tr key={r.id} className={showPanel && selected.id === r.id ? 'selected-row' : ''}>
+                    <td className="nowrap">
+                      <div className="cell-main">{formatMediumDate(r.date)}</div>
+                      <div className="cell-sub">{weekdayName(r.date)}</div>
+                    </td>
+                    <td>
+                      <div className="cell-main">{r.className}</div>
+                      <div className="cell-sub">{r.teacherName || 'No teacher'}</div>
+                    </td>
+                    <td className="nowrap">
+                      <div className="rate-cell">
+                        <div className="meter small" aria-hidden="true">
+                          <div
+                            className="meter-fill"
+                            style={{ width: `${attendanceRate(r.present, r.absent) || 0}%` }}
+                          />
+                        </div>
+                        <span>
+                          <strong>{r.present}</strong>/{r.totalStudents}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="absent-names">
+                      {r.absentees.map((a) => (a.reason ? `${a.name} (${a.reason})` : a.name)).join(', ') ||
+                        (r.absent > 0 ? `${r.absent} not identified` : '—')}
+                    </td>
+                    {isAdmin && (
+                      <td>
+                        {late ? (
+                          <span className="badge late" title={late}>
+                            <Icon name="clock" size={13} strokeWidth={2.6} />
+                            Late
+                          </span>
+                        ) : (
+                          <span className="badge good">
+                            <Icon name="check" size={13} strokeWidth={3} />
+                            On time
+                          </span>
+                        )}
+                      </td>
+                    )}
+                    <td className="no-print nowrap num">
+                      <button className="secondary small" onClick={() => openReport(r, 'view')}>
+                        View
+                      </button>{' '}
+                      <button className="secondary small" onClick={() => openReport(r, 'edit')}>
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {reports.length === 0 && (
+                <tr>
+                  <td colSpan={isAdmin ? 6 : 5}>No reports found.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {showPanel && (
+          <ReportDetails
+            report={selected}
+            showLate={isAdmin}
+            onEdit={() => setMode('edit')}
+            onPrint={printReport}
+            onClose={() => setMode('list')}
+          />
         )}
-      </table>
-    </div>
+      </div>
+    </>
   );
 }

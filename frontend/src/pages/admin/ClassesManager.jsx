@@ -61,8 +61,13 @@ export default function ClassesManager() {
   }
 
   return (
-    <div>
-      <h1>Classes</h1>
+    <>
+      <div className="page-title">
+        <div>
+          <h1>Classes</h1>
+          <p className="subtitle">Classes and their assigned teachers</p>
+        </div>
+      </div>
 
       <form className="card" onSubmit={handleSubmit}>
         <h2>{editingId ? 'Edit class' : 'Add class'}</h2>
@@ -99,6 +104,7 @@ export default function ClassesManager() {
 
       {message && <p className="success">{message}</p>}
 
+      <div className="table-box">
       <table>
         <thead>
           <tr>
@@ -126,6 +132,7 @@ export default function ClassesManager() {
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
