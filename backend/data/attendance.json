@@ -1,0 +1,1722 @@
+[
+  {
+    "id": "1a9e3ea8-a155-4070-87de-4d08d2059824",
+    "classId": "c1",
+    "date": "2026-10-19",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 15,
+    "present": 10,
+    "absent": 5,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "A",
+        "reason": "erewr"
+      }
+    ],
+    "createdAt": "2026-10-19T08:37:09.297Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-19T09:31:01.347Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "5e52206c-af91-48e4-8c1e-24b94b087770",
+    "classId": "c1",
+    "date": "2026-10-06",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-06T03:48:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-06T03:48:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "34708f75-f646-4f6b-b89b-4c45c06b9937",
+    "classId": "c2",
+    "date": "2026-10-06",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Fatima Noor",
+        "reason": "Family reason"
+      }
+    ],
+    "createdAt": "2026-10-06T03:39:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-06T03:39:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "402a4fa7-e2be-42d6-a48d-261e0127b857",
+    "classId": "c3",
+    "date": "2026-10-06",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Usman Tariq",
+        "reason": "Family reason"
+      },
+      {
+        "name": "Noor Rana",
+        "reason": ""
+      }
+    ],
+    "createdAt": "2026-10-06T03:12:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-06T03:12:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "11824173-7580-4b20-b50d-e74b99613e94",
+    "classId": "c4",
+    "date": "2026-10-06",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 1,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Kashan Qureshi",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-06T03:39:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-06T03:39:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "7c9ba03b-ee92-4d78-95ba-d88e0ab9d036",
+    "classId": "c5",
+    "date": "2026-10-06",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ibrahim Javed",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-06T03:45:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-06T03:45:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "69d9bf8b-6191-4aa9-8ec5-696bfcf93ab5",
+    "classId": "c6",
+    "date": "2026-10-06",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Iqra Siddiqui",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-06T03:47:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-06T03:47:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "98a962c4-f49f-4829-ba0b-baff87fc184d",
+    "classId": "c7",
+    "date": "2026-10-06",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Wali Hashmi",
+        "reason": "Sick"
+      },
+      {
+        "name": "Faris Farooq",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-06T03:37:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-06T03:37:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "9d19a857-aeb6-428f-bc35-08ec1686b125",
+    "classId": "c1",
+    "date": "2026-10-07",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Taha Ahmed",
+        "reason": "Sick"
+      },
+      {
+        "name": "Iqra Qureshi",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-07T03:22:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-07T03:22:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "28fa4ec2-9c2b-4960-b45e-b5eff5beba85",
+    "classId": "c2",
+    "date": "2026-10-07",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 11,
+    "present": 9,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Fatima Noor",
+        "reason": ""
+      }
+    ],
+    "createdAt": "2026-10-07T03:45:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-07T03:45:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "b01dcefd-c61d-4567-921c-7f9c4b87ba38",
+    "classId": "c3",
+    "date": "2026-10-07",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 7,
+    "absent": 3,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Zainab Shah",
+        "reason": "Sick"
+      },
+      {
+        "name": "Laiba Hashmi",
+        "reason": ""
+      },
+      {
+        "name": "Hassan Nawaz",
+        "reason": "Travelling"
+      }
+    ],
+    "createdAt": "2026-10-07T03:19:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-07T03:19:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "13d5904d-0725-467a-817a-53d8d7e87cac",
+    "classId": "c4",
+    "date": "2026-10-07",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Mahnoor Javed",
+        "reason": "Family reason"
+      }
+    ],
+    "createdAt": "2026-10-07T03:12:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-07T03:12:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "3ae810c6-c925-45de-a045-ab932a1dfdf1",
+    "classId": "c5",
+    "date": "2026-10-07",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ibrahim Javed",
+        "reason": "Appointment"
+      }
+    ],
+    "createdAt": "2026-10-07T03:15:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-07T03:15:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "f088d13e-ce05-48b9-83fa-a1584e022608",
+    "classId": "c7",
+    "date": "2026-10-07",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hafsa Rana",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-07T03:33:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-07T03:33:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "88875ca8-0708-492f-b377-cbf6540ab1b0",
+    "classId": "c1",
+    "date": "2026-10-08",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-08T03:23:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-08T03:23:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "aa5a69a8-2755-459c-a101-d7b1849c134c",
+    "classId": "c2",
+    "date": "2026-10-08",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-08T03:22:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-08T03:22:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "de7a7159-2c14-4de5-aca1-2d8509b48bc3",
+    "classId": "c3",
+    "date": "2026-10-08",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Usman Tariq",
+        "reason": "Sick"
+      },
+      {
+        "name": "Ali Rana",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-08T03:36:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-08T03:36:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "1cb947d4-e381-4e22-928d-5cbdde6cbaca",
+    "classId": "c4",
+    "date": "2026-10-08",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-08T03:42:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-08T03:42:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "92bb970b-ec16-495b-93e9-31e162b30c6f",
+    "classId": "c6",
+    "date": "2026-10-08",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hafsa Khan",
+        "reason": "Sick"
+      },
+      {
+        "name": "Mahnoor Butt",
+        "reason": "Family reason"
+      }
+    ],
+    "createdAt": "2026-10-08T03:28:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-08T03:28:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "e047d7a0-7d3b-4bbc-9210-1b28f5612c04",
+    "classId": "c7",
+    "date": "2026-10-08",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Moiz Latif",
+        "reason": "Family reason"
+      }
+    ],
+    "createdAt": "2026-10-08T03:44:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-08T03:44:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "95a5d087-de9d-4a70-96a7-966492c821b0",
+    "classId": "c1",
+    "date": "2026-10-09",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 11,
+    "present": 8,
+    "absent": 3,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Rida Siddiqui",
+        "reason": "Sick"
+      },
+      {
+        "name": "Arham Mirza",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-09T03:19:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-09T03:19:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "6da25c97-04b3-4364-8cf5-8c324f71c902",
+    "classId": "c2",
+    "date": "2026-10-09",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Fatima Noor",
+        "reason": "Travelling"
+      }
+    ],
+    "createdAt": "2026-10-09T03:39:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-09T03:39:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "04362d1d-224e-488d-9261-5cbe19064b4b",
+    "classId": "c4",
+    "date": "2026-10-09",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 1,
+    "absentees": [
+      {
+        "name": "Dua Iqbal",
+        "reason": "Wedding in family"
+      },
+      {
+        "name": "Hassan Ahmed",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-09T03:18:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-09T03:18:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "dbcfa892-70b9-42a7-8747-3a8831396636",
+    "classId": "c5",
+    "date": "2026-10-09",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Noman Hashmi",
+        "reason": "Family reason"
+      }
+    ],
+    "createdAt": "2026-10-09T03:40:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-09T03:40:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "602592eb-279a-4afb-ad41-5d49028c7f90",
+    "classId": "c6",
+    "date": "2026-10-09",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 11,
+    "present": 8,
+    "absent": 3,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Mahnoor Butt",
+        "reason": "Travelling"
+      },
+      {
+        "name": "Arham Chaudhry",
+        "reason": "Travelling"
+      }
+    ],
+    "createdAt": "2026-10-09T03:14:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-09T03:14:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "529d6467-3cdf-4da1-8b14-fc3b5568f95e",
+    "classId": "c7",
+    "date": "2026-10-09",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 11,
+    "present": 10,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-09T03:16:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-09T03:16:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "800feeba-2e56-4af2-8edf-c420700a1ecd",
+    "classId": "c1",
+    "date": "2026-10-10",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 11,
+    "present": 9,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Sana Chaudhry",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-10T03:34:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-10T03:34:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "768acfa0-f450-4cf4-85de-3de058e4ea07",
+    "classId": "c2",
+    "date": "2026-10-10",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 11,
+    "present": 7,
+    "absent": 4,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hamza Iqbal",
+        "reason": "Appointment"
+      },
+      {
+        "name": "Umaima Hashmi",
+        "reason": "Sick"
+      },
+      {
+        "name": "Zoya Latif",
+        "reason": "Appointment"
+      }
+    ],
+    "createdAt": "2026-10-10T03:19:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-10T03:19:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "a18aa41f-11cf-439b-8274-23da1f3173d3",
+    "classId": "c3",
+    "date": "2026-10-10",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 11,
+    "present": 10,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-10T03:48:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-10T03:48:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "523b3bcd-a593-4d78-a731-8a286a4f008c",
+    "classId": "c4",
+    "date": "2026-10-10",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 1,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Mahnoor Javed",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-10T03:13:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-10T03:13:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "ff829df7-b980-436c-9710-59b6cfb0f8fa",
+    "classId": "c5",
+    "date": "2026-10-10",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ali Nawaz",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-10T03:10:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-10T03:10:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "37775f7c-ba5e-4e66-8d87-94d884b005a9",
+    "classId": "c6",
+    "date": "2026-10-10",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Mahnoor Butt",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-10T03:13:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-10T03:13:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "44d37fb2-90a9-425e-ab5e-e86f881d53ed",
+    "classId": "c1",
+    "date": "2026-10-12",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ahmed Hassan",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-12T03:31:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-12T03:31:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "ccfb3d9a-3091-45aa-96f0-3061f6b1959c",
+    "classId": "c2",
+    "date": "2026-10-12",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hamza Iqbal",
+        "reason": ""
+      },
+      {
+        "name": "Noor Zafar",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-12T03:24:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-12T03:24:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "5572076d-2eb6-46ae-beba-147ff57cb3f4",
+    "classId": "c3",
+    "date": "2026-10-12",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Noman Khan",
+        "reason": ""
+      }
+    ],
+    "createdAt": "2026-10-12T03:17:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-12T03:17:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "b857180c-6f7e-4083-8ca9-91608b99c708",
+    "classId": "c4",
+    "date": "2026-10-12",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Umaima Iqbal",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-12T03:17:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-12T03:17:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "7e9bb3df-63f6-472a-a15b-ab56b4a3cf2a",
+    "classId": "c5",
+    "date": "2026-10-12",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-12T03:18:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-12T03:18:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "fe84d356-f552-4056-b111-e24d8b7c6bf7",
+    "classId": "c6",
+    "date": "2026-10-12",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hafsa Khan",
+        "reason": "Travelling"
+      }
+    ],
+    "createdAt": "2026-10-12T03:21:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-12T03:21:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "92f2122b-31a4-4138-8cb4-adbc5eddb76d",
+    "classId": "c7",
+    "date": "2026-10-12",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Bilal Chaudhry",
+        "reason": "Appointment"
+      }
+    ],
+    "createdAt": "2026-10-12T03:12:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-12T03:12:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "2c13c8cc-e527-4202-a31e-02f9c426c1f8",
+    "classId": "c1",
+    "date": "2026-10-13",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ahmed Hassan",
+        "reason": "Travelling"
+      }
+    ],
+    "createdAt": "2026-10-13T03:49:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-13T03:49:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "02704891-c464-460c-96a9-0e277abe1f95",
+    "classId": "c3",
+    "date": "2026-10-13",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-13T03:29:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-13T03:29:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "61ced385-a3af-4557-a4f5-ecbad28d7586",
+    "classId": "c4",
+    "date": "2026-10-13",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 11,
+    "present": 8,
+    "absent": 3,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Bilal Farooq",
+        "reason": "Sick"
+      },
+      {
+        "name": "Wali Zafar",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-13T03:42:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-13T03:42:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "c17e1084-a3ef-4220-af99-d3e4336aafbb",
+    "classId": "c5",
+    "date": "2026-10-13",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ibrahim Javed",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-13T03:41:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-13T03:41:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "b0dbf45c-b467-4c47-b9b0-9e55e365f003",
+    "classId": "c6",
+    "date": "2026-10-13",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Mahnoor Butt",
+        "reason": "Sick"
+      },
+      {
+        "name": "Iqra Siddiqui",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-13T03:37:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-13T03:37:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "02f1fca3-423d-4105-b0d8-cf12b878af57",
+    "classId": "c7",
+    "date": "2026-10-13",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Saad Rana",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-13T03:32:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-13T03:32:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "6c40fd63-6646-485a-a631-dbcb6537ab90",
+    "classId": "c1",
+    "date": "2026-10-14",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ahmed Hassan",
+        "reason": ""
+      },
+      {
+        "name": "Ayesha Malik",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-14T03:33:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-14T03:33:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "c77adca6-cace-48ca-90cb-cda9ab7350db",
+    "classId": "c2",
+    "date": "2026-10-14",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Fatima Noor",
+        "reason": "Sick"
+      },
+      {
+        "name": "Hamza Iqbal",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-14T03:16:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-14T03:16:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "42f7f6c7-36d4-4a2b-a15d-a860c8d9b09f",
+    "classId": "c4",
+    "date": "2026-10-14",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 11,
+    "present": 9,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Umaima Iqbal",
+        "reason": "Appointment"
+      }
+    ],
+    "createdAt": "2026-10-14T03:18:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-14T03:18:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "e46ee98c-f282-4809-be1e-ef621c4fc5ef",
+    "classId": "c7",
+    "date": "2026-10-14",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-14T03:23:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-14T03:23:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "73b11f36-f533-4e0b-868e-09436f64acb7",
+    "classId": "c1",
+    "date": "2026-10-15",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ayesha Malik",
+        "reason": "Sick"
+      },
+      {
+        "name": "Javeria Zafar",
+        "reason": ""
+      }
+    ],
+    "createdAt": "2026-10-15T03:37:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-15T03:37:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "f2c42a38-f1bd-48e9-9b31-8dfd5c74b80d",
+    "classId": "c2",
+    "date": "2026-10-15",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hamza Iqbal",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-15T03:30:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-15T03:30:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "668e564c-40f8-4998-82aa-47281eb4615c",
+    "classId": "c3",
+    "date": "2026-10-15",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 1,
+    "absentees": [
+      {
+        "name": "Zainab Shah",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-15T03:27:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-15T03:27:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "b0b6ab4c-519b-4677-8ca7-a8f8b205854e",
+    "classId": "c5",
+    "date": "2026-10-15",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ali Nawaz",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-15T03:36:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-15T03:36:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "c6dfff87-2997-46d6-9767-f1a6468a7878",
+    "classId": "c6",
+    "date": "2026-10-15",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hafsa Khan",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-15T03:40:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-15T03:40:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "d7b2a89f-233c-4fde-8370-dfb28c9a5433",
+    "classId": "c7",
+    "date": "2026-10-15",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 1,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Saad Latif",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-15T03:11:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-15T03:11:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "4c428ba5-67cc-45ed-b807-87490b01b756",
+    "classId": "c1",
+    "date": "2026-10-16",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-16T03:26:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-16T03:26:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "ecab1995-dcb7-4043-a687-aad7a86eee58",
+    "classId": "c2",
+    "date": "2026-10-16",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 11,
+    "present": 9,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 1,
+    "absentees": [
+      {
+        "name": "Noor Zafar",
+        "reason": "Fever"
+      }
+    ],
+    "createdAt": "2026-10-16T03:13:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-16T03:13:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "e2f5906c-c46f-4e71-b36e-ebe2a88cc6d1",
+    "classId": "c3",
+    "date": "2026-10-16",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Usman Tariq",
+        "reason": "Wedding in family"
+      }
+    ],
+    "createdAt": "2026-10-16T03:18:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-16T03:18:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "2d3b744f-f649-41c6-b6e1-ae85579c1667",
+    "classId": "c4",
+    "date": "2026-10-16",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 7,
+    "absent": 3,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Javeria Dar",
+        "reason": "Sick"
+      },
+      {
+        "name": "Bilal Farooq",
+        "reason": "Travelling"
+      },
+      {
+        "name": "Rayan Dar",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-16T03:15:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-16T03:15:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "307303a3-25af-4704-93c1-9d1cfb235ccd",
+    "classId": "c5",
+    "date": "2026-10-16",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Zoya Ghani",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-16T03:12:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-16T03:12:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "3a49d5d3-a529-4dc5-bcaf-f53d5457c8ab",
+    "classId": "c7",
+    "date": "2026-10-16",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Moiz Latif",
+        "reason": "Sick"
+      },
+      {
+        "name": "Hafsa Rana",
+        "reason": "Appointment"
+      }
+    ],
+    "createdAt": "2026-10-16T03:44:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-16T03:44:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "46d89f7f-2d9e-4673-8f77-75b18673d016",
+    "classId": "c1",
+    "date": "2026-10-17",
+    "className": "Grade 1 - A",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 6,
+    "absent": 4,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Ahmed Hassan",
+        "reason": "Travelling"
+      },
+      {
+        "name": "Ayesha Malik",
+        "reason": "Wedding in family"
+      },
+      {
+        "name": "Bilal Ahmed",
+        "reason": "Family reason"
+      },
+      {
+        "name": "Javeria Zafar",
+        "reason": "Travelling"
+      }
+    ],
+    "createdAt": "2026-10-17T03:36:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-17T03:36:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "bdab01fa-9ff4-4391-a14e-bd0e7bc54aac",
+    "classId": "c2",
+    "date": "2026-10-17",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Iqra Ghani",
+        "reason": "Appointment"
+      }
+    ],
+    "createdAt": "2026-10-17T03:37:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-17T03:37:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "d4336dc2-95d0-4e75-b3c2-e4eef5299c6d",
+    "classId": "c3",
+    "date": "2026-10-17",
+    "className": "Grade 3 - A",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-17T03:23:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-17T03:23:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "78146154-544a-4951-8015-5501f6ad028f",
+    "classId": "c4",
+    "date": "2026-10-17",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 10,
+    "present": 9,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Bilal Farooq",
+        "reason": ""
+      }
+    ],
+    "createdAt": "2026-10-17T03:27:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-17T03:27:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "1830204e-5c5c-49e4-8853-e5e7d5071e24",
+    "classId": "c5",
+    "date": "2026-10-17",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Amna Dar",
+        "reason": "Sick"
+      },
+      {
+        "name": "Javeria Iqbal",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-17T03:28:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-17T03:28:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "48fcb68f-0eb7-478f-90ea-2033c44c7d8c",
+    "classId": "c6",
+    "date": "2026-10-17",
+    "className": "Grade 5 - A",
+    "teacherId": "u6",
+    "teacherName": "Hina Aslam",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-17T03:16:00.000Z",
+    "createdBy": "Hina Aslam",
+    "updatedAt": "2026-10-17T03:16:00.000Z",
+    "updatedBy": "Hina Aslam"
+  },
+  {
+    "id": "719e419b-8468-4cc6-b28d-ba349b74758e",
+    "classId": "c7",
+    "date": "2026-10-17",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 11,
+    "present": 8,
+    "absent": 3,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hafsa Rana",
+        "reason": "Travelling"
+      },
+      {
+        "name": "Saad Rana",
+        "reason": "Travelling"
+      }
+    ],
+    "createdAt": "2026-10-17T03:49:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-17T03:49:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "7b764f5d-6951-4f7e-943f-eda8d8e09a4d",
+    "classId": "c2",
+    "date": "2026-10-19",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Fatima Noor",
+        "reason": ""
+      },
+      {
+        "name": "Noor Zafar",
+        "reason": "Sick"
+      }
+    ],
+    "createdAt": "2026-10-19T03:26:00.000Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-19T03:26:00.000Z",
+    "updatedBy": "Sara Khan"
+  },
+  {
+    "id": "60235f4e-3b44-47ca-a5ec-c2c1e640feb1",
+    "classId": "c4",
+    "date": "2026-10-19",
+    "className": "Grade 3 - B",
+    "teacherId": "u4",
+    "teacherName": "Nadia Hussain",
+    "totalStudents": 11,
+    "present": 10,
+    "absent": 1,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-19T03:43:00.000Z",
+    "createdBy": "Nadia Hussain",
+    "updatedAt": "2026-10-19T03:43:00.000Z",
+    "updatedBy": "Nadia Hussain"
+  },
+  {
+    "id": "c6564661-73e7-4a51-9ed0-208e7a6fe227",
+    "classId": "c5",
+    "date": "2026-10-19",
+    "className": "Grade 4 - A",
+    "teacherId": "u5",
+    "teacherName": "Omar Farooq",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-19T03:40:00.000Z",
+    "createdBy": "Omar Farooq",
+    "updatedAt": "2026-10-19T03:40:00.000Z",
+    "updatedBy": "Omar Farooq"
+  },
+  {
+    "id": "cf32bb5a-b152-47e6-926c-493643cdb4a0",
+    "classId": "c7",
+    "date": "2026-10-19",
+    "className": "Grade 5 - B",
+    "teacherId": "u3",
+    "teacherName": "Ali Raza",
+    "totalStudents": 10,
+    "present": 10,
+    "absent": 0,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [],
+    "createdAt": "2026-10-19T03:45:00.000Z",
+    "createdBy": "Ali Raza",
+    "updatedAt": "2026-10-19T03:45:00.000Z",
+    "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "b2492ffc-4a26-4310-89ab-85c139b9df3a",
+    "classId": "c2",
+    "date": "2026-10-13",
+    "className": "Grade 2 - B",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 7,
+    "absent": 3,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Hamza Iqbal",
+        "reason": "uyuyu"
+      },
+      {
+        "name": "Noor Zafar",
+        "reason": "yuyu"
+      },
+      {
+        "name": "Ali Javed",
+        "reason": "uioio"
+      }
+    ],
+    "createdAt": "2026-10-19T09:55:06.695Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-19T09:55:06.695Z",
+    "updatedBy": "Sara Khan"
+  }
+]

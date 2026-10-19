@@ -1,0 +1,37 @@
+[
+  {
+    "id": "c1",
+    "name": "Grade 1 - A",
+    "teacherId": "u2"
+  },
+  {
+    "id": "c2",
+    "name": "Grade 2 - B",
+    "teacherId": "u2"
+  },
+  {
+    "id": "c3",
+    "name": "Grade 3 - A",
+    "teacherId": "u3"
+  },
+  {
+    "id": "c4",
+    "name": "Grade 3 - B",
+    "teacherId": "u4"
+  },
+  {
+    "id": "c5",
+    "name": "Grade 4 - A",
+    "teacherId": "u5"
+  },
+  {
+    "id": "c6",
+    "name": "Grade 5 - A",
+    "teacherId": "u6"
+  },
+  {
+    "id": "c7",
+    "name": "Grade 5 - B",
+    "teacherId": "u3"
+  }
+]

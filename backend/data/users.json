@@ -1,0 +1,44 @@
+[
+  {
+    "id": "u1",
+    "name": "Admin User",
+    "username": "admin",
+    "password": "admin123",
+    "role": "admin"
+  },
+  {
+    "id": "u2",
+    "name": "Sara Khan",
+    "username": "sara",
+    "password": "teacher123",
+    "role": "teacher"
+  },
+  {
+    "id": "u3",
+    "name": "Ali Raza",
+    "username": "ali",
+    "password": "teacher123",
+    "role": "teacher"
+  },
+  {
+    "id": "u4",
+    "name": "Nadia Hussain",
+    "username": "nadia",
+    "password": "teacher123",
+    "role": "teacher"
+  },
+  {
+    "id": "u5",
+    "name": "Omar Farooq",
+    "username": "omar",
+    "password": "teacher123",
+    "role": "teacher"
+  },
+  {
+    "id": "u6",
+    "name": "Hina Aslam",
+    "username": "hina",
+    "password": "teacher123",
+    "role": "teacher"
+  }
+]
