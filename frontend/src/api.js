@@ -1,112 +1,55 @@
-// All calls to the backend go through this file.
+// All calls to the backend. VITE_API_URL (frontend/.env) is the backend address.
 
 import { getSavedUser, clearUser } from './session';
 
-async function request(url, options = {}) {
+const API_URL = import.meta.env.VITE_API_URL;
+
+async function request(method, path, body) {
   const user = getSavedUser();
-  const response = await fetch(url, {
-    ...options,
+  const response = await fetch(API_URL + path, {
+    method,
     headers: {
       'Content-Type': 'application/json',
-      // Tells the backend who is logged in. Local prototype only - not secure.
-      ...(user ? { 'X-User-Id': user.id } : {}),
+      // Tells the backend who is logged in. Prototype only - not secure.
+      ...(user && { 'X-User-Id': user.id }),
     },
+    body: body && JSON.stringify(body),
   });
   const data = await response.json().catch(() => null);
 
-  // The saved user no longer exists (for example the data files were reset).
-  if (response.status === 401 && url !== '/api/login') {
+  // The saved user no longer exists (for example the data was reset).
+  if (response.status === 401 && path !== '/api/login') {
     clearUser();
     window.location.reload();
   }
   if (!response.ok) {
-    throw new Error((data && data.error) || `Request failed (${response.status})`);
+    throw new Error(data?.error || `Request failed (${response.status})`);
   }
   return data;
 }
 
-function send(method, url, body) {
-  return request(url, { method, body: JSON.stringify(body) });
+// { date: '2026-10-19', classId: '' } -> "?date=2026-10-19" (empty values left out)
+function query(params) {
+  const text = new URLSearchParams(Object.entries(params).filter(([, v]) => v)).toString();
+  return text ? `?${text}` : '';
 }
 
-// Builds "?date=...&classId=..." leaving out empty values.
-function queryString(params) {
-  const filled = Object.entries(params).filter(([, value]) => value);
-  return filled.length ? `?${new URLSearchParams(filled)}` : '';
-}
+export const login = (username, password) => request('POST', '/api/login', { username, password });
 
-export function getHealth() {
-  return request('/api/health');
-}
+export const getTeachers = () => request('GET', '/api/teachers');
+export const createTeacher = (teacher) => request('POST', '/api/teachers', teacher);
+export const updateTeacher = (id, teacher) => request('PUT', `/api/teachers/${id}`, teacher);
 
-export function login(username, password) {
-  return send('POST', '/api/login', { username, password });
-}
+export const getClasses = () => request('GET', '/api/classes');
+export const createClass = (cls) => request('POST', '/api/classes', cls);
+export const updateClass = (id, cls) => request('PUT', `/api/classes/${id}`, cls);
 
-export function getUsers() {
-  return request('/api/users');
-}
+export const getStudents = (filters = {}) => request('GET', `/api/students${query(filters)}`);
+export const createStudent = (student) => request('POST', '/api/students', student);
+export const updateStudent = (id, student) => request('PUT', `/api/students/${id}`, student);
+export const deleteStudent = (id) => request('DELETE', `/api/students/${id}`);
 
-// Teachers
-export function getTeachers() {
-  return request('/api/teachers');
-}
-
-export function createTeacher(teacher) {
-  return send('POST', '/api/teachers', teacher);
-}
-
-export function updateTeacher(id, teacher) {
-  return send('PUT', `/api/teachers/${id}`, teacher);
-}
-
-// Classes
-export function getClasses() {
-  return request('/api/classes');
-}
-
-export function createClass(cls) {
-  return send('POST', '/api/classes', cls);
-}
-
-export function updateClass(id, cls) {
-  return send('PUT', `/api/classes/${id}`, cls);
-}
-
-// Students
-export function getStudents(filters = {}) {
-  return request(`/api/students${queryString(filters)}`);
-}
-
-export function createStudent(student) {
-  return send('POST', '/api/students', student);
-}
-
-export function updateStudent(id, student) {
-  return send('PUT', `/api/students/${id}`, student);
-}
-
-export function deleteStudent(id) {
-  return request(`/api/students/${id}`, { method: 'DELETE' });
-}
-
-// Attendance reports
-export function getReports(filters = {}) {
-  return request(`/api/attendance${queryString(filters)}`);
-}
-
-export function getSchoolDays() {
-  return request('/api/attendance/school-days');
-}
-
-export function getReport(id) {
-  return request(`/api/attendance/${id}`);
-}
-
-export function createReport(report) {
-  return send('POST', '/api/attendance', report);
-}
-
-export function updateReport(id, report) {
-  return send('PUT', `/api/attendance/${id}`, report);
-}
+export const getReports = (filters = {}) => request('GET', `/api/attendance${query(filters)}`);
+export const getSchoolDays = () => request('GET', '/api/attendance/school-days');
+export const createReport = (report) => request('POST', '/api/attendance', report);
+export const updateReport = (id, report) => request('PUT', `/api/attendance/${id}`, report);

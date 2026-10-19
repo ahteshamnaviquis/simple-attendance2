@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { login } from '../api';
-import { APP_TITLE } from '../config';
 
 export default function LoginPage({ onLogin }) {
   const [username, setUsername] = useState('');
@@ -23,7 +22,7 @@ export default function LoginPage({ onLogin }) {
 
   return (
     <div className="login-box">
-      <h1>{APP_TITLE}</h1>
+      <h1>Daily Attendance</h1>
       <form onSubmit={handleSubmit}>
         <label>
           Username

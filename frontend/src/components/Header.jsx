@@ -1,5 +1,3 @@
-import { APP_TITLE } from '../config';
-
 function initials(name) {
   return name
     .split(' ')
@@ -14,7 +12,7 @@ export default function Header({ user, onLogout }) {
     <header className="header no-print">
       <div className="brand">
         <span className="brand-mark" aria-hidden="true">✓</span>
-        <span>{APP_TITLE}</span>
+        <span>Daily Attendance</span>
       </div>
       <div className="header-right">
         <span className="avatar" aria-hidden="true">{initials(user.name)}</span>
