@@ -78,3 +78,14 @@ export function attendanceRate(present, absent) {
   const total = present + absent;
   return total > 0 ? Math.round((present / total) * 100) : null;
 }
+
+// 73.33 -> "73.33%", null -> "—" (the backend already rounds to 2 decimals)
+export function formatPercent(value) {
+  return value === null || value === undefined ? '—' : `${value}%`;
+}
+
+// Default pass marks: 33% of the maximum, rounded up (100 -> 33, 50 -> 17).
+// Same rule as the backend (results.js).
+export function defaultPassMarks(maxMarks) {
+  return Math.ceil(maxMarks * 0.33 - 1e-9);
+}

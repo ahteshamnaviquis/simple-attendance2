@@ -53,3 +53,25 @@ export const getReports = (filters = {}) => request('GET', `/api/attendance${que
 export const getSchoolDays = () => request('GET', '/api/attendance/school-days');
 export const createReport = (report) => request('POST', '/api/attendance', report);
 export const updateReport = (id, report) => request('PUT', `/api/attendance/${id}`, report);
+
+export const getSubjects = () => request('GET', '/api/subjects');
+export const createSubject = (subject) => request('POST', '/api/subjects', subject);
+export const updateSubject = (id, subject) => request('PUT', `/api/subjects/${id}`, subject);
+
+export const getClassSubjects = (filters = {}) => request('GET', `/api/class-subjects${query(filters)}`);
+export const setClassSubjects = (classId, subjects) => request('PUT', `/api/class-subjects/${classId}`, { subjects });
+
+export const getExams = (filters = {}) => request('GET', `/api/exams${query(filters)}`);
+export const getMyExamSubjects = () => request('GET', '/api/exams/my-subjects');
+export const getExam = (id) => request('GET', `/api/exams/${id}`);
+export const createExam = (exam) => request('POST', '/api/exams', exam);
+export const createExams = (exam) => request('POST', '/api/exams/bulk', exam); // { ...exam, classIds }
+export const updateExam = (id, exam) => request('PUT', `/api/exams/${id}`, exam);
+export const deleteExam = (id) => request('DELETE', `/api/exams/${id}`);
+export const publishExam = (id) => request('POST', `/api/exams/${id}/publish`);
+export const unpublishExam = (id) => request('POST', `/api/exams/${id}/unpublish`);
+export const submitExamSubject = (id, subjectId) => request('POST', `/api/exams/${id}/subjects/${subjectId}/submit`);
+export const reopenExamSubject = (id, subjectId) => request('POST', `/api/exams/${id}/subjects/${subjectId}/reopen`);
+export const getExamMarks = (id, subjectId) => request('GET', `/api/exams/${id}/marks${query({ subjectId })}`);
+export const saveExamMarks = (id, subjectId, marks) => request('PUT', `/api/exams/${id}/marks`, { subjectId, marks });
+export const getExamResults = (id) => request('GET', `/api/exams/${id}/results`);

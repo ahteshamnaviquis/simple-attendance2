@@ -75,6 +75,7 @@ module.exports = {
   todayString,
   isValidDate,
   loadCurrentUser,
+  requireRole,
   requireLogin,
   requireAdmin,
 };

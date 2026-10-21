@@ -14,6 +14,10 @@ const FILES = {
   classes: seedData.classes,
   students: seedData.students,
   attendance: seedData.attendance,
+  subjects: seedData.subjects,
+  classSubjects: seedData.classSubjects,
+  exams: seedData.exams,
+  marks: seedData.marks,
 };
 
 function filePath(name) {

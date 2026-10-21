@@ -8,11 +8,13 @@ import Dashboard from '../components/Dashboard.jsx';
 import AttendanceForm from '../components/AttendanceForm.jsx';
 import Reports from '../components/Reports.jsx';
 import StudentsManager from '../components/StudentsManager.jsx';
+import TeacherExams from '../components/TeacherExams.jsx';
 
 const MENU = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
   { id: 'attendance', label: 'Daily attendance', icon: 'attendance' },
   { id: 'reports', label: 'My reports', icon: 'reports' },
+  { id: 'exams', label: 'Examinations', icon: 'exams' },
   { id: 'students', label: 'My students', icon: 'students' },
 ];
 
@@ -59,6 +61,7 @@ export default function TeacherHome({ user, onLogout }) {
       )}
 
       {page === 'reports' && <Reports user={user} />}
+      {page === 'exams' && <TeacherExams />}
       {page === 'students' && <StudentsManager />}
     </Layout>
   );
