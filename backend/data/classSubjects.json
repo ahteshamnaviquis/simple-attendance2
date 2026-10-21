@@ -1,0 +1,110 @@
+[
+  {
+    "id": "c1-sub1",
+    "classId": "c1",
+    "subjectId": "sub1",
+    "teacherId": "u2"
+  },
+  {
+    "id": "c1-sub2",
+    "classId": "c1",
+    "subjectId": "sub2",
+    "teacherId": "u3"
+  },
+  {
+    "id": "c2-sub1",
+    "classId": "c2",
+    "subjectId": "sub1",
+    "teacherId": "u2"
+  },
+  {
+    "id": "c2-sub2",
+    "classId": "c2",
+    "subjectId": "sub2",
+    "teacherId": "u3"
+  },
+  {
+    "id": "e64e9250-a8a8-4d70-b7c6-cf3765f4c381",
+    "classId": "c1",
+    "subjectId": "07ab0743-dadb-4baf-98f6-d8e4ac23e88f",
+    "teacherId": "u7"
+  },
+  {
+    "id": "a9903194-a110-48fd-810c-0f908618d3bd",
+    "classId": "c1",
+    "subjectId": "3a3a49c6-7309-4763-bab2-ea9652a3c5d5",
+    "teacherId": "u4"
+  },
+  {
+    "id": "1ebf70ae-8343-4693-9080-4d70a1d4329b",
+    "classId": "c1",
+    "subjectId": "6a419a68-8a1c-4c58-b7ca-f1e6eec25051",
+    "teacherId": "u5"
+  },
+  {
+    "id": "150db35d-317b-46b6-9780-4ec410cb3cf8",
+    "classId": "c1",
+    "subjectId": "f0e08d2c-bb52-407e-8383-b0c7f5be295d",
+    "teacherId": "u6"
+  },
+  {
+    "id": "2326271c-a05a-4397-baa9-e4b01f5d0ee7",
+    "classId": "c1",
+    "subjectId": "6e4568b4-b142-4fa8-9fb7-c1b6e2ef9fe2",
+    "teacherId": "u8"
+  },
+  {
+    "id": "31c3ff6a-5bae-419b-8b72-a84ca142d4c7",
+    "classId": "c1",
+    "subjectId": "3906b6c5-9f0d-4676-9fc5-1c133b368eb8",
+    "teacherId": "u8"
+  },
+  {
+    "id": "93323d3e-cecd-4ffe-8f3b-1fec5beab14a",
+    "classId": "c1",
+    "subjectId": "cf1b866b-19ca-4c09-942e-2740dbf7ad33",
+    "teacherId": "u9"
+  },
+  {
+    "id": "969bcc12-db13-4e6d-938d-0716a618ecf1",
+    "classId": "c2",
+    "subjectId": "07ab0743-dadb-4baf-98f6-d8e4ac23e88f",
+    "teacherId": "u7"
+  },
+  {
+    "id": "19a4a088-97d1-4ca9-b0a2-d5a3c50c2d77",
+    "classId": "c2",
+    "subjectId": "3a3a49c6-7309-4763-bab2-ea9652a3c5d5",
+    "teacherId": "u4"
+  },
+  {
+    "id": "eafaf833-5ffb-4ed6-8bef-c8287d014e89",
+    "classId": "c2",
+    "subjectId": "6a419a68-8a1c-4c58-b7ca-f1e6eec25051",
+    "teacherId": "u5"
+  },
+  {
+    "id": "686141ed-2033-4bc0-8d01-f2ab585c8b24",
+    "classId": "c2",
+    "subjectId": "f0e08d2c-bb52-407e-8383-b0c7f5be295d",
+    "teacherId": "u6"
+  },
+  {
+    "id": "3e33dc6c-3971-453a-9e68-92660ba40c4e",
+    "classId": "c2",
+    "subjectId": "6e4568b4-b142-4fa8-9fb7-c1b6e2ef9fe2",
+    "teacherId": "u8"
+  },
+  {
+    "id": "fbebd9d7-e070-4190-bd5d-c716f8b3b96b",
+    "classId": "c2",
+    "subjectId": "3906b6c5-9f0d-4676-9fc5-1c133b368eb8",
+    "teacherId": "u8"
+  },
+  {
+    "id": "5ad0ad8e-d7b2-43aa-8b01-6334fe58309b",
+    "classId": "c2",
+    "subjectId": "cf1b866b-19ca-4c09-942e-2740dbf7ad33",
+    "teacherId": "u9"
+  }
+]
