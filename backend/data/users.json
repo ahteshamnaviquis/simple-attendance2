@@ -40,5 +40,26 @@
     "username": "hina",
     "password": "teacher123",
     "role": "teacher"
+  },
+  {
+    "id": "u7",
+    "name": "Kamran Javed",
+    "username": "kamran",
+    "password": "teacher123",
+    "role": "teacher"
+  },
+  {
+    "id": "u8",
+    "name": "Farah Naz",
+    "username": "farah",
+    "password": "teacher123",
+    "role": "teacher"
+  },
+  {
+    "id": "u9",
+    "name": "Zainab Malik",
+    "username": "zainab",
+    "password": "teacher123",
+    "role": "teacher"
   }
 ]

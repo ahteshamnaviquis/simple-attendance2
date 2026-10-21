@@ -1,0 +1,66 @@
+[
+  {
+    "id": "6c5d7aa5-c73a-41f8-97f0-6b563d73641b",
+    "name": "Monthly Test oct",
+    "date": "2026-10-21",
+    "remarks": "",
+    "subjects": [
+      {
+        "subjectId": "sub1",
+        "subjectName": "English",
+        "maxMarks": 100,
+        "submittedAt": "2026-10-21T07:09:38.671Z",
+        "submittedBy": "Sara Khan"
+      },
+      {
+        "subjectId": "sub2",
+        "subjectName": "Mathematics",
+        "maxMarks": 100,
+        "submittedAt": "2026-10-21T07:11:11.126Z",
+        "submittedBy": "Ali Raza"
+      }
+    ],
+    "classId": "c2",
+    "className": "Grade 10",
+    "status": "open",
+    "createdById": "u1",
+    "createdBy": "Admin User",
+    "createdAt": "2026-10-21T07:07:48.038Z",
+    "updatedAt": "2026-10-21T07:07:48.038Z",
+    "updatedBy": "Admin User",
+    "publishedAt": null,
+    "publishedBy": null
+  },
+  {
+    "id": "31455bae-0679-4f35-aea7-93f730100770",
+    "name": "Monthly Test oct",
+    "date": "2026-10-21",
+    "remarks": "",
+    "subjects": [
+      {
+        "subjectId": "sub1",
+        "subjectName": "English",
+        "maxMarks": 100,
+        "submittedAt": "2026-10-21T07:10:15.588Z",
+        "submittedBy": "Sara Khan"
+      },
+      {
+        "subjectId": "sub2",
+        "subjectName": "Mathematics",
+        "maxMarks": 100,
+        "submittedAt": "2026-10-21T07:11:39.923Z",
+        "submittedBy": "Ali Raza"
+      }
+    ],
+    "classId": "c1",
+    "className": "Grade 9",
+    "status": "open",
+    "createdById": "u1",
+    "createdBy": "Admin User",
+    "createdAt": "2026-10-21T07:07:48.038Z",
+    "updatedAt": "2026-10-21T07:07:48.038Z",
+    "updatedBy": "Admin User",
+    "publishedAt": null,
+    "publishedBy": null
+  }
+]

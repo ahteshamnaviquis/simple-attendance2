@@ -1,0 +1,38 @@
+[
+  {
+    "id": "sub1",
+    "name": "English"
+  },
+  {
+    "id": "sub2",
+    "name": "Mathematics"
+  },
+  {
+    "id": "07ab0743-dadb-4baf-98f6-d8e4ac23e88f",
+    "name": "Urdu"
+  },
+  {
+    "id": "3a3a49c6-7309-4763-bab2-ea9652a3c5d5",
+    "name": "Physics"
+  },
+  {
+    "id": "6a419a68-8a1c-4c58-b7ca-f1e6eec25051",
+    "name": "Chemistry"
+  },
+  {
+    "id": "f0e08d2c-bb52-407e-8383-b0c7f5be295d",
+    "name": "Biology"
+  },
+  {
+    "id": "6e4568b4-b142-4fa8-9fb7-c1b6e2ef9fe2",
+    "name": "Islamiyat"
+  },
+  {
+    "id": "3906b6c5-9f0d-4676-9fc5-1c133b368eb8",
+    "name": "Pakistan Studies"
+  },
+  {
+    "id": "cf1b866b-19ca-4c09-942e-2740dbf7ad33",
+    "name": "Computer Science"
+  }
+]
