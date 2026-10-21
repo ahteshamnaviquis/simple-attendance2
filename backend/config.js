@@ -21,5 +21,6 @@ module.exports = {
   // Locally 127.0.0.1 keeps the API private to this computer.
   HOST: process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : '127.0.0.1',
 
-  DATA_DIR: path.join(__dirname, 'data'),
+  // DATA_DIR can point somewhere else (the tests use a temporary folder).
+  DATA_DIR: process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, 'data'),
 };

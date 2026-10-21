@@ -125,6 +125,12 @@ a {
   display: flex;
   flex-direction: column;
   gap: 28px;
+  /* Stays on screen while the page scrolls, so the user and Log out are always visible. */
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .main {
@@ -1333,6 +1339,225 @@ table.tracker {
   font-size: 14px;
 }
 
+/* ---------- Examinations ---------- */
+.page-title .actions {
+  margin: 0;
+}
+
+.subject-rows input,
+.subject-rows select,
+.marks-grid input {
+  margin-top: 0;
+}
+
+.subject-rows input[type='number'] {
+  max-width: 140px;
+  margin-left: auto;
+  text-align: right;
+}
+
+.marks-progress {
+  flex: 2 1 260px;
+  display: grid;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+
+.subject-rows input.row-check,
+.marks-grid input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+  margin: 0 auto;
+  accent-color: var(--accent);
+}
+
+.class-picker {
+  margin: 18px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.class-picker legend {
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.check-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.check-label input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--accent);
+}
+
+.check-label.select-all {
+  font-weight: 700;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.class-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px 16px;
+}
+
+.class-picker .note {
+  margin: 10px 0 0;
+}
+
+.teacher-details summary {
+  margin-top: 2px;
+  color: var(--accent);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.teacher-details[open] summary {
+  margin-bottom: 4px;
+}
+
+tr.muted-row td {
+  color: var(--text-3);
+}
+
+.assign-table {
+  margin: 14px 0 4px;
+}
+
+.waiting-list {
+  margin: 6px 0 0;
+  padding-left: 20px;
+}
+
+.marks-grid td {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.marks-grid .mark-input {
+  width: 110px;
+  margin-left: auto;
+  text-align: right;
+}
+
+.marks-grid .mark-input.invalid {
+  border-color: var(--critical);
+  background: var(--critical-soft);
+}
+
+.marks-grid td:last-child input {
+  min-width: 140px;
+}
+
+.mark-problem {
+  margin-top: 4px;
+  color: var(--critical);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.marks-actions {
+  align-items: center;
+  gap: 14px;
+}
+
+.mark-missing {
+  color: var(--text-3);
+}
+
+.mark-absent {
+  display: inline-block;
+  min-width: 22px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--late-soft);
+  color: var(--late-text);
+  font-weight: 700;
+  text-align: center;
+}
+
+.th-sub {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-3);
+}
+
+.link-button,
+.link-button:hover:not(:disabled) {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-weight: 600;
+  text-align: left;
+}
+
+.link-button:hover:not(:disabled) {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+.result-sheet td,
+.result-sheet th {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.result-card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.result-card .report-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.result-card h2 {
+  margin: 4px 0 0;
+  font-size: 22px;
+}
+
+.result-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+
+.result-facts dt {
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.result-facts dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+}
+
 /* ---------- Phones ---------- */
 @media (max-width: 760px) {
   /* Sidebar becomes a compact top bar: brand + user on one line, menu scrolls sideways */
@@ -1344,6 +1569,9 @@ table.tracker {
     align-items: center;
     gap: 10px 12px;
     padding: 12px 14px;
+    position: static;
+    height: auto;
+    overflow: visible;
   }
 
   .sidebar .brand {
@@ -1458,4 +1686,20 @@ table.tracker {
     box-shadow: none;
     padding: 0;
   }
+}
+
+/* ---------- Pass / fail ---------- */
+.badge.fail {
+  background: var(--critical-soft);
+  color: var(--critical);
+}
+
+.mark-fail {
+  color: var(--critical);
+  font-weight: 700;
+}
+
+.mark-fail .cell-sub {
+  color: var(--critical);
+  font-weight: 500;
 }

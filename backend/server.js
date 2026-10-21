@@ -12,6 +12,9 @@ const teachersRouter = require('./routes/teachers');
 const classesRouter = require('./routes/classes');
 const attendanceRouter = require('./routes/attendance');
 const studentsRouter = require('./routes/students');
+const subjectsRouter = require('./routes/subjects');
+const classSubjectsRouter = require('./routes/classSubjects');
+const examsRouter = require('./routes/exams');
 
 const app = express();
 
@@ -69,6 +72,9 @@ app.use('/api/teachers', teachersRouter);
 app.use('/api/classes', classesRouter);
 app.use('/api/attendance', attendanceRouter);
 app.use('/api/students', studentsRouter);
+app.use('/api/subjects', subjectsRouter);
+app.use('/api/class-subjects', classSubjectsRouter);
+app.use('/api/exams', examsRouter);
 
 // Unknown API routes
 app.use('/api', (req, res) => {

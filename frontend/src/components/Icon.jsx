@@ -44,6 +44,19 @@ const PATHS = {
       <path d="M4 21c1-4 4.2-6 8-6s7 2 8 6" />
     </>
   ),
+  exams: (
+    <>
+      <rect x="5" y="4" width="14" height="17" rx="2" />
+      <path d="M9 2.5h6v3H9z" />
+      <path d="M9 11h6M9 15h4" />
+    </>
+  ),
+  subjects: (
+    <>
+      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z" />
+      <path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5" />
+    </>
+  ),
   logout: (
     <>
       <path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" />

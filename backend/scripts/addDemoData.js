@@ -1,32 +1,30 @@
 // Adds demo data for trying the app:
-//   - 3 more teachers, 4 more classes
+//   - the teachers and classes (Grade 9, Grade 10) from seedData.js, if missing
 //   - students for every class (about 10 per class)
 //   - attendance reports for the last 14 days (Sundays are off; today only some
 //     classes have reported, so the dashboard shows pending classes)
+//   - the academy's subjects, and for every class each subject it doesn't have yet,
+//     with that subject's teacher (as in seedData.js)
 //
-// It only ADDS data. Existing users, classes, students and reports are never
-// changed or removed, and no report is added where one already exists for that
-// class and date. Running it again is safe - it adds only what is missing.
+// It only ADDS data. Existing users, classes, students, reports, subjects and
+// subject assignments are never changed or removed (a subject that a class
+// already has keeps its teacher), and no report is added where one already exists
+// for that class and date. Running it again is safe - it adds only what is missing.
 //
 // Run from the backend folder:  npm run demo-data
+// Only teachers, subjects and class subjects:  npm run seed-subjects
 
 const { initDataFiles, readData, updateData } = require('../fileStore');
 const { newId, todayString } = require('../helpers');
+const seedData = require('../seedData');
 
 const DEMO_PASSWORD = 'teacher123'; // local demo only
 
-const NEW_TEACHERS = [
-  { id: 'u4', name: 'Nadia Hussain', username: 'nadia' },
-  { id: 'u5', name: 'Omar Farooq', username: 'omar' },
-  { id: 'u6', name: 'Hina Aslam', username: 'hina' },
-];
-
-const NEW_CLASSES = [
-  { id: 'c4', name: 'Grade 3 - B', teacherId: 'u4' },
-  { id: 'c5', name: 'Grade 4 - A', teacherId: 'u5' },
-  { id: 'c6', name: 'Grade 5 - A', teacherId: 'u6' },
-  { id: 'c7', name: 'Grade 5 - B', teacherId: 'u3' },
-];
+// The same teachers, classes and subjects a fresh install starts with.
+const NEW_TEACHERS = seedData.users.filter((u) => u.role === 'teacher');
+const NEW_CLASSES = seedData.classes;
+const SUBJECTS = seedData.subjects.map((s) => s.name);
+const { SUBJECT_TEACHERS } = seedData;
 
 const FIRST_NAMES = [
   'Ali', 'Amna', 'Arham', 'Areeba', 'Bilal', 'Dua', 'Ebad', 'Eman', 'Faris', 'Hafsa',
@@ -64,7 +62,7 @@ async function addTeachers() {
     for (const t of NEW_TEACHERS) {
       const exists = result.some((u) => u.id === t.id || u.username.toLowerCase() === t.username);
       if (!exists) {
-        result.push({ ...t, password: DEMO_PASSWORD, role: 'teacher' });
+        result.push({ ...t });
         added++;
       }
     }
@@ -190,12 +188,68 @@ async function addAttendance() {
   return added;
 }
 
+async function addSubjects() {
+  let added = 0;
+  await updateData('subjects', (subjects) => {
+    const result = [...subjects];
+    for (const name of SUBJECTS) {
+      if (!result.some((s) => s.name.toLowerCase() === name.toLowerCase())) {
+        result.push({ id: newId(), name });
+        added++;
+      }
+    }
+    return result;
+  });
+  return added;
+}
+
+// Give every class each subject it doesn't have yet, with that subject's teacher.
+async function addClassSubjects() {
+  let added = 0;
+  const [classes, subjects, users] = await Promise.all([
+    readData('classes'),
+    readData('subjects'),
+    readData('users'),
+  ]);
+  const teacherId = (username) =>
+    users.find((u) => u.role === 'teacher' && u.username.toLowerCase() === username)?.id ?? null;
+
+  await updateData('classSubjects', (rows) => {
+    const result = [...rows];
+    for (const cls of classes) {
+      for (const name of SUBJECTS) {
+        const subject = subjects.find((s) => s.name.toLowerCase() === name.toLowerCase());
+        if (!subject) continue;
+        if (result.some((r) => r.classId === cls.id && r.subjectId === subject.id)) continue; // keep it
+        result.push({
+          id: newId(),
+          classId: cls.id,
+          subjectId: subject.id,
+          teacherId: teacherId(SUBJECT_TEACHERS[name]),
+        });
+        added++;
+      }
+    }
+    return result;
+  });
+  return added;
+}
+
 async function main() {
   await initDataFiles();
+  // npm run seed-subjects: only teachers, subjects and class subjects, nothing else.
+  if (process.argv.includes('--subjects-only')) {
+    console.log(`Teachers added:   ${await addTeachers()}`);
+    console.log(`Subjects added:   ${await addSubjects()}`);
+    console.log(`Class subjects:   ${await addClassSubjects()} added`);
+    return;
+  }
   console.log(`Teachers added:   ${await addTeachers()}`);
   console.log(`Classes added:    ${await addClasses()}`);
   console.log(`Students added:   ${await addStudents()}`);
   console.log(`Reports added:    ${await addAttendance()}`);
+  console.log(`Subjects added:   ${await addSubjects()}`);
+  console.log(`Class subjects:   ${await addClassSubjects()} added`);
   console.log(`New teachers log in with password "${DEMO_PASSWORD}" (local demo only).`);
 }
 
