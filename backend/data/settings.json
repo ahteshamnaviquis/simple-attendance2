@@ -1,12 +1,12 @@
 {
   "theme": {
-    "schoolName": "ZA Solution",
-    "accentColor": "#2a62eb",
-    "sidebarColor": "#0e1726",
+    "schoolName": "Daily Attendance",
+    "accentColor": "#0b6e4f",
+    "sidebarColor": "#0d2a1f",
     "font": "Public Sans",
     "corners": "normal",
     "logoSize": "small",
-    "logoShape": "rounded",
+    "logoShape": "circle",
     "logoBackground": "accent",
     "showSchoolName": true,
     "logo": null

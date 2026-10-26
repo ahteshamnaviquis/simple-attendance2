@@ -74,7 +74,7 @@ const save = (user, settings) => api(user, 'PUT', '/api/settings', settings);
 test('anyone can read the settings; they start with the defaults', async () => {
   const res = await api(null, 'GET', '/api/settings');
   assert.equal(res.status, 200);
-  assert.equal(res.body.theme.schoolName, 'ZA Solution');
+  assert.equal(res.body.theme.schoolName, 'Daily Attendance');
   assert.deepEqual(res.body.adminPermissions, {
     students: true,
     classes: true,

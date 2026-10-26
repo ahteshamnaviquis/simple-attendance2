@@ -51,7 +51,7 @@ export default function LoginPage({ onLogin }) {
           </ul>
         </div>
 
-        <p className="login-foot">School attendance by ZA Solution</p>
+        <p className="login-foot">School attendance prototype</p>
       </section>
 
       <main className="login-main">

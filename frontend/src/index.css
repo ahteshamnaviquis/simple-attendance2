@@ -210,11 +210,6 @@ a {
   padding: 12%;
 }
 
-/* The ZA Solution logo brings its own dark tile, so it fills the mark. */
-.brand-mark img.default-logo {
-  padding: 0;
-}
-
 .side-nav {
   display: flex;
   flex-direction: column;

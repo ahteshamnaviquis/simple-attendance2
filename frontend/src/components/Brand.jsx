@@ -2,8 +2,8 @@
 // Used in the sidebar, on the login page and in the Settings preview.
 // large: the bigger version on the login page.
 
+import Icon from './Icon.jsx';
 import { logoUrl } from '../api';
-import { DEFAULT_LOGO } from '../theme';
 
 export default function Brand({ theme, large = false }) {
   const markClass = [
@@ -25,7 +25,7 @@ export default function Brand({ theme, large = false }) {
         {theme.logo ? (
           <img src={logoUrl(theme.logo)} alt="" />
         ) : (
-          <img src={DEFAULT_LOGO} alt="" className="default-logo" />
+          <Icon name="check" size={large ? 22 : 19} strokeWidth={2.4} />
         )}
       </span>
       {theme.showSchoolName && <span>{theme.schoolName}</span>}
