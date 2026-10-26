@@ -6,6 +6,7 @@
 //   className,                                   <- copied when created, like attendance
 //   subjects: [{ subjectId, subjectName, maxMarks, passMarks, submittedAt, submittedBy }],
 //   status: "open" | "published",
+//   disabled: boolean,                           <- set by the super admin; hidden from teachers
 //   createdById, createdBy, createdAt, updatedAt, updatedBy, publishedAt, publishedBy
 // }
 //
@@ -38,12 +39,24 @@
 // - Only one mark per exam + subject + student: saving updates the existing record.
 // - A subject with marks can't be removed from an exam, and its maximum marks
 //   can't go below the highest mark already entered.
-// - An exam can only be deleted while it has no marks at all.
+// - An exam can only be deleted while it has no marks at all. The super admin can
+//   remove any exam (with its marks), published or not.
+// - The super admin can disable an exam: teachers no longer see it or enter marks
+//   until it is enabled again.
 // - The super admin can enter marks for any subject (for example one with no teacher assigned).
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, isValidDate, can, requireLogin, requireArea, requireRole } = require('../helpers');
+const {
+  HttpError,
+  newId,
+  isValidDate,
+  can,
+  requireLogin,
+  requireArea,
+  requireRole,
+  requireSuperAdmin,
+} = require('../helpers');
 const { buildResults, isEntered, defaultPassMarks, passMarksOf } = require('../results');
 
 const router = express.Router();
@@ -154,6 +167,9 @@ async function loadExam(user, examId, exams) {
   const list = exams || (await readData('exams'));
   const exam = list.find((e) => e.id === examId);
   if (!exam) throw new HttpError(404, 'Examination not found');
+  if (exam.disabled && !can(user, 'exams')) {
+    throw new HttpError(403, 'This examination has been disabled by the super admin');
+  }
 
   const classSubjects = await readData('classSubjects');
   const mySubjectIds =
@@ -282,7 +298,7 @@ router.get('/', requireArea('exams'), async (req, res) => {
 router.get('/my-subjects', requireRole('teacher'), async (req, res) => {
   const [exams, data] = await Promise.all([readData('exams'), readAll()]);
   const rows = [];
-  for (const exam of exams) {
+  for (const exam of exams.filter((e) => !e.disabled)) {
     for (const s of describeSubjects(exam, data)) {
       if (s.teacherId !== req.user.id) continue;
       rows.push({
@@ -431,19 +447,46 @@ router.put('/:id', requireArea('exams'), async (req, res) => {
   res.json(updated);
 });
 
-// DELETE /api/exams/:id - super admin, only an exam with no marks (for example made by mistake).
+// DELETE /api/exams/:id
+// Admins: only an open exam with no marks (for example made by mistake).
+// Super admin: any exam; its marks are removed too.
 router.delete('/:id', requireArea('exams'), async (req, res) => {
+  const isSuper = req.user.role === 'superadmin';
+  let examId;
   await updateData('exams', async (exams) => {
     const { exam } = await loadExam(req.user, req.params.id, exams);
-    checkOpen(exam);
-    const marks = await readData('marks');
-    if (marks.some((m) => m.examId === exam.id)) {
-      throw new HttpError(409, 'This examination already has marks, so it cannot be deleted');
+    if (!isSuper) {
+      checkOpen(exam);
+      const marks = await readData('marks');
+      if (marks.some((m) => m.examId === exam.id)) {
+        throw new HttpError(409, 'This examination already has marks, so it cannot be deleted');
+      }
     }
+    examId = exam.id;
     return exams.filter((e) => e.id !== exam.id);
   });
+  if (isSuper) await updateData('marks', (marks) => marks.filter((m) => m.examId !== examId));
   res.json({ ok: true });
 });
+
+// POST /api/exams/:id/disable and /enable - super admin only.
+// A disabled exam is hidden from teachers and its marks can't be entered.
+for (const [action, disabled] of [['disable', true], ['enable', false]]) {
+  router.post(`/:id/${action}`, requireSuperAdmin, async (req, res) => {
+    let updated;
+    await updateData('exams', async (exams) => {
+      const { exam } = await loadExam(req.user, req.params.id, exams);
+      updated = {
+        ...exam,
+        disabled,
+        updatedAt: new Date().toISOString(),
+        updatedBy: req.user.name,
+      };
+      return exams.map((e) => (e.id === exam.id ? updated : e));
+    });
+    res.json(updated);
+  });
+}
 
 // Change one subject of an exam inside the exams.json write queue.
 // `changeFn(exam, subject, ctx)` returns the updated subject.

@@ -52,6 +52,7 @@ async function initDataFiles() {
 
 async function readData(name) {
   const text = await fs.readFile(filePath(name), 'utf8');
+  console.log(`Read data for ${name}: ${text}`);
   return JSON.parse(text);
 }
 

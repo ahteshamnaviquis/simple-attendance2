@@ -56,11 +56,17 @@ app.post('/api/login', async (req, res) => {
   }
 
   const users = await readData('users');
+  console.log(`Attempting login for username: ${users}`);
   const user = users.find(
     (u) => u.username.toLowerCase() === username && u.password === password
   );
   if (!user) {
     return res.status(401).json({ error: 'Wrong username or password' });
+  }
+  if (user.disabled) {
+    return res
+      .status(403)
+      .json({ error: 'This account has been disabled. Please contact the super admin.' });
   }
   res.json(publicUser(user));
 });

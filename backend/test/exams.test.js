@@ -374,7 +374,14 @@ test('max marks and subjects with marks are protected when editing the exam', as
   assert.ok(ok.body.subjects.every((s) => s.submittedAt)); // submissions kept
   await api(SUPER, 'PUT', `/api/exams/${ids.exam}`, { ...base, subjects });
 
-  assert.equal((await api(SUPER, 'DELETE', `/api/exams/${ids.exam}`)).status, 409);
+  // An admin allowed to manage exams can't delete one with marks (the super admin
+  // can - see disable.test.js).
+  const settings = (await api(null, 'GET', '/api/settings')).body;
+  const allow = (exams) =>
+    api(SUPER, 'PUT', '/api/settings', { ...settings, adminPermissions: { ...settings.adminPermissions, exams } });
+  await allow(true);
+  assert.equal((await api(ADMIN, 'DELETE', `/api/exams/${ids.exam}`)).status, 409);
+  await allow(settings.adminPermissions.exams);
 });
 
 test('only the super admin publishes; corrections go through unpublish and reopen', async () => {

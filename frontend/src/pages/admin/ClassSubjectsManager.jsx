@@ -159,7 +159,7 @@ export default function ClassSubjectsManager({ subjects }) {
                           <option value="">— Not assigned —</option>
                           {teachers.map((t) => (
                             <option key={t.id} value={t.id}>
-                              {t.name}
+                              {t.name}{t.disabled ? ' (disabled)' : ''}
                             </option>
                           ))}
                         </select>

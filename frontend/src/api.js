@@ -53,6 +53,9 @@ export const deleteAdmin = (id) => request('DELETE', `/api/admins/${id}`);
 export const getTeachers = () => request('GET', '/api/teachers');
 export const createTeacher = (teacher) => request('POST', '/api/teachers', teacher);
 export const updateTeacher = (id, teacher) => request('PUT', `/api/teachers/${id}`, teacher);
+export const setTeacherDisabled = (id, disabled) =>
+  request('POST', `/api/teachers/${id}/${disabled ? 'disable' : 'enable'}`);
+export const deleteTeacher = (id) => request('DELETE', `/api/teachers/${id}`);
 
 export const getClasses = () => request('GET', '/api/classes');
 export const createClass = (cls) => request('POST', '/api/classes', cls);
@@ -84,6 +87,8 @@ export const updateExam = (id, exam) => request('PUT', `/api/exams/${id}`, exam)
 export const deleteExam = (id) => request('DELETE', `/api/exams/${id}`);
 export const publishExam = (id) => request('POST', `/api/exams/${id}/publish`);
 export const unpublishExam = (id) => request('POST', `/api/exams/${id}/unpublish`);
+export const setExamDisabled = (id, disabled) =>
+  request('POST', `/api/exams/${id}/${disabled ? 'disable' : 'enable'}`);
 export const submitExamSubject = (id, subjectId) => request('POST', `/api/exams/${id}/subjects/${subjectId}/submit`);
 export const reopenExamSubject = (id, subjectId) => request('POST', `/api/exams/${id}/subjects/${subjectId}/reopen`);
 export const getExamMarks = (id, subjectId) => request('GET', `/api/exams/${id}/marks${query({ subjectId })}`);

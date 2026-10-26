@@ -46,7 +46,7 @@ async function loadCurrentUser(req, res, next) {
   req.user = null;
   if (id) {
     const users = await readData('users');
-    const user = users.find((u) => u.id === id);
+    const user = users.find((u) => u.id === id && !u.disabled); // a disabled user is logged out
     if (user) req.user = { ...publicUser(user), permissions: await permissionsFor(user) };
   }
   next();

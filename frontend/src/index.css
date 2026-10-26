@@ -865,6 +865,16 @@ table.details {
   color: var(--late-text);
 }
 
+.badge.muted {
+  background: #eef0f3;
+  color: var(--text-2);
+}
+
+/* A disabled teacher or exam in a table. */
+tr.disabled-row td {
+  color: var(--text-3);
+}
+
 .alert {
   display: flex;
   flex-wrap: wrap;

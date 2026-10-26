@@ -1,9 +1,17 @@
-// /api/teachers - list, add and edit teachers. Adding and editing needs the "teachers" permission.
-// Teachers are stored in users.json with role "teacher".
+// /api/teachers - list, add and edit teachers. Adding and editing needs the "teachers" permission;
+// disabling and removing teachers is for the super admin only.
+// Teachers are stored in users.json with role "teacher" (disabled: true when disabled).
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, publicUser, requireLogin, requireArea } = require('../helpers');
+const {
+  HttpError,
+  newId,
+  publicUser,
+  requireLogin,
+  requireArea,
+  requireSuperAdmin,
+} = require('../helpers');
 
 const router = express.Router();
 
@@ -27,6 +35,12 @@ function cleanTeacherInput(body, isNew) {
 function checkUsernameFree(users, username, exceptId) {
   const taken = users.some((u) => u.id !== exceptId && u.username.toLowerCase() === username);
   if (taken) throw new HttpError(409, 'That username is already taken');
+}
+
+function findTeacherIndex(users, id) {
+  const index = users.findIndex((u) => u.id === id && u.role === 'teacher');
+  if (index === -1) throw new HttpError(404, 'Teacher not found');
+  return index;
 }
 
 // GET /api/teachers
@@ -68,6 +82,38 @@ router.put('/:id', requireArea('teachers'), async (req, res) => {
     return copy;
   });
   res.json(publicUser(updated));
+});
+
+// POST /api/teachers/:id/disable and /enable - super admin only.
+// A disabled teacher can't log in (and is logged out). Their classes and
+// subjects stay assigned, so enabling them again puts everything back.
+for (const [action, disabled] of [['disable', true], ['enable', false]]) {
+  router.post(`/:id/${action}`, requireSuperAdmin, async (req, res) => {
+    let updated;
+    await updateData('users', (users) => {
+      const index = findTeacherIndex(users, req.params.id);
+      updated = { ...users[index], disabled };
+      const copy = [...users];
+      copy[index] = updated;
+      return copy;
+    });
+    res.json(publicUser(updated));
+  });
+}
+
+// DELETE /api/teachers/:id - super admin only.
+// Their classes and subjects become unassigned. Attendance reports and marks
+// keep the teacher's name as text, so history stays readable.
+router.delete('/:id', requireSuperAdmin, async (req, res) => {
+  const id = req.params.id;
+  await updateData('users', (users) => {
+    const index = findTeacherIndex(users, id);
+    return users.filter((_, i) => i !== index);
+  });
+  const unassign = (rows) => rows.map((r) => (r.teacherId === id ? { ...r, teacherId: null } : r));
+  await updateData('classes', unassign);
+  await updateData('classSubjects', unassign);
+  res.status(204).end();
 });
 
 module.exports = router;

@@ -240,6 +240,12 @@ export default function Exams() {
                   </td>
                   <td className="nowrap">
                     <StatusBadge status={e.status} />
+                    {e.disabled && (
+                      <>
+                        {' '}
+                        <span className="badge muted">Disabled</span>
+                      </>
+                    )}
                     {e.readyToPublish && <div className="cell-sub">Ready to publish</div>}
                   </td>
                   <td>{e.createdBy}</td>
