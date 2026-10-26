@@ -1,4 +1,4 @@
-// Admin: class result sheet for one examination. Every student's subject marks,
+// Super admin: class result sheet for one examination. Every student's subject marks,
 // total, percentage and position, with search, sorting and a summary. Totals and
 // ranks come from the backend (results.js). Missing marks are never counted as 0,
 // and results stay Incomplete until every subject's marks are submitted;

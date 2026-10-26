@@ -6,12 +6,12 @@
 // - The subject teacher is separate from the class teacher (classes.teacherId), who
 //   still takes attendance and manages the class's students.
 // - Examinations use these rows to decide which teacher may enter marks for a subject.
-// - Only admins change assignments. Exams keep their own copy of subject names and
+// - Only admins with the subjects permission change assignments. Exams keep their own copy of subject names and
 //   maximum marks, so changing an assignment never changes saved marks.
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, requireLogin, requireAdmin } = require('../helpers');
+const { HttpError, newId, requireLogin, requireArea } = require('../helpers');
 
 const router = express.Router();
 
@@ -45,7 +45,7 @@ router.get('/', requireLogin, async (req, res) => {
 // PUT /api/class-subjects/:classId - set the whole subject list of one class.
 // Body: { subjects: [{ subjectId, teacherId }] }
 // Subjects that stay keep their row id; subjects left out are removed from the class.
-router.put('/:classId', requireAdmin, async (req, res) => {
+router.put('/:classId', requireArea('subjects'), async (req, res) => {
   const items = Array.isArray(req.body?.subjects) ? req.body.subjects : null;
   if (!items) throw new HttpError(400, 'No subjects were sent');
 

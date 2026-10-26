@@ -25,6 +25,7 @@ const {
   newId,
   todayString,
   isValidDate,
+  isAdmin,
   requireLogin,
 } = require('../helpers');
 
@@ -83,7 +84,7 @@ function cleanReportInput(body) {
 }
 
 function canUseClass(user, cls) {
-  return user.role === 'admin' || (cls && cls.teacherId === user.id);
+  return isAdmin(user) || (cls && cls.teacherId === user.id);
 }
 
 // GET /api/attendance?date=YYYY-MM-DD&classId=...

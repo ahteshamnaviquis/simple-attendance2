@@ -18,6 +18,7 @@ const FILES = {
   classSubjects: seedData.classSubjects,
   exams: seedData.exams,
   marks: seedData.marks,
+  settings: seedData.settings,
 };
 
 function filePath(name) {

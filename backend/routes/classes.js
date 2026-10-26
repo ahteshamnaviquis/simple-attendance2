@@ -3,7 +3,7 @@
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, requireLogin, requireAdmin } = require('../helpers');
+const { HttpError, newId, requireLogin, requireArea } = require('../helpers');
 
 const router = express.Router();
 
@@ -43,7 +43,7 @@ router.get('/', requireLogin, async (req, res) => {
 });
 
 // POST /api/classes
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireArea('classes'), async (req, res) => {
   let created;
   let users;
   await updateData('classes', async (classes) => {
@@ -58,7 +58,7 @@ router.post('/', requireAdmin, async (req, res) => {
 
 // PUT /api/classes/:id
 // Past attendance reports keep the class name and teacher they had on that day.
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireArea('classes'), async (req, res) => {
   let updated;
   let users;
   await updateData('classes', async (classes) => {

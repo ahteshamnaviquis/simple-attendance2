@@ -2,6 +2,7 @@
 // Plain-text passwords are ONLY acceptable for a disposable local demo.
 
 const users = [
+  { id: 'u0', name: 'Super Admin', username: 'superadmin', password: 'super123', role: 'superadmin' },
   { id: 'u1', name: 'Admin User', username: 'admin', password: 'admin123', role: 'admin' },
   { id: 'u2', name: 'Sara Khan', username: 'sara', password: 'teacher123', role: 'teacher' },
   { id: 'u3', name: 'Ali Raza', username: 'ali', password: 'teacher123', role: 'teacher' },
@@ -71,6 +72,30 @@ const classSubjects = classes.flatMap((cls) =>
 const exams = [];
 const marks = [];
 
+// Look of the website and what admins may manage (the super admin changes these).
+const settings = {
+  theme: {
+    schoolName: 'Daily Attendance',
+    accentColor: '#2f5bd3',
+    sidebarColor: '#0f1b2d',
+    font: 'Public Sans',
+    corners: 'normal',
+    // Uploaded logo: null, or { type, version } (the image is data/logo, see routes/settings.js).
+    logo: null,
+    logoSize: 'small',
+    logoShape: 'rounded',
+    logoBackground: 'accent',
+    showSchoolName: true,
+  },
+  adminPermissions: {
+    students: true,
+    classes: true,
+    subjects: true,
+    teachers: false,
+    exams: false,
+  },
+};
+
 module.exports = {
   users,
   classes,
@@ -80,5 +105,6 @@ module.exports = {
   classSubjects,
   exams,
   marks,
+  settings,
   SUBJECT_TEACHERS, // used by scripts/addDemoData.js
 };

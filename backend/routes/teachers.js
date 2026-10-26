@@ -1,9 +1,9 @@
-// /api/teachers - list, add and edit teachers.
+// /api/teachers - list, add and edit teachers. Adding and editing needs the "teachers" permission.
 // Teachers are stored in users.json with role "teacher".
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, publicUser, requireLogin, requireAdmin } = require('../helpers');
+const { HttpError, newId, publicUser, requireLogin, requireArea } = require('../helpers');
 
 const router = express.Router();
 
@@ -40,7 +40,7 @@ router.get('/', requireLogin, async (req, res) => {
 });
 
 // POST /api/teachers
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireArea('teachers'), async (req, res) => {
   const input = cleanTeacherInput(req.body, true);
   let created;
   await updateData('users', (users) => {
@@ -52,7 +52,7 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // PUT /api/teachers/:id
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireArea('teachers'), async (req, res) => {
   const input = cleanTeacherInput(req.body, false);
   let updated;
   await updateData('users', (users) => {

@@ -1,0 +1,21 @@
+{
+  "theme": {
+    "schoolName": "Daily Attendance",
+    "accentColor": "#0b6e4f",
+    "sidebarColor": "#0d2a1f",
+    "font": "Public Sans",
+    "corners": "normal",
+    "logoSize": "small",
+    "logoShape": "circle",
+    "logoBackground": "accent",
+    "showSchoolName": true,
+    "logo": null
+  },
+  "adminPermissions": {
+    "students": true,
+    "classes": true,
+    "subjects": true,
+    "teachers": false,
+    "exams": false
+  }
+}

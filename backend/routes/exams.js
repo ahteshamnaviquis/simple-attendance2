@@ -18,18 +18,19 @@
 // }
 //
 // Workflow:
-// 1. The admin creates an exam for a class (or the same exam for several classes
+// 1. The super admin creates an exam for a class (or the same exam for several classes
 //    at once), choosing from the subjects assigned to the class (class-subjects)
 //    and setting each subject's maximum marks. Every class gets its own exam record.
 // 2. Each subject's teacher (from class-subjects, checked on every request) enters
 //    marks for their own subject only, then submits them. A subject's marks-entry
 //    status is Pending (nothing entered), In progress, or Submitted.
-// 3. Submitted marks are locked. The admin can reopen a subject for corrections.
-// 4. When every subject is submitted and every student has all marks, the admin
-//    publishes the exam. Published exams are locked; the admin can unpublish.
+// 3. Submitted marks are locked. The super admin can reopen a subject for corrections.
+// 4. When every subject is submitted and every student has all marks, the super admin
+//    publishes the exam. Published exams are locked; the super admin can unpublish.
 //
 // Other rules:
-// - Only admins create, edit, delete and publish exams. The class of an exam can't change.
+// - Only the super admin (and admins, if the super admin allows them to manage
+//   examinations) creates, edits, deletes and publishes exams. The class of an exam can't change.
 // - Pass marks: a whole number from 1 to the subject's maximum; 33% of the maximum
 //   (rounded up) when not given. Exams saved before pass marks existed use that default.
 // - Obtained marks: 0 up to the subject's maximum, at most 2 decimal places.
@@ -38,11 +39,11 @@
 // - A subject with marks can't be removed from an exam, and its maximum marks
 //   can't go below the highest mark already entered.
 // - An exam can only be deleted while it has no marks at all.
-// - Admins can enter marks for any subject (for example one with no teacher assigned).
+// - The super admin can enter marks for any subject (for example one with no teacher assigned).
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, isValidDate, requireLogin, requireAdmin, requireRole } = require('../helpers');
+const { HttpError, newId, isValidDate, can, requireLogin, requireArea, requireRole } = require('../helpers');
 const { buildResults, isEntered, defaultPassMarks, passMarksOf } = require('../results');
 
 const router = express.Router();
@@ -147,7 +148,7 @@ function checkSubjectsInClass(subjects, classSubjects, classId, alreadyInExam = 
 }
 
 // Load an exam and work out which of its subjects the user may work on.
-// Admins: all subjects. Teachers: the subjects they currently teach in the exam's
+// Super admin: all subjects. Teachers: the subjects they currently teach in the exam's
 // class; a teacher with none of them gets 403.
 async function loadExam(user, examId, exams) {
   const list = exams || (await readData('exams'));
@@ -156,7 +157,7 @@ async function loadExam(user, examId, exams) {
 
   const classSubjects = await readData('classSubjects');
   const mySubjectIds =
-    user.role === 'admin'
+    can(user, 'exams')
       ? exam.subjects.map((s) => s.subjectId)
       : exam.subjects
           .filter((s) => assignedTeacherId(classSubjects, exam.classId, s.subjectId) === user.id)
@@ -181,7 +182,7 @@ function checkOpen(exam) {
   if (exam.status === 'published') {
     throw new HttpError(
       409,
-      'This examination is published, so it can no longer be changed. The admin can unpublish it first.'
+      'This examination is published, so it can no longer be changed. The super admin can unpublish it first.'
     );
   }
 }
@@ -190,7 +191,7 @@ function checkNotSubmitted(subject) {
   if (subject.submittedAt) {
     throw new HttpError(
       409,
-      `${subject.subjectName} marks have been submitted. Ask the admin to reopen them for corrections.`
+      `${subject.subjectName} marks have been submitted. Ask the super admin to reopen them for corrections.`
     );
   }
 }
@@ -238,10 +239,10 @@ function className(exam, classes) {
   return classes.find((c) => c.id === exam.classId)?.name ?? exam.className;
 }
 
-// GET /api/exams?classId=&name=&subjectId=&from=&to=&status=  (admin)
+// GET /api/exams?classId=&name=&subjectId=&from=&to=&status=  (super admin)
 // All filters are optional. Newest exam dates first. Each exam comes with its
 // marks-entry progress and a short summary of its results.
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/', requireArea('exams'), async (req, res) => {
   const [exams, data] = await Promise.all([readData('exams'), readAll()]);
   const { classId, name, subjectId, from, to, status } = req.query;
 
@@ -305,7 +306,7 @@ router.get('/my-subjects', requireRole('teacher'), async (req, res) => {
 });
 
 // GET /api/exams/:id
-// Admins get every subject; teachers only the subjects they teach in it.
+// The super admin gets every subject; teachers only the subjects they teach in it.
 router.get('/:id', requireLogin, async (req, res) => {
   const ctx = await loadExam(req.user, req.params.id);
   const data = await readAll();
@@ -319,8 +320,8 @@ router.get('/:id', requireLogin, async (req, res) => {
   });
 });
 
-// POST /api/exams - admin creates an exam.
-router.post('/', requireAdmin, async (req, res) => {
+// POST /api/exams - super admin creates an exam.
+router.post('/', requireArea('exams'), async (req, res) => {
   const subjectList = await readData('subjects');
   const input = cleanExamInput(req.body, subjectList);
   const classId = String(req.body?.classId ?? '');
@@ -339,12 +340,12 @@ router.post('/', requireAdmin, async (req, res) => {
   res.status(201).json(created);
 });
 
-// POST /api/exams/bulk - admin creates the same exam for several classes at once.
+// POST /api/exams/bulk - super admin creates the same exam for several classes at once.
 // Body: like POST /api/exams, but with classIds: [...] instead of classId.
 // Each class gets its own exam with the chosen subjects that the class studies
 // (each with the maximum marks given). Every class must study at least one of
 // them. All exams are created, or none if any class has a problem.
-router.post('/bulk', requireAdmin, async (req, res) => {
+router.post('/bulk', requireArea('exams'), async (req, res) => {
   const subjectList = await readData('subjects');
   const input = cleanExamInput(req.body, subjectList);
   const classIds = Array.isArray(req.body?.classIds) ? [...new Set(req.body.classIds.map(String))] : [];
@@ -371,8 +372,8 @@ router.post('/bulk', requireAdmin, async (req, res) => {
   res.status(201).json(created);
 });
 
-// PUT /api/exams/:id - admin edits name, date, remarks, subjects and maximum marks.
-router.put('/:id', requireAdmin, async (req, res) => {
+// PUT /api/exams/:id - super admin edits name, date, remarks, subjects and maximum marks.
+router.put('/:id', requireArea('exams'), async (req, res) => {
   const subjectList = await readData('subjects');
   const input = cleanExamInput(req.body, subjectList);
 
@@ -430,8 +431,8 @@ router.put('/:id', requireAdmin, async (req, res) => {
   res.json(updated);
 });
 
-// DELETE /api/exams/:id - admin, only an exam with no marks (for example made by mistake).
-router.delete('/:id', requireAdmin, async (req, res) => {
+// DELETE /api/exams/:id - super admin, only an exam with no marks (for example made by mistake).
+router.delete('/:id', requireArea('exams'), async (req, res) => {
   await updateData('exams', async (exams) => {
     const { exam } = await loadExam(req.user, req.params.id, exams);
     checkOpen(exam);
@@ -461,7 +462,7 @@ async function updateExamSubject(req, changeFn) {
   return updated;
 }
 
-// POST /api/exams/:id/subjects/:subjectId/submit - the subject teacher (or admin)
+// POST /api/exams/:id/subjects/:subjectId/submit - the subject teacher (or super admin)
 // submits a subject's marks. Every student now in the class needs a mark or Absent.
 router.post('/:id/subjects/:subjectId/submit', requireLogin, async (req, res) => {
   const exam = await updateExamSubject(req, async (exam, subject) => {
@@ -481,9 +482,9 @@ router.post('/:id/subjects/:subjectId/submit', requireLogin, async (req, res) =>
   res.json(exam);
 });
 
-// POST /api/exams/:id/subjects/:subjectId/reopen - admin only. The teacher can
+// POST /api/exams/:id/subjects/:subjectId/reopen - super admin only. The teacher can
 // correct the marks again. No marks are deleted.
-router.post('/:id/subjects/:subjectId/reopen', requireAdmin, async (req, res) => {
+router.post('/:id/subjects/:subjectId/reopen', requireArea('exams'), async (req, res) => {
   const exam = await updateExamSubject(req, (exam, subject) => {
     checkOpen(exam);
     if (!subject.submittedAt) throw new HttpError(409, `${subject.subjectName} marks are not submitted`);
@@ -492,9 +493,9 @@ router.post('/:id/subjects/:subjectId/reopen', requireAdmin, async (req, res) =>
   res.json(exam);
 });
 
-// POST /api/exams/:id/publish - admin only, once every subject is submitted and
+// POST /api/exams/:id/publish - super admin only, once every subject is submitted and
 // every student has all marks.
-router.post('/:id/publish', requireAdmin, async (req, res) => {
+router.post('/:id/publish', requireArea('exams'), async (req, res) => {
   let updated;
   await updateData('exams', async (exams) => {
     const { exam } = await loadExam(req.user, req.params.id, exams);
@@ -520,9 +521,9 @@ router.post('/:id/publish', requireAdmin, async (req, res) => {
   res.json(updated);
 });
 
-// POST /api/exams/:id/unpublish - admin only. Subjects stay submitted; the admin
+// POST /api/exams/:id/unpublish - super admin only. Subjects stay submitted; the super admin
 // can then reopen a subject so its teacher can correct marks.
-router.post('/:id/unpublish', requireAdmin, async (req, res) => {
+router.post('/:id/unpublish', requireArea('exams'), async (req, res) => {
   let updated;
   await updateData('exams', async (exams) => {
     const { exam } = await loadExam(req.user, req.params.id, exams);
@@ -588,7 +589,7 @@ function marksGrid(exam, subject, students, marks) {
   };
 }
 
-// GET /api/exams/:id/marks?subjectId=...  (admin or the subject's teacher)
+// GET /api/exams/:id/marks?subjectId=...  (super admin or the subject's teacher)
 router.get('/:id/marks', requireLogin, async (req, res) => {
   const ctx = await loadExam(req.user, req.params.id);
   const subject = findMySubject(ctx, String(req.query.subjectId ?? ''));
@@ -691,9 +692,9 @@ router.put('/:id/marks', requireLogin, async (req, res) => {
   res.json({ ...grid, savedCount });
 });
 
-// GET /api/exams/:id/results - admin only. The class result sheet with totals,
+// GET /api/exams/:id/results - super admin only. The class result sheet with totals,
 // percentages, positions and summary statistics.
-router.get('/:id/results', requireAdmin, async (req, res) => {
+router.get('/:id/results', requireArea('exams'), async (req, res) => {
   const { exam } = await loadExam(req.user, req.params.id);
   const data = await readAll();
   const results = buildResults(exam, data.students, data.marks);

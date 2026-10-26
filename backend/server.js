@@ -5,9 +5,12 @@
 // at the bottom automatically, so routes do not need try/catch.
 
 const express = require('express');
+const seedData = require('./seedData');
 const { PORT, HOST, DATA_DIR, FRONTEND_URLS } = require('./config');
-const { initDataFiles, readData } = require('./fileStore');
-const { publicUser, loadCurrentUser, requireAdmin } = require('./helpers');
+const { initDataFiles, readData, updateData } = require('./fileStore');
+const { publicUser, loadCurrentUser, requireRole } = require('./helpers');
+const adminsRouter = require('./routes/admins');
+const settingsRouter = require('./routes/settings');
 const teachersRouter = require('./routes/teachers');
 const classesRouter = require('./routes/classes');
 const attendanceRouter = require('./routes/attendance');
@@ -62,12 +65,14 @@ app.post('/api/login', async (req, res) => {
   res.json(publicUser(user));
 });
 
-// List all users (without passwords). Admin only.
-app.get('/api/users', requireAdmin, async (req, res) => {
+// List all users (without passwords). Admins and the super admin only.
+app.get('/api/users', requireRole('admin', 'superadmin'), async (req, res) => {
   const users = await readData('users');
   res.json(users.map(publicUser));
 });
 
+app.use('/api/admins', adminsRouter);
+app.use('/api/settings', settingsRouter);
 app.use('/api/teachers', teachersRouter);
 app.use('/api/classes', classesRouter);
 app.use('/api/attendance', attendanceRouter);
@@ -84,6 +89,9 @@ app.use('/api', (req, res) => {
 // Error handler: known errors (HttpError, bad JSON) get their own status,
 // anything else is logged and reported as a general server error.
 app.use((err, req, res, next) => {
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'That file is too big' });
+  }
   if (err.status && err.status < 500) {
     return res.status(err.status).json({ error: err.message });
   }
@@ -91,7 +99,23 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong on the server' });
 });
 
+// Older data folders were made before the super admin existed: add the
+// starting super admin account so someone can manage the admins.
+async function ensureSuperAdmin() {
+  const starting = seedData.users.find((u) => u.role === 'superadmin');
+  await updateData('users', (users) => {
+    if (users.some((u) => u.role === 'superadmin')) return users;
+    if (users.some((u) => u.username.toLowerCase() === starting.username)) {
+      console.warn(`No super admin: the username "${starting.username}" is already used`);
+      return users;
+    }
+    console.log(`Added super admin "${starting.username}" to data/users.json`);
+    return [starting, ...users];
+  });
+}
+
 initDataFiles()
+  .then(ensureSuperAdmin)
   .then(() => {
     app.listen(PORT, HOST, () => {
       console.log(`API running at http://${HOST}:${PORT}`);

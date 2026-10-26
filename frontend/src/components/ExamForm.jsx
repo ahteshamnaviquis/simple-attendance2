@@ -1,7 +1,7 @@
-// Admin: create or edit an examination.
+// Super admin: create or edit an examination.
 //
 // Creating: choose one or more classes (or "Select all classes"). The subjects of
-// the chosen classes load with their teachers; the admin picks which subjects the
+// the chosen classes load with their teachers; the super admin picks which subjects the
 // exam includes and sets each one's maximum marks. Every class gets its own exam
 // with the included subjects it studies.
 //
@@ -89,7 +89,7 @@ export default function ExamForm({ exam, classes, onSaved, onCancel }) {
   );
   const [classSubjects, setClassSubjects] = useState(null); // null = loading
   // Per subject: { included, maxMarks, passMarks }. Kept while classes are ticked and
-  // unticked. passMarks is undefined until the admin types one: it then follows the
+  // unticked. passMarks is undefined until the super admin types one: it then follows the
   // maximum (33% of it).
   const [settings, setSettings] = useState(() =>
     Object.fromEntries(
@@ -116,7 +116,7 @@ export default function ExamForm({ exam, classes, onSaved, onCancel }) {
     setForm({ ...form, [event.target.name]: event.target.value });
   }
 
-  // The pass marks shown for a subject: typed by the admin, or 33% of the maximum.
+  // The pass marks shown for a subject: typed by the super admin, or 33% of the maximum.
   function passMarksText(s) {
     if (s.passMarks !== undefined) return s.passMarks;
     const max = Number(s.maxMarks);
@@ -314,7 +314,7 @@ export default function ExamForm({ exam, classes, onSaved, onCancel }) {
                         {many ? (
                           <ClassesCell row={row} chosen={chosenClasses} />
                         ) : (
-                          row.taughtIn[0]?.teacherName || <span className="note">Not assigned (admin enters marks)</span>
+                          row.taughtIn[0]?.teacherName || <span className="note">Not assigned (super admin enters marks)</span>
                         )}
                       </td>
                       <td className="num">

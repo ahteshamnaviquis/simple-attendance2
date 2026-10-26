@@ -1,4 +1,4 @@
-// Admin: one examination, shown in a panel beside the examinations list.
+// Super admin: one examination, shown in a panel beside the examinations list.
 // Marks-entry progress for every subject and its teacher, and the actions allowed
 // right now: enter marks (for subjects without a teacher, or corrections),
 // reopen a submitted subject, edit, publish, unpublish and delete.

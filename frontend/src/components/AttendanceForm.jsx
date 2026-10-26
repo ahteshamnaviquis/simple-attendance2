@@ -8,6 +8,11 @@
 //
 // `initialClassId` / `initialDate` pre-select a class and date (used when a
 // day is clicked in the submission tracker).
+//
+// When the class has students, they are listed as a roster: click a student to
+// switch them between present and absent, and give absent students a reason.
+// Total, present and absent are then counted from the roster automatically.
+// Classes without a student list fall back to typing the counts by hand.
 
 import { useEffect, useState } from 'react';
 import { getReports, getStudents, createReport, updateReport } from '../api';
@@ -60,6 +65,10 @@ export default function AttendanceForm({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
+  const [justMarked, setJustMarked] = useState(''); // student just marked absent
+  // Names the teacher marked present. null = a saved report, where everyone
+  // not absent was present. A new report starts with nobody marked.
+  const [presentNames, setPresentNames] = useState(report ? null : []);
 
   // Load the class's students (used for name suggestions and the total).
   useEffect(() => {
@@ -91,10 +100,12 @@ export default function AttendanceForm({
         if (found) {
           setCounts(countsFrom(found));
           setAbsentees(found.absentees);
+          setPresentNames(null);
         } else {
           const total = classStudents.length ? String(classStudents.length) : '';
           setCounts({ ...EMPTY_COUNTS, totalStudents: total });
           setAbsentees([]);
+          setPresentNames([]);
         }
       })
       .catch((err) => !cancelled && setError(err.message));
@@ -111,6 +122,16 @@ export default function AttendanceForm({
   const sumMismatch = countsFilled && present + absent !== total;
   const namedCount = absentees.filter((a) => a.name.trim()).length;
   const tooManyNames = counts.absent !== '' && namedCount > absent;
+
+  // Roster mode: counts come from the student list and the absent names.
+  const rosterMode = students.length > 0;
+  const rosterNames = new Set(students.map((s) => s.name));
+  // Absent students who are not in the class list (e.g. removed since).
+  const otherAbsentees = absentees
+    .map((a, index) => ({ ...a, index }))
+    .filter((a) => !rosterNames.has(a.name));
+  const rosterTotal = students.length + otherAbsentees.filter((a) => a.name.trim()).length;
+  const rosterAbsent = namedCount;
 
   function handleCountChange(event) {
     setCounts({ ...counts, [event.target.name]: event.target.value });
@@ -130,37 +151,66 @@ export default function AttendanceForm({
     setAbsentees([...absentees, { name: '', reason: '' }]);
   }
 
-  // Click a student's name to add them to the absent list.
-  function markAbsent(studentName) {
-    if (absentees.some((a) => a.name === studentName)) return;
-    // Reuse an empty row if there is one, otherwise add a new row.
-    const emptyIndex = absentees.findIndex((a) => !a.name.trim());
-    if (emptyIndex >= 0) {
-      updateAbsentee(emptyIndex, 'name', studentName);
-    } else {
-      setAbsentees([...absentees, { name: studentName, reason: '' }]);
-    }
-  }
-
   const absentNames = new Set(absentees.map((a) => a.name));
+
+  // Each student is 'present', 'absent' or '' (not marked yet).
+  function statusOf(name) {
+    if (absentNames.has(name)) return 'absent';
+    if (presentNames === null || presentNames.includes(name)) return 'present';
+    return '';
+  }
+  const rosterPresent = students.filter((s) => statusOf(s.name) === 'present').length;
+  const unmarked = students.filter((s) => statusOf(s.name) === '').length;
 
   function removeAbsentee(index) {
     setAbsentees(absentees.filter((_, i) => i !== index));
+  }
+
+  // Roster: mark a student present or absent.
+  function setAbsent(studentName, isAbsent) {
+    if (isAbsent) {
+      if (absentNames.has(studentName)) return;
+      setAbsentees([...absentees, { name: studentName, reason: '' }]);
+      setJustMarked(studentName); // focus their reason box
+      if (presentNames) setPresentNames(presentNames.filter((n) => n !== studentName));
+    } else {
+      setAbsentees(absentees.filter((a) => a.name !== studentName));
+      if (presentNames && !presentNames.includes(studentName)) {
+        setPresentNames([...presentNames, studentName]);
+      }
+    }
+  }
+
+  function setReason(studentName, reason) {
+    setAbsentees(absentees.map((a) => (a.name === studentName ? { ...a, reason } : a)));
+  }
+
+  // Marks the students not marked yet as present (absent ones stay absent).
+  function markRestPresent() {
+    if (presentNames) setPresentNames(students.map((s) => s.name).filter((n) => !absentNames.has(n)));
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
     setMessage('');
+    if (rosterMode && unmarked > 0) {
+      setError(`Please mark all students. ${unmarked} not marked yet.`);
+      return;
+    }
     setSaving(true);
     try {
-      const payload = { classId, date, ...counts, absentees };
+      const finalCounts = rosterMode
+        ? { ...counts, totalStudents: rosterTotal, present: rosterPresent, absent: rosterAbsent }
+        : counts;
+      const payload = { classId, date, ...finalCounts, absentees };
       const saved = existing
         ? await updateReport(existing.id, payload)
         : await createReport(payload);
       setExisting(saved);
       setCounts(countsFrom(saved));
       setAbsentees(saved.absentees);
+      setPresentNames(null);
       setMessage(existing ? 'Report updated.' : 'Report saved.');
       if (onSaved) onSaved(saved);
     } catch (err) {
@@ -208,95 +258,231 @@ export default function AttendanceForm({
         </p>
       )}
 
-      <h3>Student counts</h3>
-      <div className="form-grid counts">
-        {Object.entries(COUNT_LABELS).map(([field, label]) => (
-          <label key={field}>
-            {label}
-            <input
-              type="number"
-              min="0"
-              step="1"
-              name={field}
-              value={counts[field]}
-              onChange={handleCountChange}
-              required
-            />
-          </label>
-        ))}
-      </div>
-      <button type="button" className="secondary small" onClick={fillAbsent}>
-        Absent = Total − Present
-      </button>
-      {sumMismatch && (
-        <p className="error">
-          Present ({present}) + Absent ({absent}) = {present + absent}, but Total is {total}.
-        </p>
-      )}
+      {rosterMode ? (
+        <>
+          <div className="roster-summary">
+            <div className="roster-stats">
+              <div className="roster-stat">
+                <span>Total students</span>
+                <strong>{rosterTotal}</strong>
+              </div>
+              <div className="roster-stat present">
+                <span>Present</span>
+                <strong>{rosterPresent}</strong>
+              </div>
+              <div className="roster-stat absent">
+                <span>Absent</span>
+                <strong>{rosterAbsent}</strong>
+              </div>
+              <div className={unmarked ? 'roster-stat unmarked' : 'roster-stat'}>
+                <span>Not marked</span>
+                <strong>{unmarked}</strong>
+              </div>
+              <div className="roster-stat rate">
+                <span>Attendance</span>
+                <strong>{rosterTotal ? Math.round((rosterPresent / rosterTotal) * 100) : 0}%</strong>
+                <div className="roster-meter">
+                  <div
+                    style={{ width: `${rosterTotal ? (rosterPresent / rosterTotal) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="roster-movement">
+              {['addedToday', 'leftToday'].map((field) => (
+                <label key={field}>
+                  {COUNT_LABELS[field]}
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    name={field}
+                    value={counts[field]}
+                    onChange={handleCountChange}
+                    required
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
 
-      <h3>Absent students</h3>
-      <p className="note">
-        {namedCount} of {counts.absent === '' ? '?' : absent} absent students named. Add a row for
-        each absent student you know.
-      </p>
-      {students.length > 0 && (
-        <div className="student-picker">
-          <span className="note">Click to mark absent:</span>
-          {students.map((s) => (
+          <div className="roster-head">
+            <div>
+              <h3>Students</h3>
+              <span className="note">
+                Mark every student present or absent. Add a reason for absent students.
+              </span>
+            </div>
             <button
               type="button"
-              key={s.id}
-              className={absentNames.has(s.name) ? 'chip selected' : 'chip'}
-              onClick={() => markAbsent(s.name)}
-              disabled={absentNames.has(s.name)}
+              className="secondary small"
+              onClick={markRestPresent}
+              disabled={unmarked === 0}
             >
-              {s.rollNumber ? `${s.rollNumber}. ` : ''}
-              {s.name}
+              Mark remaining present
             </button>
-          ))}
-        </div>
-      )}
-      {absentees.map((a, index) => (
-        <div className="absentee-row" key={index}>
-          <input
-            placeholder="Student name"
-            list="class-students"
-            value={a.name}
-            onChange={(e) => updateAbsentee(index, 'name', e.target.value)}
-          />
-          <input
-            placeholder="Reason"
-            list="absence-reasons"
-            value={a.reason}
-            onChange={(e) => updateAbsentee(index, 'reason', e.target.value)}
-          />
-          <button type="button" className="secondary small" onClick={() => removeAbsentee(index)}>
-            Remove
+          </div>
+          <div className="roster" role="table" aria-label="Students">
+            <div className="roster-row roster-header" role="row">
+              <span role="columnheader">Roll</span>
+              <span role="columnheader">Student</span>
+              <span role="columnheader">Status</span>
+              <span role="columnheader">Reason</span>
+            </div>
+            {students.map((s) => {
+              const entry = absentees.find((a) => a.name === s.name);
+              const status = statusOf(s.name);
+              return (
+                <div key={s.id} className={`roster-row ${status || 'unmarked'}`} role="row">
+                  <span className="roster-roll" role="cell">
+                    {s.rollNumber || '–'}
+                  </span>
+                  <span className="roster-name" role="cell">
+                    {s.name}
+                  </span>
+                  <span className="status-toggle" role="cell">
+                    <button
+                      type="button"
+                      className={status === 'present' ? 'present active' : 'present'}
+                      aria-pressed={status === 'present'}
+                      onClick={() => setAbsent(s.name, false)}
+                    >
+                      Present
+                    </button>
+                    <button
+                      type="button"
+                      className={status === 'absent' ? 'absent active' : 'absent'}
+                      aria-pressed={status === 'absent'}
+                      onClick={() => setAbsent(s.name, true)}
+                    >
+                      Absent
+                    </button>
+                  </span>
+                  <span className="roster-reason" role="cell">
+                    {entry ? (
+                      <input
+                        placeholder="Reason for absence"
+                        aria-label={`Reason ${s.name} is absent`}
+                        list="absence-reasons"
+                        value={entry.reason}
+                        onChange={(e) => setReason(s.name, e.target.value)}
+                        autoFocus={s.name === justMarked}
+                      />
+                    ) : (
+                      <span className="roster-dash">—</span>
+                    )}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {otherAbsentees.length > 0 && (
+            <>
+              <h3>Other absent students</h3>
+              <p className="note">
+                These names are not in the class list. They are counted as absent.
+              </p>
+              {otherAbsentees.map((a) => (
+                <div className="absentee-row" key={a.index}>
+                  <input
+                    placeholder="Student name"
+                    value={a.name}
+                    onChange={(e) => updateAbsentee(a.index, 'name', e.target.value)}
+                  />
+                  <input
+                    placeholder="Reason"
+                    list="absence-reasons"
+                    value={a.reason}
+                    onChange={(e) => updateAbsentee(a.index, 'reason', e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="secondary small"
+                    onClick={() => removeAbsentee(a.index)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          <h3>Student counts</h3>
+          <div className="form-grid counts">
+            {Object.entries(COUNT_LABELS).map(([field, label]) => (
+              <label key={field}>
+                {label}
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  name={field}
+                  value={counts[field]}
+                  onChange={handleCountChange}
+                  required
+                />
+              </label>
+            ))}
+          </div>
+          <button type="button" className="secondary small" onClick={fillAbsent}>
+            Absent = Total − Present
           </button>
-        </div>
-      ))}
-      <datalist id="class-students">
-        {students.map((s) => (
-          <option key={s.id} value={s.name} />
-        ))}
-      </datalist>
+          {sumMismatch && (
+            <p className="error">
+              Present ({present}) + Absent ({absent}) = {present + absent}, but Total is {total}.
+            </p>
+          )}
+
+          <h3>Absent students</h3>
+          <p className="note">
+            {namedCount} of {counts.absent === '' ? '?' : absent} absent students named. Add a row for
+            each absent student you know.
+          </p>
+          {absentees.map((a, index) => (
+            <div className="absentee-row" key={index}>
+              <input
+                placeholder="Student name"
+                value={a.name}
+                onChange={(e) => updateAbsentee(index, 'name', e.target.value)}
+              />
+              <input
+                placeholder="Reason"
+                list="absence-reasons"
+                value={a.reason}
+                onChange={(e) => updateAbsentee(index, 'reason', e.target.value)}
+              />
+              <button type="button" className="secondary small" onClick={() => removeAbsentee(index)}>
+                Remove
+              </button>
+            </div>
+          ))}
+          <button type="button" className="secondary small" onClick={addAbsentee}>
+            + Add absent student
+          </button>
+          {tooManyNames && (
+            <p className="error">
+              You listed {namedCount} names, but the absent count is {absent}.
+            </p>
+          )}
+        </>
+      )}
       <datalist id="absence-reasons">
         {COMMON_REASONS.map((r) => (
           <option key={r} value={r} />
         ))}
       </datalist>
-      <button type="button" className="secondary small" onClick={addAbsentee}>
-        + Add absent student
-      </button>
-      {tooManyNames && (
-        <p className="error">
-          You listed {namedCount} names, but the absent count is {absent}.
-        </p>
-      )}
 
       {existing && (
         <p className="note">
           Last updated by {existing.updatedBy} on {formatDateTime(existing.updatedAt)}.
+        </p>
+      )}
+      {rosterMode && unmarked > 0 && !error && (
+        <p className="note">
+          {unmarked} of {students.length} students not marked yet.
         </p>
       )}
       {error && <p className="error">{error}</p>}

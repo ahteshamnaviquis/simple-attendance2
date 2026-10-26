@@ -24,9 +24,17 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
 - Students: add, edit, remove, search, filter by class
 - Reports: filter by date and class, view, edit, print the list or a single report
 - Classes: add, rename, and assign a teacher
-- Teachers: add and edit (name, username, password)
 - Subjects: add and rename the academy's subjects, and choose which subjects each class
   studies and which teacher teaches each one
+**Super admin**
+- Admins: add, edit and remove admin accounts
+- Settings: the website's look (school name, accent and sidebar colors with ready-made
+  presets, font, corner style), previewed live while editing, and which areas admins may
+  manage (students, classes, subjects, teachers, examinations)
+- Logo: upload a PNG, JPEG, WebP or GIF (up to 1 MB) shown in the sidebar, on the login
+  page and as the browser tab icon; choose its size, shape (rounded, square, circle) and
+  background (accent color, white, none), and whether the school name shows next to it
+- Teachers: add and edit (name, username, password)
 - Examinations: create exams for one class, several, or all classes at once (the
   classes' subjects load with their teachers; set each subject's maximum marks), filter (class, name, subject, date range, status), and
   monitor marks entry per subject and teacher (Pending / In progress / Submitted).
@@ -66,10 +74,10 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
 | Rule | How it works |
 |------|--------------|
 | Subjects | The admin keeps one list of subjects, and for each class chooses its subjects and each subject's teacher. A class can have each subject once. The subject teacher is separate from the class teacher, who still takes attendance and manages students. |
-| Creating exams | Admins only. Choose one class, several, or "Select all classes". The chosen classes' subjects load with their teachers; the admin picks which to include and sets each one's maximum marks (a whole number, 1 to 1000; 100 by default) and pass marks. Each class gets its own exam with the included subjects it studies. Every chosen class must study at least one included subject, and if any class has a problem nothing is created. The class of an exam can't be changed later. |
-| Who enters marks | The teacher assigned to that subject in that class (checked by the backend on every request), or the admin. A teacher only sees the exam subjects they teach. |
-| Marks-entry status | Pending (nothing entered), In progress (saved as draft), Submitted. Submitting needs a mark or Absent for every student. Submitted marks are locked; the admin can reopen a subject so the teacher can correct it. |
-| Publishing | Admins only, once every subject is submitted and every student has all marks. A published exam is locked; the admin can unpublish it, then reopen subjects for corrections. |
+| Creating exams | Super admin only. Choose one class, several, or "Select all classes". The chosen classes' subjects load with their teachers; the super admin picks which to include and sets each one's maximum marks (a whole number, 1 to 1000; 100 by default) and pass marks. Each class gets its own exam with the included subjects it studies. Every chosen class must study at least one included subject, and if any class has a problem nothing is created. The class of an exam can't be changed later. |
+| Who enters marks | The teacher assigned to that subject in that class (checked by the backend on every request), or the super admin. A teacher only sees the exam subjects they teach. |
+| Marks-entry status | Pending (nothing entered), In progress (saved as draft), Submitted. Submitting needs a mark or Absent for every student. Submitted marks are locked; the super admin can reopen a subject so the teacher can correct it. |
+| Publishing | Super admin only, once every subject is submitted and every student has all marks. A published exam is locked; the super admin can unpublish it, then reopen subjects for corrections. |
 | Marks | 0 up to the subject's maximum, at most 2 decimals. An empty box means "not entered", which is different from 0. Ticking Absent counts as 0 in totals. Every row is checked before saving; if any row is wrong, nothing is saved. |
 | One mark per student, subject and exam | Saving again updates the same record, so duplicates can't happen. |
 | Totals | Total = sum of the maximum marks of the exam's subjects. Percentage = obtained ÷ total × 100, rounded to 2 decimals. |
@@ -89,15 +97,20 @@ SimpleAttendence/
 │   ├── .env               # PORT, FRONTEND_URL
 │   ├── config.js          # Reads .env
 │   ├── server.js          # Express app: login, health, users, error handling
-│   ├── helpers.js         # HttpError, ids, dates, role checks
+│   ├── helpers.js         # HttpError, ids, dates, role and permission checks
+│   ├── settings.js        # Theme and admin permissions: defaults and validation
 │   ├── fileStore.js       # Reads/writes JSON files through one write queue
 │   ├── seedData.js        # Sample data used when a JSON file is missing
 │   ├── results.js         # Exam totals, percentages, Incomplete and positions
 │   ├── test/
-│   │   └── exams.test.js  # npm test: API tests for examinations (uses a temporary data folder)
+│   │   ├── exams.test.js  # npm test: API tests for examinations (uses a temporary data folder)
+│   │   ├── admins.test.js # Super admin and admin accounts
+│   │   └── settings.test.js # Theme and admin permissions
 │   ├── scripts/
 │   │   └── addDemoData.js # npm run demo-data: extra teachers, classes, students, 14 days of reports
 │   ├── routes/
+│   │   ├── admins.js      # /api/admins (super admin only)
+│   │   ├── settings.js    # /api/settings (theme and admin permissions)
 │   │   ├── teachers.js    # /api/teachers
 │   │   ├── classes.js     # /api/classes
 │   │   ├── students.js    # /api/students
@@ -113,7 +126,9 @@ SimpleAttendence/
 │       ├── subjects.json
 │       ├── classSubjects.json
 │       ├── exams.json
-│       └── marks.json
+│       ├── marks.json
+│       ├── settings.json
+│       └── logo           # The uploaded logo, if any (not committed)
 ├── mobile/                # React Native (Expo) Android app, see "Mobile app"
 └── frontend/
     ├── package.json
@@ -122,12 +137,14 @@ SimpleAttendence/
     ├── index.html
     └── src/
         ├── main.jsx
-        ├── App.jsx        # Picks the screen: login, admin or teacher
+        ├── App.jsx        # Picks the screen: login, super admin, admin or teacher
         ├── api.js         # All backend calls live here
         ├── session.js     # Remembers the logged-in user (sessionStorage)
         ├── utils.js       # Date helpers
+        ├── theme.js       # Applies the super admin's theme; fonts, presets, settings context
         ├── index.css      # All styles, including the print layout
         ├── components/
+        │   ├── Brand.jsx            # Logo and school name (sidebar, login, settings preview)
         │   ├── Header.jsx
         │   ├── Tabs.jsx
         │   ├── Dashboard.jsx        # Dashboard (admin and teacher)
@@ -136,7 +153,7 @@ SimpleAttendence/
         │   ├── Reports.jsx          # Report list, filters, view/edit/print
         │   ├── StudentsManager.jsx  # Students screen (admin and teacher)
         │   ├── ReportDetails.jsx    # One report (also the printed layout)
-        │   ├── Exams.jsx            # Admin: examinations list, filters, progress
+        │   ├── Exams.jsx            # Super admin: examinations list, filters, progress
         │   ├── TeacherExams.jsx     # Teacher: the exam subjects they teach
         │   ├── ExamDetails.jsx      # One exam: progress per subject and teacher, publish
         │   ├── ExamForm.jsx         # Create / edit an exam and its subjects
@@ -145,9 +162,12 @@ SimpleAttendence/
         │   └── StudentResult.jsx    # One student's result (also the printed card)
         └── pages/
             ├── LoginPage.jsx
-            ├── AdminHome.jsx
+            ├── SuperAdminHome.jsx   # Examinations, teachers, admins, settings
+            ├── AdminHome.jsx        # Dashboard, reports, and the areas admins are allowed
             ├── TeacherHome.jsx
             └── admin/
+                ├── AdminsManager.jsx   # Super admin only
+                ├── SettingsManager.jsx # Super admin only: theme and admin permissions
                 ├── ClassesManager.jsx
                 ├── SubjectsManager.jsx
                 ├── ClassSubjectsManager.jsx
@@ -250,8 +270,16 @@ generated, so it's not committed; run `prebuild` again after changing `app.json`
 
 ## Sample logins
 
+The work is split between two kinds of administrator. The **super admin** handles the
+admin accounts, the settings, teachers and examinations. **Admins** (there can be several)
+always have the dashboard and attendance reports, plus the areas the super admin allows in
+*Settings*: by default students, classes and subjects. The super admin can also hand
+teachers or examinations to admins, or take areas away. If `data/users.json` has no super
+admin, the server adds the `superadmin` account when it starts.
+
 | Username | Password   | Role    | Class teacher of | Teaches (Grade 9 and 10) |
 |----------|------------|---------|------------------|--------------------------|
+| superadmin | super123 | superadmin |               | |
 | admin    | admin123   | admin   | all              | |
 | sara     | teacher123 | teacher | Grade 9          | English |
 | ali      | teacher123 | teacher | Grade 10         | Mathematics |
@@ -298,6 +326,10 @@ files in `backend/data`, and run `npm run demo-data`.
 
 ## API
 
+In the "Who" column, the teacher and exam rows marked "super admin" also accept admins
+when *Settings* allows them those areas, and the class, subject and student rows marked
+"admin" need that permission (on by default).
+
 All routes except `/api/health` and `/api/login` need the `X-User-Id` header (the frontend
 adds it automatically after login).
 
@@ -305,10 +337,19 @@ adds it automatically after login).
 |--------|------------------------|----------------|--------------|
 | GET    | `/api/health`          | anyone         | `{ status: "ok", time }` |
 | POST   | `/api/login`           | anyone         | `{ username, password }` → the user (no password), or 401 |
-| GET    | `/api/users`           | admin          | All users without passwords |
+| GET    | `/api/users`           | admin / super admin | All users without passwords |
+| GET    | `/api/settings`        | anyone         | `{ theme, adminPermissions }` (the login page uses the theme) |
+| PUT    | `/api/settings`        | super admin    | Save `{ theme: { schoolName, accentColor, sidebarColor, font, corners, logoSize, logoShape, logoBackground, showSchoolName }, adminPermissions: { students, classes, subjects, teachers, exams } }`. Colors must be dark enough for white text |
+| GET    | `/api/settings/logo`   | anyone         | The uploaded logo image (404 if none) |
+| PUT    | `/api/settings/logo`   | super admin    | Upload the logo: the image itself as the body, with its `Content-Type` (PNG, JPEG, WebP or GIF, up to 1 MB) |
+| DELETE | `/api/settings/logo`   | super admin    | Remove the logo (the check mark is shown again) |
+| GET    | `/api/admins`          | super admin    | All admins |
+| POST   | `/api/admins`          | super admin    | Add admin `{ name, username, password }` |
+| PUT    | `/api/admins/:id`      | super admin    | Edit admin (blank password = keep current) |
+| DELETE | `/api/admins/:id`      | super admin    | Remove admin |
 | GET    | `/api/teachers`        | logged in      | All teachers |
-| POST   | `/api/teachers`        | admin          | Add teacher `{ name, username, password }` |
-| PUT    | `/api/teachers/:id`    | admin          | Edit teacher (blank password = keep current) |
+| POST   | `/api/teachers`        | super admin    | Add teacher `{ name, username, password }` |
+| PUT    | `/api/teachers/:id`    | super admin    | Edit teacher (blank password = keep current) |
 | GET    | `/api/classes`         | logged in      | Admin: all classes. Teacher: only theirs |
 | POST   | `/api/classes`         | admin          | Add class `{ name, teacherId }` |
 | PUT    | `/api/classes/:id`     | admin          | Edit class / assign teacher |
@@ -326,20 +367,20 @@ adds it automatically after login).
 | PUT    | `/api/subjects/:id`    | admin          | Rename subject |
 | GET    | `/api/class-subjects`  | logged in      | Subjects of each class with their teacher. Teachers: only the ones they teach. Optional `?classId=` |
 | PUT    | `/api/class-subjects/:classId` | admin  | Set a class's subjects `{ subjects: [{ subjectId, teacherId }] }` |
-| GET    | `/api/exams`           | admin          | Exams with marks-entry progress and a results summary. Optional `?classId=&name=&subjectId=&from=&to=&status=` |
+| GET    | `/api/exams`           | super admin    | Exams with marks-entry progress and a results summary. Optional `?classId=&name=&subjectId=&from=&to=&status=` |
 | GET    | `/api/exams/my-subjects` | teacher      | The exam subjects the teacher teaches, with status |
 | GET    | `/api/exams/:id`       | logged in      | One exam with progress per subject. Teachers: only their subjects |
-| POST   | `/api/exams`           | admin          | New exam `{ name, classId, date, remarks, subjects: [{ subjectId, maxMarks, passMarks }] }` (passMarks optional, 33% by default) |
-| POST   | `/api/exams/bulk`      | admin          | The same exam for several classes `{ name, classIds: [...], date, remarks, subjects }`. Each class gets the subjects it studies. All or nothing |
-| PUT    | `/api/exams/:id`       | admin          | Edit an open exam (not its class) |
-| DELETE | `/api/exams/:id`       | admin          | Delete an exam with no marks |
-| GET    | `/api/exams/:id/marks?subjectId=` | subject teacher / admin | Marks grid for one subject |
-| PUT    | `/api/exams/:id/marks` | subject teacher / admin | Save (draft) one subject's marks `{ subjectId, marks: [{ studentId, obtained, absent, remarks }] }` |
-| POST   | `/api/exams/:id/subjects/:subjectId/submit` | subject teacher / admin | Submit a subject's marks (locks them) |
-| POST   | `/api/exams/:id/subjects/:subjectId/reopen` | admin | Unlock a submitted subject |
-| POST   | `/api/exams/:id/publish` | admin        | Publish results (every subject submitted) |
-| POST   | `/api/exams/:id/unpublish` | admin      | Back to open |
-| GET    | `/api/exams/:id/results` | admin        | Result sheet: per-student totals, percentages, positions and summary |
+| POST   | `/api/exams`           | super admin    | New exam `{ name, classId, date, remarks, subjects: [{ subjectId, maxMarks, passMarks }] }` (passMarks optional, 33% by default) |
+| POST   | `/api/exams/bulk`      | super admin    | The same exam for several classes `{ name, classIds: [...], date, remarks, subjects }`. Each class gets the subjects it studies. All or nothing |
+| PUT    | `/api/exams/:id`       | super admin    | Edit an open exam (not its class) |
+| DELETE | `/api/exams/:id`       | super admin    | Delete an exam with no marks |
+| GET    | `/api/exams/:id/marks?subjectId=` | subject teacher / super admin | Marks grid for one subject |
+| PUT    | `/api/exams/:id/marks` | subject teacher / super admin | Save (draft) one subject's marks `{ subjectId, marks: [{ studentId, obtained, absent, remarks }] }` |
+| POST   | `/api/exams/:id/subjects/:subjectId/submit` | subject teacher / super admin | Submit a subject's marks (locks them) |
+| POST   | `/api/exams/:id/subjects/:subjectId/reopen` | super admin | Unlock a submitted subject |
+| POST   | `/api/exams/:id/publish` | super admin  | Publish results (every subject submitted) |
+| POST   | `/api/exams/:id/unpublish` | super admin | Back to open |
+| GET    | `/api/exams/:id/results` | super admin  | Result sheet: per-student totals, percentages, positions and summary |
 
 ## Data safety
 
@@ -368,8 +409,10 @@ in `backend/data` are never touched.
    and save.
 2. Change the date and back. The saved report loads with the "already exists" notice.
 3. *My reports* shows only Sara's class. View the report and click *Print*.
-4. Log out and log in as `admin`. The dashboard shows which classes have reported today.
-5. *Teachers*: add a teacher. Adding the username `sara` again is rejected.
+4. Log out and log in as `superadmin`. *Teachers*: add a teacher. Adding the username
+   `sara` again is rejected. *Admins*: add a second admin.
+5. Log in as `admin`. The dashboard shows which classes have reported today. There is no
+   *Teachers* or *Examinations* menu.
 6. *Classes*: add a class assigned to the new teacher, and rename *Grade 9*. In
    *Reports*, the old report still says *Grade 9*.
 7. *Reports*: filter by date and class. Edit a report so present + absent ≠ total, and
@@ -379,7 +422,7 @@ in `backend/data` are never touched.
    already used in that class, edit, search, and remove.
 10. As `admin`, *Subjects*: the subjects and each class's subjects and teachers are
     already there. Adding "english" again is rejected.
-11. *Examinations* → *Create examination*: tick *Select all classes*. English and
+11. As `superadmin`, *Examinations* → *Create examination*: tick *Select all classes*. English and
     Mathematics load with their teachers, each out of 100 with 33 pass marks; change one
     (for example Mathematics to 75) and create. The details panel shows both subjects as
     Pending.
@@ -389,7 +432,7 @@ in `backend/data` are never touched.
     mark or Absent. Submit.
 13. Log in as `ali`: only Mathematics is listed. Enter and submit it, with one mark below
     the pass marks.
-14. As `admin`: the result sheet shows positions, the low mark in red and that student as
+14. As `superadmin`: the result sheet shows positions, the low mark in red and that student as
     Fail. Before both subjects were submitted, it showed "Awaiting submission" and
     *Publish results* was disabled.
 15. *Publish results*. Marks are locked. *Unpublish*, then *Reopen* English: Sara can

@@ -2,12 +2,12 @@
 // A subject: { id, name }
 //
 // Everyone logged in can see the list (teachers pick subjects for their exams).
-// Only admins add or rename subjects. Subjects can't be deleted, and every
+// Only admins with the subjects permission add or rename subjects. Subjects can't be deleted, and every
 // exam keeps the subject names it was created with, so old results always make sense.
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, requireLogin, requireAdmin } = require('../helpers');
+const { HttpError, newId, requireLogin, requireArea } = require('../helpers');
 
 const router = express.Router();
 
@@ -32,7 +32,7 @@ router.get('/', requireLogin, async (req, res) => {
 });
 
 // POST /api/subjects
-router.post('/', requireAdmin, async (req, res) => {
+router.post('/', requireArea('subjects'), async (req, res) => {
   const input = cleanSubjectInput(req.body);
   let created;
   await updateData('subjects', (subjects) => {
@@ -44,7 +44,7 @@ router.post('/', requireAdmin, async (req, res) => {
 });
 
 // PUT /api/subjects/:id - rename. Existing exams keep the old name.
-router.put('/:id', requireAdmin, async (req, res) => {
+router.put('/:id', requireArea('subjects'), async (req, res) => {
   const input = cleanSubjectInput(req.body);
   let updated;
   await updateData('subjects', (subjects) => {

@@ -1,4 +1,4 @@
-// Admin: list, add and edit teachers.
+// Super admin: list, add and edit teachers.
 
 import { useEffect, useState } from 'react';
 import { getTeachers, getClasses, createTeacher, updateTeacher } from '../../api';

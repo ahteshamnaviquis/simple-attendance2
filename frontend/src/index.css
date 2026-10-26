@@ -16,10 +16,12 @@
   --text-3: #667085;
   --label: #344054;
 
+  /* --accent, --nav-bg, --font and --radius* are replaced by the super admin's
+     theme (see theme.js); the other accent shades follow --accent. */
   --accent: #2f5bd3;
-  --accent-dark: #1e3f9e;
-  --accent-soft: #eef2fc;
-  --focus: #c9d7f7;
+  --accent-dark: color-mix(in srgb, var(--accent) 66%, black);
+  --accent-soft: color-mix(in srgb, var(--accent) 8%, white);
+  --focus: color-mix(in srgb, var(--accent) 26%, white);
 
   --nav-bg: #0f1b2d;
   --nav-text: #c3cdda;
@@ -39,6 +41,7 @@
   --critical: #c42b2b;
   --critical-soft: #fdecec;
 
+  --font: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --radius: 12px;
   --radius-sm: 10px;
   --shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
@@ -50,7 +53,7 @@
 
 body {
   margin: 0;
-  font-family: 'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: var(--font);
   font-size: 15px;
   background: var(--bg);
   color: var(--text);
@@ -153,19 +156,58 @@ a {
 }
 
 .brand-mark {
+  --logo: 34px;
+  flex: none;
   display: inline-grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: var(--logo);
+  height: var(--logo);
+  overflow: hidden;
   border-radius: 9px;
   background: var(--accent);
   color: #ffffff;
 }
 
 .brand-mark-lg {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: calc(var(--logo) * 1.2);
+  height: calc(var(--logo) * 1.2);
+}
+
+/* Logo options from Settings: size, shape and background. */
+.brand-mark.logo-medium {
+  --logo: 46px;
+}
+
+.brand-mark.logo-large {
+  --logo: 60px;
+}
+
+.brand-mark.logo-square {
+  border-radius: 3px;
+}
+
+.brand-mark.logo-circle {
+  border-radius: 50%;
+}
+
+.brand-mark.logo-bg-white {
+  background: #ffffff;
+  color: var(--accent);
+}
+
+.brand-mark.logo-bg-none {
+  background: transparent;
+}
+
+.brand-mark img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* A little room around the image when it sits on a colored tile. */
+.brand-mark:not(.logo-bg-none) img {
+  padding: 12%;
 }
 
 .side-nav {
@@ -219,7 +261,7 @@ a {
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #23324b;
+  background: color-mix(in srgb, var(--nav-bg) 85%, white);
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
@@ -444,6 +486,248 @@ label {
   border-color: #efc2c2;
   color: var(--critical);
   opacity: 1;
+}
+
+/* Attendance roster: every student has Present / Absent buttons;
+   absent students get a reason box. */
+.roster-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  margin: 20px 0 24px;
+}
+
+.roster-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.roster-stat {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 18px;
+  border-left: 1px solid var(--border);
+}
+
+.roster-stat:first-child {
+  border-left: none;
+}
+
+.roster-stat span {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.roster-stat strong {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.roster-stat.present strong {
+  color: var(--good-text);
+}
+
+.roster-stat.absent strong {
+  color: var(--critical);
+}
+
+.roster-stat.unmarked strong {
+  color: var(--warning-text);
+}
+
+.roster-meter {
+  height: 6px;
+  margin-top: 4px;
+  border-radius: 999px;
+  background: var(--critical-soft);
+  overflow: hidden;
+}
+
+.roster-meter div {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--good);
+  transition: width 0.2s ease;
+}
+
+.roster-movement {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  align-content: center;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.roster-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px 14px;
+  margin-bottom: 10px;
+}
+
+.roster-head h3 {
+  margin: 0 0 2px;
+}
+
+.roster-head .note {
+  margin: 0;
+}
+
+.roster {
+  margin: 0 0 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.roster-row {
+  display: grid;
+  grid-template-columns: 56px minmax(160px, 1.2fr) 196px minmax(200px, 2fr);
+  gap: 16px;
+  align-items: center;
+  min-height: 56px;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border-soft);
+  border-left: 3px solid transparent;
+  transition: background 0.15s ease;
+}
+
+.roster-row:hover {
+  background: var(--surface-2);
+}
+
+.roster-row.roster-header {
+  min-height: 0;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-top: none;
+  background: var(--surface-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.roster-row.absent {
+  border-left-color: var(--critical);
+  background: color-mix(in srgb, var(--critical-soft) 60%, white);
+}
+
+.roster-roll {
+  color: var(--text-3);
+  font-size: 14px;
+}
+
+.roster-name {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status-toggle {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.status-toggle button,
+.status-toggle button:hover:not(:disabled) {
+  flex: 1;
+  min-height: 32px;
+  padding: 4px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.status-toggle button:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.status-toggle button.present.active,
+.status-toggle button.present.active:hover:not(:disabled) {
+  border-color: var(--good-border);
+  background: var(--good-soft);
+  color: var(--good-text);
+}
+
+.status-toggle button.absent.active,
+.status-toggle button.absent.active:hover:not(:disabled) {
+  border-color: var(--critical);
+  background: var(--critical);
+  color: #ffffff;
+}
+
+.roster-reason input {
+  margin-top: 0;
+}
+
+.roster-dash {
+  color: var(--border-strong);
+}
+
+@media (max-width: 960px) {
+  .roster-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .roster-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .roster-stat:nth-child(odd) {
+    border-left: none;
+  }
+
+  .roster-stat.rate {
+    grid-column: 1 / -1;
+  }
+
+  .roster-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--border);
+  }
+
+  .roster-row.roster-header {
+    display: none;
+  }
+
+  .roster-row {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    gap: 8px 12px;
+    padding: 10px 12px;
+  }
+
+  .roster-reason {
+    grid-column: 1 / -1;
+  }
+
+  .roster-row:not(.absent) .roster-reason {
+    display: none;
+  }
 }
 
 .filters {
@@ -1294,7 +1578,7 @@ table.tracker {
 
 .login-pitch li svg {
   flex: none;
-  color: #7fa2f0;
+  color: color-mix(in srgb, var(--accent) 50%, white);
   margin-top: 1px;
 }
 
@@ -1559,6 +1843,162 @@ tr.muted-row td {
 }
 
 /* ---------- Phones ---------- */
+/* ---------- Settings (super admin) ---------- */
+.logo-editor {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 14px;
+}
+
+.logo-editor > div:last-child {
+  flex: 1 1 260px;
+}
+
+.logo-editor .actions {
+  margin-top: 0;
+}
+
+/* A piece of the sidebar showing the logo with the chosen options. */
+.brand-preview {
+  flex: 0 1 260px;
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-radius: var(--radius-sm);
+  background: var(--nav-bg);
+}
+
+.brand-preview .brand {
+  padding: 0;
+}
+
+/* The file input is hidden; its label looks like a button. */
+.file-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.file-button:hover {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+}
+
+.file-button:focus-within {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.file-button.disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.file-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.logo-name-toggle {
+  margin-top: 14px;
+}
+
+.settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.settings .actions {
+  margin: 0;
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+button.preset.active {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.color-field {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.color-field input {
+  margin-top: 0;
+}
+
+.color-field input[type='color'] {
+  flex: none;
+  width: 56px;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.field-error {
+  display: block;
+  margin-top: 6px;
+  font-weight: 500;
+  color: var(--critical);
+}
+
+.permission-list {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+
+.check-label.permission {
+  align-items: flex-start;
+  font-weight: 600;
+}
+
+.check-label.permission input {
+  margin-top: 2px;
+}
+
+.permission-help {
+  display: block;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-3);
+}
+
 @media (max-width: 760px) {
   /* Sidebar becomes a compact top bar: brand + user on one line, menu scrolls sideways */
   .sidebar {

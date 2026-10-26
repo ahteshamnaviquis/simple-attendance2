@@ -1,5 +1,12 @@
 [
   {
+    "id": "u0",
+    "name": "Super Admin",
+    "username": "superadmin",
+    "password": "super123",
+    "role": "superadmin"
+  },
+  {
     "id": "u1",
     "name": "Admin User",
     "username": "admin",
@@ -61,5 +68,12 @@
     "username": "zainab",
     "password": "teacher123",
     "role": "teacher"
+  },
+  {
+    "id": "582103f2-c2ff-4e92-97c3-c35b12f8cae0",
+    "name": "Admin2",
+    "username": "admin2",
+    "password": "admin123",
+    "role": "admin"
   }
 ]
