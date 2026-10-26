@@ -5,6 +5,9 @@
 import { createContext, useContext } from 'react';
 import { logoUrl } from './api';
 
+// The company logo (frontend/public), shown until the super admin uploads one.
+export const DEFAULT_LOGO = '/za-logo.png';
+
 // Font name -> its CSS font stack and the weights to load from Google Fonts
 // (only weights the font has: Google rejects the whole request otherwise).
 // Keep the names in step with FONTS in backend/settings.js.
@@ -35,6 +38,7 @@ export const LOGO_BACKGROUNDS = { accent: 'Accent color', white: 'White', none: 
 
 // Ready-made color pairs for the Settings screen.
 export const PRESETS = [
+  { name: 'ZA Solution', accentColor: '#2a62eb', sidebarColor: '#0e1726' },
   { name: 'Civic Navy', accentColor: '#2f5bd3', sidebarColor: '#0f1b2d' },
   { name: 'Forest', accentColor: '#0b6e4f', sidebarColor: '#0d2a1f' },
   { name: 'Maroon', accentColor: '#9b1c31', sidebarColor: '#2b0d14' },
@@ -80,7 +84,7 @@ export function applyTheme(theme) {
   setFavicon(theme.logo);
 }
 
-// The browser tab icon: the uploaded logo, or the built-in check mark.
+// The browser tab icon: the uploaded logo, or the ZA Solution logo.
 function setFavicon(logo) {
   let link = document.querySelector("link[rel='icon']");
   if (!link) {
@@ -88,22 +92,15 @@ function setFavicon(logo) {
     link.rel = 'icon';
     document.head.appendChild(link);
   }
-  link.href = logo ? logoUrl(logo) : DEFAULT_FAVICON;
+  link.href = logo ? logoUrl(logo) : DEFAULT_LOGO;
 }
-
-const DEFAULT_FAVICON =
-  'data:image/svg+xml,' +
-  encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#2f5bd3"/>' +
-      '<path d="M8 16.5l5 5L24 10" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
-  );
 
 // Used until the backend answers (or if it can't be reached). Same as the backend's defaults.
 export const DEFAULT_SETTINGS = {
   theme: {
-    schoolName: 'Daily Attendance',
-    accentColor: '#2f5bd3',
-    sidebarColor: '#0f1b2d',
+    schoolName: 'ZA Solution',
+    accentColor: '#2a62eb',
+    sidebarColor: '#0e1726',
     font: 'Public Sans',
     corners: 'normal',
     logo: null,

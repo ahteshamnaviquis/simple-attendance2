@@ -1,4 +1,4 @@
-# Simple Daily Attendance & Class Management System
+# ZA Solution — Daily Attendance & Class Management System
 
 A small **local prototype**: React frontend + Node.js/Express backend, with data stored in JSON files.
 

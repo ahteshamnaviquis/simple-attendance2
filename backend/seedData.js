@@ -75,9 +75,9 @@ const marks = [];
 // Look of the website and what admins may manage (the super admin changes these).
 const settings = {
   theme: {
-    schoolName: 'Daily Attendance',
-    accentColor: '#2f5bd3',
-    sidebarColor: '#0f1b2d',
+    schoolName: 'ZA Solution',
+    accentColor: '#2a62eb',
+    sidebarColor: '#0e1726',
     font: 'Public Sans',
     corners: 'normal',
     // Uploaded logo: null, or { type, version } (the image is data/logo, see routes/settings.js).
