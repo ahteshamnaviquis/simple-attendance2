@@ -4,16 +4,18 @@ import { getSavedUser, clearUser } from './session';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+// body is sent as JSON, except a File (an upload), which is sent as it is.
 async function request(method, path, body) {
   const user = getSavedUser();
+  const isFile = body instanceof File;
   const response = await fetch(API_URL + path, {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': isFile ? body.type : 'application/json',
       // Tells the backend who is logged in. Prototype only - not secure.
       ...(user && { 'X-User-Id': user.id }),
     },
-    body: body && JSON.stringify(body),
+    body: isFile ? body : body && JSON.stringify(body),
   });
   const data = await response.json().catch(() => null);
 
@@ -35,6 +37,18 @@ function query(params) {
 }
 
 export const login = (username, password) => request('POST', '/api/login', { username, password });
+
+export const getSettings = () => request('GET', '/api/settings');
+export const saveSettings = (settings) => request('PUT', '/api/settings', settings);
+export const uploadLogo = (file) => request('PUT', '/api/settings/logo', file);
+export const removeLogo = () => request('DELETE', '/api/settings/logo');
+// The address of the uploaded logo image; the version makes browsers fetch a new upload.
+export const logoUrl = (logo) => `${API_URL}/api/settings/logo?v=${logo.version}`;
+
+export const getAdmins = () => request('GET', '/api/admins');
+export const createAdmin = (admin) => request('POST', '/api/admins', admin);
+export const updateAdmin = (id, admin) => request('PUT', `/api/admins/${id}`, admin);
+export const deleteAdmin = (id) => request('DELETE', `/api/admins/${id}`);
 
 export const getTeachers = () => request('GET', '/api/teachers');
 export const createTeacher = (teacher) => request('POST', '/api/teachers', teacher);

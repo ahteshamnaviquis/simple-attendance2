@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { login } from '../api';
 import Icon from '../components/Icon.jsx';
+import Brand from '../components/Brand.jsx';
+import { useSettings } from '../theme';
 
 const FEATURES = [
   'Daily class reports with absent students and reasons',
@@ -9,6 +11,7 @@ const FEATURES = [
 ];
 
 export default function LoginPage({ onLogin }) {
+  const { theme } = useSettings();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -30,12 +33,7 @@ export default function LoginPage({ onLogin }) {
   return (
     <div className="login">
       <section className="login-intro">
-        <div className="brand">
-          <span className="brand-mark brand-mark-lg">
-            <Icon name="check" size={22} strokeWidth={2.4} />
-          </span>
-          <span>Daily Attendance</span>
-        </div>
+        <Brand theme={theme} large />
 
         <div className="login-pitch">
           <h1>Attendance for every class, every day.</h1>

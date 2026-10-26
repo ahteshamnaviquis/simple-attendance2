@@ -47,9 +47,38 @@ async function loadCurrentUser(req, res, next) {
   if (id) {
     const users = await readData('users');
     const user = users.find((u) => u.id === id);
-    if (user) req.user = publicUser(user);
+    if (user) req.user = { ...publicUser(user), permissions: await permissionsFor(user) };
   }
   next();
+}
+
+// The areas each role may manage. The super admin always has teachers and
+// exams; admins have whatever the super admin allowed in settings.json.
+async function permissionsFor(user) {
+  if (user.role === 'superadmin') return { teachers: true, exams: true };
+  if (user.role === 'admin') {
+    const { readSettings } = require('./settings'); // here, not at the top: settings.js uses this file
+    return (await readSettings()).adminPermissions;
+  }
+  return {};
+}
+
+// True when the user may manage this area (students, classes, subjects, teachers, exams).
+function can(user, area) {
+  return Boolean(user?.permissions?.[area]);
+}
+
+// Middleware: only let users who may manage this area continue.
+function requireArea(area) {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Please log in again' });
+    }
+    if (!can(req.user, area)) {
+      return res.status(403).json({ error: 'You are not allowed to do this' });
+    }
+    next();
+  };
 }
 
 // Middleware: only let users with one of the given roles continue.
@@ -65,8 +94,16 @@ function requireRole(...roles) {
   };
 }
 
-const requireLogin = requireRole('admin', 'teacher');
-const requireAdmin = requireRole('admin');
+// Two kinds of administrator:
+//   superadmin - admin accounts, settings, teachers and examinations
+//   admin      - dashboard and attendance reports, plus the areas the super
+//                admin allows (by default students, classes and subjects)
+function isAdmin(user) {
+  return user?.role === 'admin';
+}
+
+const requireLogin = requireRole('superadmin', 'admin', 'teacher');
+const requireSuperAdmin = requireRole('superadmin');
 
 module.exports = {
   HttpError,
@@ -75,7 +112,10 @@ module.exports = {
   todayString,
   isValidDate,
   loadCurrentUser,
+  isAdmin,
+  can,
   requireRole,
+  requireArea,
   requireLogin,
-  requireAdmin,
+  requireSuperAdmin,
 };

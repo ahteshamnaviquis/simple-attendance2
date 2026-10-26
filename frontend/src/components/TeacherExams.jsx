@@ -1,6 +1,6 @@
 // Teacher: the exam subjects they teach (one row per exam + subject), with the
 // marks-entry status, and the marks-entry screen for one of them. Teachers don't
-// create or publish examinations; the admin does.
+// create or publish examinations; the super admin does.
 
 import { useEffect, useState } from 'react';
 import { getMyExamSubjects } from '../api';
@@ -117,7 +117,7 @@ export default function TeacherExams() {
                 <td colSpan="9">
                   {show === 'todo' && list.length > 0
                     ? 'All your marks are submitted.'
-                    : 'No examinations for your subjects yet. The admin creates examinations.'}
+                    : 'No examinations for your subjects yet. The super admin creates examinations.'}
                 </td>
               </tr>
             )}

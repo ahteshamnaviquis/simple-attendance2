@@ -182,7 +182,7 @@ export default function ClassSubjectsManager({ subjects }) {
           </div>
           {unassigned > 0 && (
             <p className="note">
-              {unassigned} {unassigned === 1 ? 'subject has' : 'subjects have'} no teacher. The admin enters
+              {unassigned} {unassigned === 1 ? 'subject has' : 'subjects have'} no teacher. The super admin enters
               those marks.
             </p>
           )}

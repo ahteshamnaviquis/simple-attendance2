@@ -9,12 +9,18 @@
 
 const express = require('express');
 const { readData, updateData } = require('../fileStore');
-const { HttpError, newId, requireLogin } = require('../helpers');
+const { HttpError, newId, isAdmin, can, requireLogin } = require('../helpers');
 
 const router = express.Router();
 
+// Adding, editing and removing: admins with the students permission, or the class teacher.
 function canUseClass(user, cls) {
-  return user.role === 'admin' || (cls && cls.teacherId === user.id);
+  return can(user, 'students') || (cls && cls.teacherId === user.id);
+}
+
+// Reading: every admin (the dashboard counts students), or the class teacher.
+function canSeeClass(user, cls) {
+  return isAdmin(user) || canUseClass(user, cls);
 }
 
 function cleanStudentInput(body) {
@@ -61,7 +67,7 @@ function compareStudents(a, b) {
 // Admins see all students, teachers only students in their classes.
 router.get('/', requireLogin, async (req, res) => {
   const [students, classes] = await Promise.all([readData('students'), readData('classes')]);
-  const visibleClasses = classes.filter((c) => canUseClass(req.user, c));
+  const visibleClasses = classes.filter((c) => canSeeClass(req.user, c));
 
   let list = students
     .map((s) => {

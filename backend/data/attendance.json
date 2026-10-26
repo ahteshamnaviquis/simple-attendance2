@@ -555,5 +555,32 @@
     "createdBy": "Ali Raza",
     "updatedAt": "2026-10-21T03:20:00.000Z",
     "updatedBy": "Ali Raza"
+  },
+  {
+    "id": "c3293e39-c79a-4664-bc48-56572b8c327c",
+    "classId": "c1",
+    "date": "2026-10-24",
+    "className": "Grade 9",
+    "teacherId": "u2",
+    "teacherName": "Sara Khan",
+    "totalStudents": 10,
+    "present": 8,
+    "absent": 2,
+    "addedToday": 0,
+    "leftToday": 0,
+    "absentees": [
+      {
+        "name": "Javeria Zafar",
+        "reason": "dsfsdf"
+      },
+      {
+        "name": "Ayesha Malik",
+        "reason": "dsfsdf"
+      }
+    ],
+    "createdAt": "2026-10-24T07:38:35.389Z",
+    "createdBy": "Sara Khan",
+    "updatedAt": "2026-10-24T07:38:35.389Z",
+    "updatedBy": "Sara Khan"
   }
 ]

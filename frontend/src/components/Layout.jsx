@@ -3,6 +3,10 @@
 // items: [{ id, label, icon }]
 
 import Icon from './Icon.jsx';
+import Brand from './Brand.jsx';
+import { useSettings } from '../theme';
+
+const ROLE_LABELS = { superadmin: 'Super admin', admin: 'Administrator', teacher: 'Teacher' };
 
 function initials(name) {
   return name
@@ -14,15 +18,11 @@ function initials(name) {
 }
 
 export default function Layout({ user, items, current, onNavigate, onLogout, children }) {
+  const { theme } = useSettings();
   return (
     <div className="layout">
       <aside className="sidebar no-print">
-        <div className="brand">
-          <span className="brand-mark">
-            <Icon name="check" size={19} strokeWidth={2.4} />
-          </span>
-          <span>Daily Attendance</span>
-        </div>
+        <Brand theme={theme} />
 
         <nav className="side-nav" aria-label="Main">
           {items.map((item) => (
@@ -45,7 +45,7 @@ export default function Layout({ user, items, current, onNavigate, onLogout, chi
           </span>
           <span className="user-info">
             <span className="user-name">{user.name}</span>
-            <span className="user-role">{user.role === 'admin' ? 'Administrator' : 'Teacher'}</span>
+            <span className="user-role">{ROLE_LABELS[user.role]}</span>
           </span>
           <button type="button" className="icon-button" aria-label="Log out" onClick={onLogout}>
             <Icon name="logout" />

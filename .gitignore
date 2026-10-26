@@ -6,3 +6,5 @@ data-backup-*/
 .env
 .env.example
 mobile/
+# The logo the super admin uploads
+backend/data/logo

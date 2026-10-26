@@ -1,10 +1,10 @@
 // Enter one subject's marks for every student in the exam's class.
 // Teachers only get the subjects they teach (the backend checks this on every
-// request); the admin gets every subject.
+// request); the super admin gets every subject.
 //
 // - "Save draft" stores the marks; they can be changed until submitted.
 // - "Submit marks" saves, then submits. It needs a mark or Absent for every
-//   student. Submitted marks are locked until the admin reopens them.
+//   student. Submitted marks are locked until the super admin reopens them.
 // - The grid is cleared and loaded again whenever the subject changes, and Save
 //   sends the exam and subject the grid was loaded for, so marks can't be saved
 //   against the wrong records.
@@ -191,7 +191,7 @@ export default function MarksEntry({ examId, initialSubjectId, onBack, onShowRes
   async function handleSubmit() {
     if (problemCount > 0 || !allEntered) return;
     const ok = window.confirm(
-      `Submit ${grid.subject.subjectName} marks for ${exam.className}?\n\nAfter submitting you can't change them unless the admin reopens them.`
+      `Submit ${grid.subject.subjectName} marks for ${exam.className}?\n\nAfter submitting you can't change them unless the super admin reopens them.`
     );
     if (!ok) return;
     setBusy(true);
@@ -267,7 +267,7 @@ export default function MarksEntry({ examId, initialSubjectId, onBack, onShowRes
 
       {grid && isPublished && <p className="info">The results of this examination are published, so marks are locked.</p>}
       {grid && !isPublished && isSubmitted && (
-        <p className="info">These marks are submitted, so they are locked. The admin can reopen them for corrections.</p>
+        <p className="info">These marks are submitted, so they are locked. The super admin can reopen them for corrections.</p>
       )}
 
       {error && <p className="error">{error}</p>}

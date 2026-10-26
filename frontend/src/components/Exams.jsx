@@ -1,4 +1,4 @@
-// Admin: examinations. The list with filters and marks-entry progress, and the
+// Super admin: examinations. The list with filters and marks-entry progress, and the
 // screens for one exam (details panel, create/edit form, marks entry, result
 // sheet, one student's result). Teachers use TeacherExams instead.
 
