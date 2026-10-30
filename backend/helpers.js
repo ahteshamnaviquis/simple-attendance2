@@ -1,7 +1,7 @@
 // Small shared helpers for the API routes.
 
 const crypto = require('crypto');
-const { readData } = require('./fileStore');
+const { readData } = require('./store');
 
 // An error with an HTTP status code. Throw it from a route (or from inside
 // updateData) and the error handler in server.js sends it to the browser.
@@ -53,7 +53,7 @@ async function loadCurrentUser(req, res, next) {
 }
 
 // The areas each role may manage. The super admin always has teachers and
-// exams; admins have whatever the super admin allowed in settings.json.
+// exams; admins have whatever the super admin allowed in the settings table.
 async function permissionsFor(user) {
   if (user.role === 'superadmin') return { teachers: true, exams: true };
   if (user.role === 'admin') {

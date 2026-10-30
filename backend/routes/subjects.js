@@ -6,7 +6,7 @@
 // exam keeps the subject names it was created with, so old results always make sense.
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const { HttpError, newId, requireLogin, requireArea } = require('../helpers');
 
 const router = express.Router();

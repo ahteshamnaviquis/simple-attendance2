@@ -1,22 +1,17 @@
 // API tests for the theme and admin permissions (settings.json). Run with: npm test
 //
-// Starts the real server on a spare port with a temporary data folder that has
-// no settings.json yet, so the server must create it with the defaults.
+// Starts the real server on a spare port with a temporary MySQL database (see
+// testServer.js) that has no settings saved yet, so the defaults apply.
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
+const { startServer, stopServer, readFile } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
 const SARA = 'u2';
 
-let server;
 let baseUrl;
-let dataDir;
 
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
@@ -43,28 +38,10 @@ const START_DATA = {
 };
 
 test.before(async () => {
-  dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'settings-test-'));
-  for (const [name, data] of Object.entries(START_DATA)) {
-    fs.writeFileSync(path.join(dataDir, `${name}.json`), JSON.stringify(data));
-  }
-  const port = 20000 + Math.floor(Math.random() * 20000);
-  baseUrl = `http://127.0.0.1:${port}`;
-  server = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, PORT: String(port), DATA_DIR: dataDir, RAILWAY_ENVIRONMENT: '' },
-    stdio: ['ignore', 'pipe', 'inherit'],
-  });
-  await new Promise((resolve, reject) => {
-    server.on('exit', (code) => reject(new Error(`Server stopped (${code})`)));
-    server.stdout.on('data', (chunk) => {
-      if (String(chunk).includes('API running')) resolve();
-    });
-  });
+  baseUrl = await startServer(START_DATA);
 });
 
-test.after(() => {
-  server.kill();
-  fs.rmSync(dataDir, { recursive: true, force: true });
-});
+test.after(stopServer);
 
 let current;
 const withTheme = (changes) => ({ ...current, theme: { ...current.theme, ...changes } });
@@ -211,5 +188,5 @@ test('the uploaded logo is served, kept when settings are saved, and can be remo
   assert.equal(removed.status, 200);
   assert.equal(removed.body.theme.logo, null);
   assert.equal((await api(null, 'GET', '/api/settings/logo')).status, 404);
-  assert.ok(!fs.existsSync(path.join(dataDir, 'logo')));
+  assert.equal(await readFile('logo'), null);
 });

@@ -1,11 +1,11 @@
-// School-wide settings, stored in settings.json and changed by the super admin:
+// School-wide settings, stored in the settings table and changed by the super admin:
 //   theme            - how the website looks (name, colors, font, corners, logo)
 //   adminPermissions - which areas admins may manage
 //
 // The dashboard and attendance reports always belong to admins; admin accounts
 // and these settings always belong to the super admin.
 
-const { readData } = require('./fileStore');
+const { readData } = require('./store');
 const { settings: DEFAULT_SETTINGS } = require('./seedData');
 const { HttpError } = require('./helpers');
 
@@ -31,7 +31,7 @@ const LOGO_BACKGROUNDS = ['accent', 'white', 'none'];
 const ADMIN_AREAS = Object.keys(DEFAULT_SETTINGS.adminPermissions);
 
 // The saved settings, with defaults filled in for anything missing
-// (for example a settings.json written by an older version).
+// (for example settings saved by an older version).
 async function readSettings() {
   const saved = await readData('settings');
   return {

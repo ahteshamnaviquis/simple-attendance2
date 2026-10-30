@@ -1,23 +1,18 @@
 // API tests for disabling and removing teachers and examinations (super admin).
 // Run with: npm test
 //
-// Starts the real server on a spare port with a temporary data folder.
+// Starts the real server on a spare port with a temporary MySQL database (testServer.js).
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
+const { startServer, stopServer, readTable } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
 const SARA = 'u2';
 const ALI = 'u3';
 
-let server;
 let baseUrl;
-let dataDir;
 
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
@@ -28,9 +23,6 @@ async function api(userId, method, url, body) {
   return { status: response.status, body: await response.json().catch(() => null) };
 }
 
-function readFile(name) {
-  return JSON.parse(fs.readFileSync(path.join(dataDir, `${name}.json`), 'utf8'));
-}
 
 const exam = (id, name) => ({
   id,
@@ -41,6 +33,7 @@ const exam = (id, name) => ({
   remarks: '',
   subjects: [{ subjectId: 's1', subjectName: 'Maths', maxMarks: 100, passMarks: 33 }],
   status: 'open',
+  createdById: 'u0',
   createdBy: 'Super Admin',
   createdAt: '2026-10-01T00:00:00.000Z',
   updatedBy: 'Super Admin',
@@ -61,33 +54,27 @@ const START_DATA = {
   classSubjects: [{ id: 'cs1', classId: 'c1', subjectId: 's1', teacherId: 'u2' }],
   exams: [exam('e1', 'Mid term'), exam('e2', 'Final')],
   marks: [
-    { id: 'm1', examId: 'e2', subjectId: 's1', studentId: 'st1', obtained: 70, absent: false, remarks: '' },
+    {
+      id: 'm1',
+      examId: 'e2',
+      subjectId: 's1',
+      studentId: 'st1',
+      studentName: 'Ahmed',
+      rollNumber: '1',
+      obtained: 70,
+      absent: false,
+      remarks: '',
+      updatedAt: '2026-10-01T00:00:00.000Z',
+      updatedBy: 'Sara Khan',
+    },
   ],
 };
 
 test.before(async () => {
-  dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'disable-test-'));
-  for (const [name, data] of Object.entries(START_DATA)) {
-    fs.writeFileSync(path.join(dataDir, `${name}.json`), JSON.stringify(data));
-  }
-  const port = 20000 + Math.floor(Math.random() * 20000);
-  baseUrl = `http://127.0.0.1:${port}`;
-  server = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, PORT: String(port), DATA_DIR: dataDir, RAILWAY_ENVIRONMENT: '' },
-    stdio: ['ignore', 'pipe', 'inherit'],
-  });
-  await new Promise((resolve, reject) => {
-    server.on('exit', (code) => reject(new Error(`Server stopped (${code})`)));
-    server.stdout.on('data', (chunk) => {
-      if (String(chunk).includes('API running')) resolve();
-    });
-  });
+  baseUrl = await startServer(START_DATA);
 });
 
-test.after(() => {
-  server.kill();
-  fs.rmSync(dataDir, { recursive: true, force: true });
-});
+test.after(stopServer);
 
 test('only the super admin disables and removes teachers', async () => {
   assert.equal((await api(ADMIN, 'POST', `/api/teachers/${SARA}/disable`)).status, 403);
@@ -110,7 +97,7 @@ test('a disabled teacher cannot log in or use the API until enabled', async () =
   assert.equal((await api(SARA, 'GET', '/api/classes')).status, 401);
 
   // Classes stay assigned while disabled.
-  assert.equal(readFile('classes')[0].teacherId, SARA);
+  assert.equal((await readTable('classes'))[0].teacherId, SARA);
 
   assert.equal((await api(SUPER, 'POST', `/api/teachers/${SARA}/enable`)).status, 200);
   assert.equal((await api(null, 'POST', '/api/login', { username: 'sara', password: 'teacher123' })).status, 200);
@@ -139,14 +126,14 @@ test('a disabled exam is hidden from its teacher until enabled', async () => {
 test('the super admin removes an exam that has marks, with its marks', async () => {
   assert.equal((await api(SARA, 'DELETE', '/api/exams/e2')).status, 403);
   assert.equal((await api(SUPER, 'DELETE', '/api/exams/e2')).status, 200);
-  assert.deepEqual(readFile('exams').map((e) => e.id), ['e1']);
-  assert.equal(readFile('marks').length, 0);
+  assert.deepEqual((await readTable('exams')).map((e) => e.id), ['e1']);
+  assert.equal((await readTable('marks')).length, 0);
 });
 
 test('removing a teacher unassigns their classes and subjects', async () => {
   assert.equal((await api(SUPER, 'DELETE', `/api/teachers/${SARA}`)).status, 204);
   assert.equal((await api(null, 'POST', '/api/login', { username: 'sara', password: 'teacher123' })).status, 401);
-  assert.equal(readFile('classes')[0].teacherId, null);
-  assert.equal(readFile('classSubjects')[0].teacherId, null);
-  assert.ok(readFile('users').some((u) => u.id === ALI));
+  assert.equal((await readTable('classes'))[0].teacherId, null);
+  assert.equal((await readTable('classSubjects'))[0].teacherId, null);
+  assert.ok((await readTable('users')).some((u) => u.id === ALI));
 });

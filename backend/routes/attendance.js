@@ -19,7 +19,7 @@
 // - Teachers can only see and change reports for classes assigned to them.
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const {
   HttpError,
   newId,

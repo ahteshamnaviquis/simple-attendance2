@@ -2,7 +2,7 @@
 // Each class: { id, name, teacherId }  (teacherId is null when unassigned)
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const { HttpError, newId, requireLogin, requireArea } = require('../helpers');
 
 const router = express.Router();

@@ -1,6 +1,6 @@
 # Simple Daily Attendance & Class Management System
 
-A small **local prototype**: React frontend + Node.js/Express backend, with data stored in JSON files.
+A small **local prototype**: React frontend + Node.js/Express backend, with data stored in MySQL.
 
 > ⚠️ **Local demo only.** Passwords are stored in plain text, and "who is logged in" is just
 > an id the browser sends in a header (`X-User-Id`), which anyone could fake. The roles
@@ -94,20 +94,25 @@ SimpleAttendence/
 ├── README.md
 ├── backend/
 │   ├── package.json
-│   ├── .env               # PORT, FRONTEND_URL
+│   ├── .env               # PORT, FRONTEND_URL, MySQL connection
 │   ├── config.js          # Reads .env
 │   ├── server.js          # Express app: login, health, users, error handling
 │   ├── helpers.js         # HttpError, ids, dates, role and permission checks
 │   ├── settings.js        # Theme and admin permissions: defaults and validation
-│   ├── fileStore.js       # Reads/writes JSON files through one write queue
-│   ├── seedData.js        # Sample data used when a JSON file is missing
+│   ├── store.js           # Reads/writes MySQL through one write queue (readData/updateData)
+│   ├── seedData.js        # Sample data for a brand-new database
+│   ├── sql/
+│   │   ├── schema.sql     # The tables (the server runs this itself on start)
+│   │   └── data.sql       # The data from the JSON files as INSERTs (npm run json-to-sql)
 │   ├── results.js         # Exam totals, percentages, Incomplete and positions
 │   ├── test/
-│   │   ├── exams.test.js  # npm test: API tests for examinations (uses a temporary data folder)
+│   │   ├── testServer.js  # Starts the server on a temporary MySQL database for each test file
+│   │   ├── exams.test.js  # npm test: API tests for examinations
 │   │   ├── admins.test.js # Super admin and admin accounts
 │   │   └── settings.test.js # Theme and admin permissions
 │   ├── scripts/
-│   │   └── addDemoData.js # npm run demo-data: extra teachers, classes, students, 14 days of reports
+│   │   ├── addDemoData.js # npm run demo-data: extra teachers, classes, students, 14 days of reports
+│   │   └── jsonToSql.js   # npm run json-to-sql: JSON data files -> sql/data.sql
 │   ├── routes/
 │   │   ├── admins.js      # /api/admins (super admin only)
 │   │   ├── settings.js    # /api/settings (theme and admin permissions)
@@ -118,7 +123,7 @@ SimpleAttendence/
 │   │   ├── subjects.js    # /api/subjects
 │   │   ├── classSubjects.js # /api/class-subjects (subjects of each class and their teachers)
 │   │   └── exams.js       # /api/exams (exams, marks and results; all exam rules live here)
-│   └── data/              # Created automatically on first start
+│   └── data/              # The JSON data from before MySQL (source of sql/data.sql; not used by the server)
 │       ├── users.json
 │       ├── classes.json
 │       ├── students.json
@@ -128,7 +133,7 @@ SimpleAttendence/
 │       ├── exams.json
 │       ├── marks.json
 │       ├── settings.json
-│       └── logo           # The uploaded logo, if any (not committed)
+│       └── logo           # A logo uploaded before MySQL, if any (not committed)
 ├── mobile/                # React Native (Expo) Android app, see "Mobile app"
 └── frontend/
     ├── package.json
@@ -177,6 +182,9 @@ SimpleAttendence/
 ## Requirements
 
 - Node.js 20.12 or newer (check with `node -v` in PowerShell)
+- MySQL 8.0 or newer, running (the Windows installer sets it up as a service). The
+  backend's MySQL user needs permission to create a database and tables, or you create
+  them yourself (see *Database*).
 
 ## Configuration (.env files)
 
@@ -186,7 +194,16 @@ Each app has one small `.env` file:
 ```
 PORT=5050
 FRONTEND_URL=http://localhost:5173
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your-mysql-password
+DB_NAME=attendance
 ```
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: the MySQL server and
+  database (defaults: `127.0.0.1`, `3306`, `root`, no password, `attendance`). Instead you
+  can give one `DATABASE_URL`, such as `mysql://user:password@host:3306/attendance`.
+  Railway's MySQL sets `MYSQL_URL`, which works too.
 - `PORT`: port the API listens on. Railway sets its own `PORT` automatically.
 - `FRONTEND_URL`: the website allowed to call the API from the browser (CORS). To
   allow several, separate them with commas. On Railway, set this as a variable to
@@ -233,6 +250,36 @@ picks the next free one (5174, ...). Stop either server with `Ctrl + C`.
 
 While developing the backend, `npm run dev` restarts it automatically when you save a file.
 
+## Database
+
+On start the backend creates the database (`DB_NAME`) if it's missing, and any missing
+tables from `backend/sql/schema.sql`. A **brand-new** database is filled with the starting
+data from `seedData.js` (the logins below). After that the server never adds sample data
+again.
+
+**Load the same data as the JSON files** (the users, classes, students, 25 reports, exams
+and marks in `backend/data`): `backend/sql/data.sql` has all of it as INSERT statements.
+In PowerShell, from the `backend` folder:
+
+```powershell
+mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS attendance CHARACTER SET utf8mb4"
+mysql -u root -p attendance -e "source sql/schema.sql"
+mysql -u root -p attendance -e "source sql/data.sql"
+```
+
+`data.sql` empties the tables first, so loading it again starts over. (In MySQL Workbench:
+*File → Open SQL Script*, pick the database, and run each file.)
+
+**Your own JSON data** (for example a backup folder, or the data on a server): turn it into
+SQL with `node scripts/jsonToSql.js <folder> <output.sql>`, then load that file the same
+way. `npm run json-to-sql` remakes `sql/data.sql` from `backend/data`.
+
+**Tables:** `users`, `classes`, `students`, `subjects`, `class_subjects`, `attendance`,
+`exams`, `marks`, `settings` and `files` (the uploaded logo). Lists inside a row (a
+report's absent students, an exam's subjects) are JSON columns. Copies such as a report's
+class and teacher name are kept on purpose, so history stays readable after renames and
+removals.
+
 ## Mobile app (Android)
 
 The `mobile` folder is a React Native app (Expo) with the same features as the web
@@ -274,7 +321,7 @@ The work is split between two kinds of administrator. The **super admin** handle
 admin accounts, the settings, teachers and examinations. **Admins** (there can be several)
 always have the dashboard and attendance reports, plus the areas the super admin allows in
 *Settings*: by default students, classes and subjects. The super admin can also hand
-teachers or examinations to admins, or take areas away. If `data/users.json` has no super
+teachers or examinations to admins, or take areas away. If the database has no super
 admin, the server adds the `superadmin` account when it starts.
 
 | Username | Password   | Role    | Class teacher of | Teaches (Grade 9 and 10) |
@@ -320,9 +367,9 @@ assignments are never changed (a subject a class already has keeps its teacher),
 running again adds only what is missing. Refresh the browser afterwards. You don't need to
 restart the backend.
 
-To start over with only the starting data plus demo data: stop the backend, copy
-`backend/data` somewhere safe (a `data-backup-*` folder is ignored by git), delete the
-files in `backend/data`, and run `npm run demo-data`.
+To start over with only the starting data plus demo data: stop the backend, back up the
+database (see *Data safety*), drop it (`mysql -u root -p -e "DROP DATABASE attendance"`),
+and run `npm run demo-data`. It creates a fresh database first.
 
 ## API
 
@@ -384,13 +431,15 @@ adds it automatically after login).
 
 ## Data safety
 
-All writes go through one queue in `fileStore.js`, so simultaneous saves run one after
-another instead of overwriting each other. Each save writes a temporary file first and
-then renames it, so a crash can't leave a half-written JSON file.
+All writes go through one queue in `store.js`, so simultaneous saves run one after another
+instead of overwriting each other. Each save runs in a MySQL transaction: a change that
+fails part-way saves nothing. Foreign keys and unique keys (one report per class per date,
+one mark per exam, subject and student, unique usernames and subject names) guard the data
+as well.
 
-**Backup:** copy the `backend/data` folder.
-**Reset:** stop the backend, delete the files in `backend/data/`, and start it again. They
-are recreated from `seedData.js`.
+**Backup:** `mysqldump -u root -p attendance > attendance-backup.sql`
+**Reset:** stop the backend, drop the database, and start it again. It is recreated from
+`seedData.js`.
 
 ## Tests
 
@@ -399,8 +448,10 @@ cd backend
 npm test
 ```
 
-Runs the examination API tests against a temporary copy of the starting data, so the files
-in `backend/data` are never touched.
+Runs the API tests. Each test file gets its own temporary MySQL database
+(`attendance_test_...`), dropped again at the end, so your real database is never touched.
+They use the MySQL server from `backend/.env`, whose user must be allowed to create and
+drop databases.
 
 ## Quick test checklist
 

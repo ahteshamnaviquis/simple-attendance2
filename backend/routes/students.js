@@ -8,7 +8,7 @@
 // absent students' names as text.
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const { HttpError, newId, isAdmin, can, requireLogin } = require('../helpers');
 
 const router = express.Router();

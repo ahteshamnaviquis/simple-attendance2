@@ -1,7 +1,7 @@
 // API tests for subject assignments, examinations, marks and results. Run with: npm test
 //
-// Starts the real server on a spare port with a temporary data folder, so the
-// files in backend/data are never touched. The folder starts with the fixed data
+// Starts the real server on a spare port with a temporary MySQL database (see
+// testServer.js), so the real data is never touched. It starts with the fixed data
 // below (not seedData.js, so changing the demo data doesn't break the tests):
 // super admin u0 (exams, teachers), admin u1 (subjects, classes, students), teachers u2 (Sara, class teacher of c1 and c2) and u3 (Ali, class
 // teacher of c3), Grade 1 - Grade 3 (c1-c3), students s1-s3 in c1, s4-s5 in c2,
@@ -12,19 +12,14 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
-const fs = require('node:fs');
-const os = require('node:os');
-const path = require('node:path');
+const { startServer, stopServer, readTable } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
 const SARA = 'u2';
 const ALI = 'u3';
 
-let server;
 let baseUrl;
-let dataDir;
 
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
@@ -63,33 +58,12 @@ const START_DATA = {
   marks: [],
 };
 
-function readFile(name) {
-  return JSON.parse(fs.readFileSync(path.join(dataDir, `${name}.json`), 'utf8'));
-}
 
 test.before(async () => {
-  dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'exams-test-'));
-  for (const [name, data] of Object.entries(START_DATA)) {
-    fs.writeFileSync(path.join(dataDir, `${name}.json`), JSON.stringify(data));
-  }
-  const port = 20000 + Math.floor(Math.random() * 20000);
-  baseUrl = `http://127.0.0.1:${port}`;
-  server = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env: { ...process.env, PORT: String(port), DATA_DIR: dataDir, RAILWAY_ENVIRONMENT: '' },
-    stdio: ['ignore', 'pipe', 'inherit'],
-  });
-  await new Promise((resolve, reject) => {
-    server.on('exit', (code) => reject(new Error(`Server stopped (${code})`)));
-    server.stdout.on('data', (chunk) => {
-      if (String(chunk).includes('API running')) resolve();
-    });
-  });
+  baseUrl = await startServer(START_DATA);
 });
 
-test.after(() => {
-  server.kill();
-  fs.rmSync(dataDir, { recursive: true, force: true });
-});
+test.after(stopServer);
 
 const ids = {};
 const marksUrl = () => `/api/exams/${ids.exam}/marks`;
@@ -134,7 +108,7 @@ test('admin assigns subjects and subject teachers to a class', async () => {
   assert.equal(res.body.find((r) => r.subjectId === ids.Mathematics).teacherName, 'Ali Raza');
   await set(ADMIN, 'c3', [{ subjectId: ids.Urdu, teacherId: ALI }]);
 
-  assert.equal(readFile('classSubjects').length, 4);
+  assert.equal((await readTable('classSubjects')).length, 4);
   const mine = await api(SARA, 'GET', '/api/class-subjects');
   assert.deepEqual(mine.body.map((r) => r.subjectName), ['English']);
   const c1 = await api(ADMIN, 'GET', '/api/class-subjects?classId=c1');
@@ -212,7 +186,7 @@ test('a teacher enters marks only for their own subject, even by changing the re
   assert.equal((await saveMarks(ALI, ids.English, [{ studentId: 's1', obtained: 50 }])).status, 403);
   assert.equal((await saveMarks(SARA, ids.Physics, [{ studentId: 's1', obtained: 50 }])).status, 403);
   assert.equal((await saveMarks(ids.zara, ids.English, [{ studentId: 's1', obtained: 50 }])).status, 403);
-  assert.equal(readFile('marks').length, 0);
+  assert.equal((await readTable('marks')).length, 0);
 });
 
 test('valid marks are saved and edited without duplicates; zero is not missing', async () => {
@@ -235,13 +209,13 @@ test('valid marks are saved and edited without duplicates; zero is not missing',
   assert.equal(res.body.rows.find((r) => r.studentId === 's3').obtained, 0);
   assert.equal(res.body.subject.enteredCount, 3);
 
-  const english = readFile('marks').filter((m) => m.subjectId === ids.English);
+  const english = (await readTable('marks')).filter((m) => m.subjectId === ids.English);
   assert.equal(english.length, 3);
   assert.equal(new Set(english.map((m) => m.studentId)).size, 3);
 });
 
 test('invalid marks are rejected and nothing from that save is stored', async () => {
-  const before = readFile('marks');
+  const before = await readTable('marks');
   const bad = [
     [{ studentId: 's1', obtained: 50 }, { studentId: 's2', obtained: -1 }],
     [{ studentId: 's1', obtained: 50 }, { studentId: 's2', obtained: 101 }],
@@ -256,7 +230,7 @@ test('invalid marks are rejected and nothing from that save is stored', async ()
     assert.equal(res.status, 400, JSON.stringify(marks));
   }
   assert.equal((await saveMarks(SUPER, ids.Urdu, [{ studentId: 's1', obtained: 1 }])).status, 400);
-  assert.deepEqual(readFile('marks'), before);
+  assert.deepEqual(await readTable('marks'), before);
 });
 
 test('submitting needs every student; submitted marks are locked', async () => {
@@ -431,7 +405,7 @@ test('the super admin list filters examinations', async () => {
 
 test('marks of a student who left the class are kept but not ranked', async () => {
   await api(SUPER, 'POST', `/api/exams/${ids.exam}/unpublish`);
-  const student = readFile('students').find((s) => s.id === 's3');
+  const student = (await readTable('students')).find((s) => s.id === 's3');
   const moved = await api(ADMIN, 'PUT', '/api/students/s3', { ...student, classId: 'c2' });
   assert.equal(moved.status, 200);
 
@@ -460,8 +434,8 @@ test('existing features keep working', async () => {
   assert.equal(report.status, 201);
   // Ali teaches Maths in c1 but is not its class teacher: attendance stays Sara's.
   assert.equal((await api(ALI, 'GET', '/api/attendance?classId=c1')).body.length, 0);
-  assert.equal(readFile('classes').length, 3);
-  assert.equal(readFile('classes')[0].teacherId, 'u2');
+  assert.equal((await readTable('classes')).length, 3);
+  assert.equal((await readTable('classes'))[0].teacherId, 'u2');
 });
 
 test('the super admin creates the same exam for several classes at once', async () => {
@@ -474,7 +448,7 @@ test('the super admin creates the same exam for several classes at once', async 
       { subjectId: ids.Urdu, maxMarks: 50 },
     ],
   };
-  const before = readFile('exams').length;
+  const before = (await readTable('exams')).length;
 
   assert.equal((await api(SARA, 'POST', '/api/exams/bulk', { ...exam, classIds: ['c1'] })).status, 403);
   assert.equal((await api(SUPER, 'POST', '/api/exams/bulk', { ...exam, classIds: [] })).status, 400);
@@ -482,7 +456,7 @@ test('the super admin creates the same exam for several classes at once', async 
   const noSubjects = await api(SUPER, 'POST', '/api/exams/bulk', { ...exam, classIds: ['c1', 'c2'] });
   assert.equal(noSubjects.status, 400);
   assert.match(noSubjects.body.error, /Grade 2/);
-  assert.equal(readFile('exams').length, before);
+  assert.equal((await readTable('exams')).length, before);
 
   await api(ADMIN, 'PUT', '/api/class-subjects/c2', { subjects: [{ subjectId: ids.English, teacherId: SARA }] });
   const res = await api(SUPER, 'POST', '/api/exams/bulk', { ...exam, classIds: ['c1', 'c2', 'c3', 'c1'] });
@@ -496,13 +470,13 @@ test('the super admin creates the same exam for several classes at once', async 
     'Grade 3': ['Urdu/50'], // c3 doesn't study English
   });
   assert.ok(res.body.every((e) => e.status === 'open' && e.createdBy === 'Super Admin'));
-  assert.equal(readFile('exams').length, before + 3);
+  assert.equal((await readTable('exams')).length, before + 3);
 
   // Again: Grade 1 already has it, so nothing more is created.
   const again = await api(SUPER, 'POST', '/api/exams/bulk', { ...exam, classIds: ['c2', 'c1'] });
   assert.equal(again.status, 409);
   assert.match(again.body.error, /Grade 2/);
-  assert.equal(readFile('exams').length, before + 3);
+  assert.equal((await readTable('exams')).length, before + 3);
 
   // Each class's subject teacher sees their own class's exam.
   const sara = await api(SARA, 'GET', '/api/exams/my-subjects');

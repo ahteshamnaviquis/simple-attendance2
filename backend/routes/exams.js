@@ -1,6 +1,6 @@
 // /api/exams - examinations, subject marks and results.
 //
-// An exam (exams.json):
+// An exam (the exams table; subjects is a JSON column):
 // {
 //   id, name, classId, date: "YYYY-MM-DD", remarks,
 //   className,                                   <- copied when created, like attendance
@@ -10,7 +10,7 @@
 //   createdById, createdBy, createdAt, updatedAt, updatedBy, publishedAt, publishedBy
 // }
 //
-// A mark (marks.json), one per exam + subject + student:
+// A mark (the marks table), one per exam + subject + student:
 // {
 //   id, examId, subjectId, studentId,
 //   studentName, rollNumber,                     <- copied when saved, so results stay
@@ -46,7 +46,7 @@
 // - The super admin can enter marks for any subject (for example one with no teacher assigned).
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const {
   HttpError,
   newId,
@@ -69,7 +69,7 @@ function assignedTeacherId(classSubjects, classId, subjectId) {
   return row ? row.teacherId : null;
 }
 
-// Check the exam form. `subjectList` is subjects.json, used to look up names.
+// Check the exam form. `subjectList` is the subjects list, used to look up names.
 function cleanExamInput(body, subjectList) {
   const name = String(body?.name ?? '').trim().replace(/\s+/g, ' ');
   const date = String(body?.date ?? '');
@@ -488,7 +488,7 @@ for (const [action, disabled] of [['disable', true], ['enable', false]]) {
   });
 }
 
-// Change one subject of an exam inside the exams.json write queue.
+// Change one subject of an exam inside the exams write queue.
 // `changeFn(exam, subject, ctx)` returns the updated subject.
 async function updateExamSubject(req, changeFn) {
   let updated;

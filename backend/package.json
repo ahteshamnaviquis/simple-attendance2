@@ -10,9 +10,11 @@
     "dev": "node --watch server.js",
     "demo-data": "node scripts/addDemoData.js",
     "seed-subjects": "node scripts/addDemoData.js --subjects-only",
-    "test": "node --test"
+    "test": "node --test",
+    "json-to-sql": "node scripts/jsonToSql.js"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "mysql2": "^3.24.6"
   }
 }

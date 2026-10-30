@@ -1,10 +1,10 @@
 // /api/admins - list, add, edit and remove admins. Super admin only.
-// Admins are stored in users.json with role "admin". They look after students,
+// Admins are stored in the users table with role "admin". They look after students,
 // classes, subjects and attendance; teachers and exams stay with the super admin.
 // The super admin account itself can't be changed or removed here.
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const { HttpError, newId, publicUser, requireSuperAdmin } = require('../helpers');
 
 const router = express.Router();

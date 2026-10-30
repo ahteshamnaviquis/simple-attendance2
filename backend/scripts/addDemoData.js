@@ -14,7 +14,7 @@
 // Run from the backend folder:  npm run demo-data
 // Only teachers, subjects and class subjects:  npm run seed-subjects
 
-const { initDataFiles, readData, updateData } = require('../fileStore');
+const { initDatabase, closeDatabase, readData, updateData } = require('../store');
 const { newId, todayString } = require('../helpers');
 const seedData = require('../seedData');
 
@@ -236,7 +236,7 @@ async function addClassSubjects() {
 }
 
 async function main() {
-  await initDataFiles();
+  await initDatabase(seedData);
   // npm run seed-subjects: only teachers, subjects and class subjects, nothing else.
   if (process.argv.includes('--subjects-only')) {
     console.log(`Teachers added:   ${await addTeachers()}`);
@@ -253,7 +253,9 @@ async function main() {
   console.log(`New teachers log in with password "${DEMO_PASSWORD}" (local demo only).`);
 }
 
-main().catch((err) => {
-  console.error('Could not add demo data:', err);
-  process.exit(1);
-});
+main()
+  .catch((err) => {
+    console.error('Could not add demo data:', err);
+    process.exitCode = 1;
+  })
+  .finally(closeDatabase);

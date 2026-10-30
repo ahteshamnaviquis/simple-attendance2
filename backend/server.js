@@ -6,8 +6,8 @@
 
 const express = require('express');
 const seedData = require('./seedData');
-const { PORT, HOST, DATA_DIR, FRONTEND_URLS } = require('./config');
-const { initDataFiles, readData, updateData } = require('./fileStore');
+const { PORT, HOST, DB, FRONTEND_URLS } = require('./config');
+const { initDatabase, readData, updateData } = require('./store');
 const { publicUser, loadCurrentUser, requireRole } = require('./helpers');
 const adminsRouter = require('./routes/admins');
 const settingsRouter = require('./routes/settings');
@@ -45,7 +45,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', time: new Date().toISOString() });
 });
 
-// Login: check username and password against users.json.
+// Login: check username and password against the users table.
 // Returns the user (without password) on success. No tokens or sessions -
 // the frontend simply remembers who logged in. LOCAL DEMO ONLY.
 app.post('/api/login', async (req, res) => {
@@ -105,7 +105,7 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong on the server' });
 });
 
-// Older data folders were made before the super admin existed: add the
+// Databases filled from older data may have no super admin: add the
 // starting super admin account so someone can manage the admins.
 async function ensureSuperAdmin() {
   const starting = seedData.users.find((u) => u.role === 'superadmin');
@@ -115,21 +115,21 @@ async function ensureSuperAdmin() {
       console.warn(`No super admin: the username "${starting.username}" is already used`);
       return users;
     }
-    console.log(`Added super admin "${starting.username}" to data/users.json`);
+    console.log(`Added super admin "${starting.username}"`);
     return [starting, ...users];
   });
 }
 
-initDataFiles()
+initDatabase(seedData)
   .then(ensureSuperAdmin)
   .then(() => {
     app.listen(PORT, HOST, () => {
       console.log(`API running at http://${HOST}:${PORT}`);
       console.log(`Allowed frontend: ${FRONTEND_URLS.join(', ')}`);
-      console.log(`Data folder: ${DATA_DIR}`);
+      console.log(`Database: ${DB.database} on ${DB.host}:${DB.port}`);
     });
   })
   .catch((err) => {
-    console.error('Could not prepare data files:', err);
+    console.error(`Could not prepare the MySQL database "${DB.database}" on ${DB.host}:${DB.port}:`, err.message);
     process.exit(1);
   });

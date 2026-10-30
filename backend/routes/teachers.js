@@ -1,9 +1,9 @@
 // /api/teachers - list, add and edit teachers. Adding and editing needs the "teachers" permission;
 // disabling and removing teachers is for the super admin only.
-// Teachers are stored in users.json with role "teacher" (disabled: true when disabled).
+// Teachers are stored in the users table with role "teacher" (disabled: true when disabled).
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const {
   HttpError,
   newId,

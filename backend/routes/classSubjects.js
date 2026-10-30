@@ -10,7 +10,7 @@
 //   maximum marks, so changing an assignment never changes saved marks.
 
 const express = require('express');
-const { readData, updateData } = require('../fileStore');
+const { readData, updateData } = require('../store');
 const { HttpError, newId, requireLogin, requireArea } = require('../helpers');
 
 const router = express.Router();
