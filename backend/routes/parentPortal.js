@@ -4,9 +4,11 @@
 //   GET  /children/:studentId/attendance    the child's day-by-day attendance (?from=&to=, default last 60 days)
 //   GET  /children/:studentId/exams         published examinations with the child's result
 //   GET  /children/:studentId/exams/:examId the child's subject-wise result and the class averages
-//   GET  /messages                          the conversation with the school (marks school messages read)
-//   GET  /messages/unread                   { count } of unread school messages
-//   POST /messages                          { body } send a message to the school
+//   GET  /contacts                          who the parent can message: the school office and
+//                                           their children's teachers, with unread counts
+//   GET  /messages?with=school|<teacherId>  one conversation (marks the other side's messages read)
+//   GET  /messages/unread                   { count } of unread messages from the school and teachers
+//   POST /messages                          { to: 'school' | teacherId, body } send a message
 //
 // Rules:
 // - A parent only sees the students linked to them in parent_students (403 otherwise).
@@ -19,9 +21,9 @@
 
 const express = require('express');
 const { readData, updateData } = require('../store');
-const { HttpError, newId, todayString, isValidDate, requireParent } = require('../helpers');
+const { HttpError, todayString, isValidDate, requireParent } = require('../helpers');
 const { buildResults, passMarksOf } = require('../results');
-const { cleanMessageBody } = require('./messages');
+const { cleanMessageBody, newMessage, inThread, teachersOf, threadSummary } = require('../conversations');
 
 const router = express.Router();
 router.use(requireParent);
@@ -215,14 +217,82 @@ router.get('/children/:studentId/exams/:examId', async (req, res) => {
   });
 });
 
-// GET /api/parent/messages
-// Reading the conversation marks the school's messages as read.
+// The people a parent can message: the school office first, then their
+// children's teachers (what each teaches which child), each with a summary of
+// the conversation. A teacher who no longer teaches them stays listed while
+// there is a conversation with them, but can't get new messages.
+async function contactsFor(user) {
+  const [ids, students, classes, classSubjects, subjects, users, messages] = await Promise.all([
+    myStudentIds(user),
+    readData('students'),
+    readData('classes'),
+    readData('classSubjects'),
+    readData('subjects'),
+    readData('users'),
+    readData('messages'),
+  ]);
+  const mine = messages.filter((m) => m.parentId === user.id);
+  const byTeacher = teachersOf(
+    students.filter((s) => ids.includes(s.id)),
+    { classes, classSubjects, subjects }
+  );
+
+  const school = {
+    id: 'school',
+    kind: 'school',
+    teacherId: null,
+    name: 'School office',
+    canWrite: true,
+    teaches: [],
+    ...threadSummary(mine.filter((m) => !m.teacherId), false),
+  };
+
+  const teacherIds = new Set([...byTeacher.keys(), ...mine.filter((m) => m.teacherId).map((m) => m.teacherId)]);
+  const teachers = [...teacherIds]
+    .map((teacherId) => {
+      const teacher = users.find((u) => u.id === teacherId && u.role === 'teacher');
+      const teaches = byTeacher.get(teacherId) ?? [];
+      const thread = mine.filter((m) => m.teacherId === teacherId);
+      if (!teacher && thread.length === 0) return null;
+      return {
+        id: teacherId,
+        kind: 'teacher',
+        teacherId,
+        name: teacher?.name ?? thread[thread.length - 1]?.senderName ?? 'Former teacher',
+        canWrite: Boolean(teacher && !teacher.disabled && teaches.length > 0),
+        teaches,
+        ...threadSummary(thread, false),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  return [school, ...teachers];
+}
+
+async function findContact(user, key) {
+  const contact = (await contactsFor(user)).find((c) => c.id === (key || 'school'));
+  if (!contact) throw new HttpError(404, 'You can message the school office and your children\'s teachers');
+  return contact;
+}
+
+// GET /api/parent/contacts
+router.get('/contacts', async (req, res) => {
+  res.json(await contactsFor(req.user));
+});
+
+// GET /api/parent/messages?with=school|<teacherId>
+// Reading the conversation marks the other side's messages as read.
 router.get('/messages', async (req, res) => {
+  const contact = await findContact(req.user, req.query.with);
   const now = new Date().toISOString();
   const all = await updateData('messages', (messages) =>
-    messages.map((m) => (m.parentId === req.user.id && m.fromSchool && !m.readAt ? { ...m, readAt: now } : m))
+    messages.map((m) =>
+      inThread(m, req.user.id, contact.teacherId) && m.fromSchool && !m.readAt ? { ...m, readAt: now } : m
+    )
   );
-  res.json(all.filter((m) => m.parentId === req.user.id));
+  const { lastMessage, messageCount, unreadCount, ...rest } = contact;
+  res.json({ contact: rest, messages: all.filter((m) => inThread(m, req.user.id, contact.teacherId)) });
 });
 
 // GET /api/parent/messages/unread
@@ -231,19 +301,12 @@ router.get('/messages/unread', async (req, res) => {
   res.json({ count: messages.filter((m) => m.parentId === req.user.id && m.fromSchool && !m.readAt).length });
 });
 
-// POST /api/parent/messages  { body }
+// POST /api/parent/messages  { to: 'school' | teacherId, body }
 router.post('/messages', async (req, res) => {
   const body = cleanMessageBody(req.body?.body);
-  const message = {
-    id: newId(),
-    parentId: req.user.id,
-    fromSchool: false,
-    senderId: req.user.id,
-    senderName: req.user.name,
-    body,
-    createdAt: new Date().toISOString(),
-    readAt: null,
-  };
+  const contact = await findContact(req.user, req.body?.to);
+  if (!contact.canWrite) throw new HttpError(403, `${contact.name} no longer teaches your children`);
+  const message = newMessage({ parentId: req.user.id, teacherId: contact.teacherId, sender: req.user, body });
   await updateData('messages', (messages) => [...messages, message]);
   res.status(201).json(message);
 });

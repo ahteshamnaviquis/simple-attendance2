@@ -1,53 +1,68 @@
-// /api/messages - the school's side of the conversations with parents.
-// For every admin and the super admin (not a permission they can lose): parents
-// write to "the school", not to one person, so all of them see every conversation.
+// /api/messages - the staff side of the conversations with parents (see conversations.js).
 //
-// A message (the messages table):
-// { id, parentId, fromSchool, senderId, senderName, body, createdAt, readAt }
-// readAt is set when the other side opens the conversation.
+// Admins and the super admin: the school office conversations, which they all
+// share (whatever the permissions). Teachers: their own conversations with the
+// parents of the students they teach (as class teacher or subject teacher).
 //
-//   GET  /             conversations: each parent with messages, newest first
-//   GET  /unread       { count } of parent messages nobody has read yet
-//   GET  /parents      everyone a message can go to: parents with their children
+//   GET  /             conversations, newest first, with unread counts
+//   GET  /unread       { count } of parent messages not read yet
+//   GET  /parents      everyone this user can write to: parents with their children
 //   GET  /:parentId    one conversation (marks the parent's messages read)
 //   POST /             { parentIds, body } send the same message to one or more parents
 
 const express = require('express');
 const { readData, updateData } = require('../store');
-const { HttpError, newId, requireRole } = require('../helpers');
+const { HttpError, requireLogin } = require('../helpers');
 const { listParents } = require('./parents');
-
-const MAX_MESSAGE_LENGTH = 2000;
-
-function cleanMessageBody(value) {
-  const body = String(value ?? '').trim();
-  if (!body) throw new HttpError(400, 'Please write a message');
-  if (body.length > MAX_MESSAGE_LENGTH) {
-    throw new HttpError(400, `A message can be at most ${MAX_MESSAGE_LENGTH} characters`);
-  }
-  return body;
-}
+const { cleanMessageBody, newMessage, inThread, studentIdsOfTeacher, threadSummary } = require('../conversations');
 
 const router = express.Router();
-router.use(requireRole('admin', 'superadmin'));
+router.use(requireLogin);
 
-const isUnread = (m) => !m.fromSchool && !m.readAt;
+// The teacherId of the conversations this user handles: null for the office.
+const scopeOf = (user) => (user.role === 'teacher' ? user.id : null);
+
+// The parents this user may write to. Teachers: parents of their students,
+// with only those children listed.
+async function reachableParents(user) {
+  const parents = await listParents();
+  if (user.role !== 'teacher') return parents;
+  const [classes, classSubjects, students] = await Promise.all([
+    readData('classes'),
+    readData('classSubjects'),
+    readData('students'),
+  ]);
+  const mine = studentIdsOfTeacher(user.id, { classes, classSubjects, students });
+  return parents
+    .map((p) => ({ ...p, children: p.children.filter((c) => mine.has(c.studentId)) }))
+    .filter((p) => p.children.length > 0);
+}
+
+function publicParent(p) {
+  return { id: p.id, name: p.name, relation: p.relation, phone: p.phone, disabled: p.disabled, children: p.children };
+}
 
 // GET /api/messages
 router.get('/', async (req, res) => {
-  const [parents, messages] = await Promise.all([listParents(), readData('messages')]);
+  const scope = scopeOf(req.user);
+  const [parents, reachable, messages] = await Promise.all([
+    listParents(),
+    reachableParents(req.user),
+    readData('messages'),
+  ]);
   const threads = parents
     .map((parent) => {
-      const mine = messages.filter((m) => m.parentId === parent.id);
+      const mine = messages.filter((m) => inThread(m, parent.id, scope));
       if (mine.length === 0) return null;
+      // A teacher sees the children they teach (all of them if none any more).
+      const children = reachable.find((p) => p.id === parent.id)?.children ?? parent.children;
       return {
         parentId: parent.id,
         parentName: parent.name,
-        disabled: Boolean(parent.disabled),
-        children: parent.children,
-        lastMessage: mine[mine.length - 1],
-        messageCount: mine.length,
-        unreadCount: mine.filter(isUnread).length,
+        relation: parent.relation,
+        disabled: parent.disabled,
+        children,
+        ...threadSummary(mine, true),
       };
     })
     .filter(Boolean)
@@ -57,34 +72,37 @@ router.get('/', async (req, res) => {
 
 // GET /api/messages/unread
 router.get('/unread', async (req, res) => {
+  const scope = scopeOf(req.user);
   const messages = await readData('messages');
-  res.json({ count: messages.filter(isUnread).length });
+  res.json({ count: messages.filter((m) => (m.teacherId ?? null) === scope && !m.fromSchool && !m.readAt).length });
 });
 
 // GET /api/messages/parents
 router.get('/parents', async (req, res) => {
-  const parents = await listParents();
-  res.json(
-    parents.map((p) => ({
-      id: p.id,
-      name: p.name,
-      relation: p.relation,
-      disabled: p.disabled,
-      children: p.children,
-    }))
-  );
+  res.json((await reachableParents(req.user)).map(publicParent));
 });
 
 // GET /api/messages/:parentId
+// Teachers can open a conversation with a parent of their students, or one that
+// already exists (a child may have moved to another class since).
 router.get('/:parentId', async (req, res) => {
-  const parent = (await listParents()).find((p) => p.id === req.params.parentId);
-  if (!parent) throw new HttpError(404, 'Parent not found');
+  const scope = scopeOf(req.user);
+  const reachable = (await reachableParents(req.user)).find((p) => p.id === req.params.parentId);
+  const all = (await listParents()).find((p) => p.id === req.params.parentId);
+  if (!all) throw new HttpError(404, 'Parent not found');
+
+  const existing = (await readData('messages')).some((m) => inThread(m, all.id, scope));
+  if (!reachable && !existing) throw new HttpError(403, 'You do not teach any child of this parent');
 
   const now = new Date().toISOString();
-  const all = await updateData('messages', (messages) =>
-    messages.map((m) => (m.parentId === parent.id && isUnread(m) ? { ...m, readAt: now } : m))
+  const saved = await updateData('messages', (messages) =>
+    messages.map((m) => (inThread(m, all.id, scope) && !m.fromSchool && !m.readAt ? { ...m, readAt: now } : m))
   );
-  res.json({ parent, messages: all.filter((m) => m.parentId === parent.id) });
+  res.json({
+    parent: publicParent(reachable ?? all),
+    with: scope ? 'teacher' : 'school',
+    messages: saved.filter((m) => inThread(m, all.id, scope)),
+  });
 });
 
 // POST /api/messages  { parentIds: [...], body }
@@ -94,23 +112,19 @@ router.post('/', async (req, res) => {
   const parentIds = Array.isArray(req.body?.parentIds) ? [...new Set(req.body.parentIds.map(String))] : [];
   if (parentIds.length === 0) throw new HttpError(400, 'Please choose at least one parent');
 
-  const users = await readData('users');
-  const known = new Set(users.filter((u) => u.role === 'parent').map((u) => u.id));
-  if (parentIds.some((id) => !known.has(id))) throw new HttpError(400, 'Please choose parents from the list');
+  const scope = scopeOf(req.user);
+  const reachable = new Set((await reachableParents(req.user)).map((p) => p.id));
+  const messages = await readData('messages');
+  for (const id of parentIds) {
+    if (!reachable.has(id) && !(scope && messages.some((m) => inThread(m, id, scope)))) {
+      throw new HttpError(400, 'Please choose parents from the list');
+    }
+  }
 
   const createdAt = new Date().toISOString();
-  const sent = parentIds.map((parentId) => ({
-    id: newId(),
-    parentId,
-    fromSchool: true,
-    senderId: req.user.id,
-    senderName: req.user.name,
-    body,
-    createdAt,
-    readAt: null,
-  }));
-  await updateData('messages', (messages) => [...messages, ...sent]);
+  const sent = parentIds.map((parentId) => newMessage({ parentId, teacherId: scope, sender: req.user, body, createdAt }));
+  await updateData('messages', (list) => [...list, ...sent]);
   res.status(201).json({ sentCount: sent.length, messages: sent });
 });
 
-module.exports = { router, cleanMessageBody };
+module.exports = { router };

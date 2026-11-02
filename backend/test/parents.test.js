@@ -8,7 +8,8 @@ const { startServer, stopServer, readTable } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
-const SARA = 'u2';
+const SARA = 'u2'; // class teacher of Grade 9, teaches English there
+const OMAR = 'u3'; // a teacher of none of these children
 const PARENT = 'p1'; // Ahmed's and Fatima's parent
 const OTHER_PARENT = 'p2'; // Bilal's parent
 
@@ -97,6 +98,7 @@ const START_DATA = {
     { id: 'u0', name: 'Super Admin', username: 'superadmin', password: 'super123', role: 'superadmin' },
     { id: 'u1', name: 'Admin User', username: 'admin', password: 'admin123', role: 'admin' },
     { id: 'u2', name: 'Sara Khan', username: 'sara', password: 'teacher123', role: 'teacher' },
+    { id: 'u3', name: 'Omar Farooq', username: 'omar', password: 'teacher123', role: 'teacher' },
     { id: 'p1', name: 'Hassan Ali', username: 'hassan', password: 'parent123', role: 'parent' },
     { id: 'p2', name: 'Ahmed Khan', username: 'ahmedk', password: 'parent123', role: 'parent' },
   ],
@@ -153,7 +155,7 @@ test('a parent logs in, but can not use staff screens', async () => {
   assert.equal(login.status, 200);
   assert.equal(login.body.role, 'parent');
 
-  for (const url of ['/api/students', '/api/attendance', '/api/classes', '/api/parents', '/api/messages', '/api/users']) {
+  for (const url of ['/api/students', '/api/attendance', '/api/classes', '/api/parents', '/api/messages', '/api/messages/parents', '/api/users']) {
     assert.equal((await api(PARENT, 'GET', url)).status, 403, url);
   }
   // Staff can't use the parent portal.
@@ -373,7 +375,6 @@ test('the school and parents message each other, with unread counts', async () =
   assert.equal((await api(ADMIN, 'POST', '/api/messages', { parentIds: [], body: 'Hi' })).status, 400);
   assert.equal((await api(ADMIN, 'POST', '/api/messages', { parentIds: [SARA], body: 'Hi' })).status, 400);
   assert.equal((await api(ADMIN, 'POST', '/api/messages', { parentIds: [PARENT], body: 'x'.repeat(2001) })).status, 400);
-  assert.equal((await api(SARA, 'POST', '/api/messages', { parentIds: [PARENT], body: 'Hi' })).status, 403);
 
   // One message to two parents: two private conversations.
   const sent = await api(ADMIN, 'POST', '/api/messages', { parentIds: [PARENT, OTHER_PARENT], body: 'School closes early on Friday.' });
@@ -381,9 +382,11 @@ test('the school and parents message each other, with unread counts', async () =
   assert.equal(sent.body.sentCount, 2);
 
   assert.deepEqual((await api(PARENT, 'GET', '/api/parent/messages/unread')).body, { count: 1 });
-  const inbox = await api(PARENT, 'GET', '/api/parent/messages');
-  assert.equal(inbox.body.length, 1);
-  assert.equal(inbox.body[0].senderName, 'Admin User');
+  const inbox = await api(PARENT, 'GET', '/api/parent/messages'); // the school office by default
+  assert.equal(inbox.body.contact.kind, 'school');
+  assert.equal(inbox.body.messages.length, 1);
+  assert.equal(inbox.body.messages[0].senderName, 'Admin User');
+  assert.equal(inbox.body.messages[0].senderRole, 'admin');
   assert.deepEqual((await api(PARENT, 'GET', '/api/parent/messages/unread')).body, { count: 0 });
 
   assert.equal((await api(PARENT, 'POST', '/api/parent/messages', { body: '' })).status, 400);
@@ -404,8 +407,70 @@ test('the school and parents message each other, with unread counts', async () =
   assert.deepEqual((await api(ADMIN, 'GET', '/api/messages/unread')).body, { count: 0 });
 
   // The other parent doesn't see this conversation.
-  const other = await api(OTHER_PARENT, 'GET', '/api/parent/messages');
-  assert.deepEqual(other.body.map((m) => m.body), ['School closes early on Friday.']);
+  const other = await api(OTHER_PARENT, 'GET', '/api/parent/messages?with=school');
+  assert.deepEqual(other.body.messages.map((m) => m.body), ['School closes early on Friday.']);
+});
+
+test('parents and their children\'s teachers message each other', async () => {
+  // The parent's contacts: the office, then each teacher with what they teach which child.
+  const contacts = await api(PARENT, 'GET', '/api/parent/contacts');
+  assert.equal(contacts.status, 200);
+  assert.deepEqual(contacts.body.map((c) => [c.kind, c.name]), [['school', 'School office'], ['teacher', 'Sara Khan']]);
+  assert.deepEqual(contacts.body[1].teaches, [
+    { studentId: 's1', studentName: 'Ahmed Hassan', className: 'Grade 9', roles: ['Class teacher', 'English'] },
+  ]);
+  assert.equal(contacts.body[1].canWrite, true);
+
+  // Only their children's teachers.
+  assert.equal((await api(PARENT, 'POST', '/api/parent/messages', { to: OMAR, body: 'Hi' })).status, 404);
+  assert.equal((await api(PARENT, 'GET', `/api/parent/messages?with=${OMAR}`)).status, 404);
+
+  const sent = await api(PARENT, 'POST', '/api/parent/messages', { to: SARA, body: 'Is Ahmed keeping up in English?' });
+  assert.equal(sent.status, 201);
+  assert.equal(sent.body.teacherId, SARA);
+
+  // Sara sees it; admins don't (it isn't an office conversation).
+  assert.deepEqual((await api(SARA, 'GET', '/api/messages/unread')).body, { count: 1 });
+  const saraThreads = await api(SARA, 'GET', '/api/messages');
+  assert.deepEqual(saraThreads.body.map((t) => [t.parentName, t.unreadCount]), [['Hassan Ali', 1]]);
+  assert.deepEqual(saraThreads.body[0].children.map((c) => c.name), ['Ahmed Hassan']); // only the child she teaches
+  const adminThreads = await api(ADMIN, 'GET', '/api/messages');
+  assert.ok(!adminThreads.body.some((t) => t.lastMessage.body.startsWith('Is Ahmed')));
+
+  const thread = await api(SARA, 'GET', `/api/messages/${PARENT}`);
+  assert.equal(thread.body.with, 'teacher');
+  assert.deepEqual(thread.body.messages.map((m) => m.body), ['Is Ahmed keeping up in English?']);
+  assert.deepEqual((await api(SARA, 'GET', '/api/messages/unread')).body, { count: 0 });
+
+  // Sara replies, and can start conversations with the parents of her students only.
+  const reply = await api(SARA, 'POST', '/api/messages', { parentIds: [PARENT], body: 'Yes, he is doing well.' });
+  assert.equal(reply.status, 201);
+  assert.equal(reply.body.messages[0].senderRole, 'teacher');
+  const recipients = await api(SARA, 'GET', '/api/messages/parents');
+  const ids = recipients.body.map((p) => p.id);
+  assert.ok(ids.includes(PARENT) && ids.includes(OTHER_PARENT));
+  assert.ok(recipients.body.every((p) => p.children.every((c) => c.className === 'Grade 9'))); // her class only
+  assert.equal((await api(OMAR, 'POST', '/api/messages', { parentIds: [PARENT], body: 'Hi' })).status, 400);
+  assert.equal((await api(OMAR, 'GET', `/api/messages/${PARENT}`)).status, 403);
+  assert.deepEqual((await api(OMAR, 'GET', '/api/messages')).body, []);
+
+  // The parent sees the reply in Sara's conversation, separate from the office.
+  const withSara = await api(PARENT, 'GET', `/api/parent/messages?with=${SARA}`);
+  assert.equal(withSara.body.contact.name, 'Sara Khan');
+  assert.deepEqual(withSara.body.messages.map((m) => m.body), ['Is Ahmed keeping up in English?', 'Yes, he is doing well.']);
+  const office = await api(PARENT, 'GET', '/api/parent/messages?with=school');
+  assert.ok(!office.body.messages.some((m) => m.teacherId));
+
+  // A teacher who stops teaching the child keeps the conversation, but the parent can't write new messages.
+  await api(ADMIN, 'PUT', '/api/class-subjects/c1', { subjects: [{ subjectId: 'sub1', teacherId: null }, { subjectId: 'sub2', teacherId: null }] });
+  await api(ADMIN, 'PUT', '/api/classes/c1', { name: 'Grade 9', teacherId: OMAR });
+  const after = (await api(PARENT, 'GET', '/api/parent/contacts')).body;
+  const sara = after.find((c) => c.id === SARA);
+  assert.equal(sara.canWrite, false);
+  assert.equal(sara.messageCount, 2);
+  assert.ok(after.some((c) => c.id === OMAR && c.canWrite)); // the new class teacher
+  assert.equal((await api(PARENT, 'POST', '/api/parent/messages', { to: SARA, body: 'Hello?' })).status, 403);
+  assert.equal((await api(SARA, 'GET', `/api/messages/${PARENT}`)).status, 200); // she can still read it
 });
 
 test('admins keep messages when the super admin stops them managing parents', async () => {
@@ -423,5 +488,5 @@ test('admins keep messages when the super admin stops them managing parents', as
   assert.ok(recipients.body.some((p) => p.id === PARENT && p.children.length === 2));
   assert.equal(recipients.body[0].username, undefined);
   assert.equal((await api(ADMIN, 'POST', '/api/messages', { parentIds: [PARENT], body: 'Still here' })).status, 201);
-  assert.equal((await api(SARA, 'GET', '/api/messages/parents')).status, 403);
+  assert.equal((await api(PARENT, 'GET', '/api/messages/parents')).status, 403);
 });

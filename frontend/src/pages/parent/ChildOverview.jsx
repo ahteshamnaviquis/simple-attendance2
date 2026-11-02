@@ -24,7 +24,7 @@ export default function ChildOverview({ user, childList: children, unread, onOpe
           </span>
           <div className="alert-body">
             <strong>
-              {unread} new message{unread === 1 ? '' : 's'} from the school
+              {unread} new message{unread === 1 ? '' : 's'} from the school or a teacher
             </strong>
           </div>
           <button type="button" onClick={onMessages}>

@@ -84,6 +84,12 @@ const PATHS = {
     </>
   ),
   send: <path d="M4 12l16-8-6 16-2.5-6.5z" />,
+  school: (
+    <>
+      <path d="M3 21h18M5 21V10l7-5 7 5v11" />
+      <path d="M10 21v-5h4v5M9 11h.01M15 11h.01" />
+    </>
+  ),
   results: (
     <>
       <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />

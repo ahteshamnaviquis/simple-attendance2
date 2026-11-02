@@ -57,9 +57,17 @@ const COLLECTIONS = {
   parentStudents: { table: 'parent_students', props: 'id parentId studentId' },
   messages: {
     table: 'messages',
-    props: 'id parentId fromSchool:bool senderId senderName body createdAt:timestamp readAt:timestamp',
+    props:
+      'id parentId teacherId fromSchool:bool senderId senderName senderRole body createdAt:timestamp readAt:timestamp',
   },
 };
+
+// Columns added to a table after it was first released. CREATE TABLE IF NOT
+// EXISTS leaves an existing table as it is, so these are added on start when missing.
+const ADDED_COLUMNS = [
+  { table: 'messages', column: 'teacher_id', definition: 'VARCHAR(64) NULL AFTER parent_id' },
+  { table: 'messages', column: 'sender_role', definition: "VARCHAR(20) NOT NULL DEFAULT '' AFTER sender_name" },
+];
 
 // The order to fill an empty database in, so every row's parents already exist.
 const LOAD_ORDER = ['users', 'classes', 'subjects', 'students', 'classSubjects', 'attendance', 'exams', 'marks', 'parentProfiles', 'parentStudents', 'messages', 'settings'];
@@ -301,11 +309,22 @@ async function initDatabase(startData) {
   );
   const isNew = found[0].n === 0;
   for (const statement of schemaStatements()) await pool.query(statement);
+  await addMissingColumns();
   if (isNew && startData) {
     await importData(startData);
     console.log(`Created the tables in "${DB.database}" and added the sample data`);
   }
   return isNew;
+}
+
+async function addMissingColumns() {
+  for (const { table, column, definition } of ADDED_COLUMNS) {
+    const [found] = await pool.query(
+      'SELECT COUNT(*) AS n FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = ? AND column_name = ?',
+      [table, column]
+    );
+    if (found[0].n === 0) await pool.query(`ALTER TABLE ?? ADD COLUMN ?? ${definition}`, [table, column]);
+  }
 }
 
 // Remove a test database (testServer.js). Refuses any other name.

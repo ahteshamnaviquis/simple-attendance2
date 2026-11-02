@@ -159,15 +159,20 @@ CREATE TABLE IF NOT EXISTS parent_students (
   CONSTRAINT fk_parent_students_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Messages between the school (admins and the super admin) and a parent:
--- one conversation per parent. read_at is set when the other side reads it.
+-- Messages between a parent and the school. Each parent has one conversation
+-- with the school office (teacher_id NULL: every admin and the super admin) and
+-- one with each teacher they write to (teacher_id = that teacher).
+-- read_at is set when the other side reads it. Databases made before teacher
+-- conversations get teacher_id and sender_role from store.js (ADDED_COLUMNS).
 CREATE TABLE IF NOT EXISTS messages (
   seq         INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id          VARCHAR(64)  NOT NULL PRIMARY KEY,
   parent_id   VARCHAR(64)  NOT NULL,          -- whose conversation it is
+  teacher_id  VARCHAR(64)  NULL,              -- NULL: the school office
   from_school BOOLEAN      NOT NULL,          -- TRUE: sent by staff, FALSE: by the parent
   sender_id   VARCHAR(64)  NOT NULL,
   sender_name VARCHAR(100) NOT NULL,          -- kept as text, like attendance.created_by
+  sender_role VARCHAR(20)  NOT NULL DEFAULT '', -- admin, superadmin, teacher or parent
   body        TEXT         NOT NULL,
   created_at  DATETIME(3)  NOT NULL,          -- UTC
   read_at     DATETIME(3)  NULL,

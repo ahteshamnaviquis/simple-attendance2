@@ -103,7 +103,8 @@ for (const [action, disabled] of [['disable', true], ['enable', false]]) {
 
 // DELETE /api/teachers/:id - super admin only.
 // Their classes and subjects become unassigned. Attendance reports and marks
-// keep the teacher's name as text, so history stays readable.
+// keep the teacher's name as text, so history stays readable. Their
+// conversations with parents are removed.
 router.delete('/:id', requireSuperAdmin, async (req, res) => {
   const id = req.params.id;
   await updateData('users', (users) => {
@@ -113,6 +114,7 @@ router.delete('/:id', requireSuperAdmin, async (req, res) => {
   const unassign = (rows) => rows.map((r) => (r.teacherId === id ? { ...r, teacherId: null } : r));
   await updateData('classes', unassign);
   await updateData('classSubjects', unassign);
+  await updateData('messages', (messages) => messages.filter((m) => m.teacherId !== id));
   res.status(204).end();
 });
 

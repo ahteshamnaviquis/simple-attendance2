@@ -103,7 +103,8 @@ export const setParentDisabled = (id, disabled) =>
   request('POST', `/api/parents/${id}/${disabled ? 'disable' : 'enable'}`);
 export const deleteParent = (id) => request('DELETE', `/api/parents/${id}`);
 
-// The school's side of the conversations with parents.
+// The staff side of the conversations with parents: admins see the school
+// office's, teachers their own.
 export const getMessageThreads = () => request('GET', '/api/messages');
 export const getMessageRecipients = () => request('GET', '/api/messages/parents');
 export const getUnreadMessageCount = () => request('GET', '/api/messages/unread');
@@ -117,6 +118,9 @@ export const getChildAttendance = (studentId, filters = {}) =>
 export const getChildExams = (studentId) => request('GET', `/api/parent/children/${studentId}/exams`);
 export const getChildExamResult = (studentId, examId) =>
   request('GET', `/api/parent/children/${studentId}/exams/${examId}`);
-export const getMyMessages = () => request('GET', '/api/parent/messages');
+// Who the parent can message: the school office and their children's teachers.
+export const getMessageContacts = () => request('GET', '/api/parent/contacts');
+// One conversation: contact 'school' or a teacher's id.
+export const getMyMessages = (contact) => request('GET', `/api/parent/messages${query({ with: contact })}`);
 export const getMyUnreadCount = () => request('GET', '/api/parent/messages/unread');
-export const sendMyMessage = (body) => request('POST', '/api/parent/messages', { body });
+export const sendMyMessage = (to, body) => request('POST', '/api/parent/messages', { to, body });

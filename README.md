@@ -54,6 +54,9 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
 - Examinations: the exam subjects they teach, with max marks and marks-entry status.
   Enter marks, save as a draft, and submit them. Teachers can't create or publish exams
   or see other teachers' subjects.
+- Messages: private chats with the parents of the students they teach (as class teacher
+  or subject teacher). Parents can write to them; they can reply, or write to one parent,
+  a class's parents or all their parents. The school office doesn't see these chats.
 
 **Parents** (admins with the *Parents* permission, on by default, and the super admin)
 - Parents are added on the student form, together with the student: relation (Father,
@@ -70,9 +73,14 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
 - Teachers see each student's parents (name, relation, phone) but can't add or change them.
 
 **Messages** (every admin and the super admin, whatever the permissions)
-- One private conversation per parent. Write to one parent, the parents of a class, or
-  all parents at once (each gets the message in their own conversation). Unread replies
-  show as a count next to *Messages*; every admin sees the same conversations.
+- The school office inbox: one private chat per parent, shared by every admin and the
+  super admin. Write to one parent, the parents of a class, or all parents at once (each
+  gets the message in their own chat). Unread replies show as a count next to *Messages*.
+- Every chat says who it is between ("Private chat between Hassan Ali (parent) and the
+  school office"), and each message shows the sender and their role (Admin, Teacher,
+  Parent), the time, and ✓ sent / ✓✓ read. Messages are grouped by day.
+- Teachers' chats with parents are separate: each parent has one chat with the office and
+  one with each teacher they write to.
 
 **Parent** (their own login)
 - My children: each child's class, roll number, class teacher, subjects and subject
@@ -82,7 +90,10 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
 - Results: published exams only, with marks per subject, total, percentage, position,
   Pass/Fail and the class average and highest. A printable result card. Other students'
   marks are never shown.
-- Messages: the conversation with the school, with an unread count in the menu
+- Messages: start or continue a chat with the school office (admins) or with any of
+  their children's teachers. Each teacher is listed with what they teach which child
+  ("Class teacher and English for Ahmed Hassan (Grade 9)"). A teacher who no longer
+  teaches their children keeps the old chat, but can't get new messages. Unread count in the menu.
 
 ## Attendance rules
 
@@ -134,6 +145,7 @@ SimpleAttendence/
 │   │   ├── schema.sql     # The tables (the server runs this itself on start)
 │   │   └── data.sql       # The data from the JSON files as INSERTs (npm run json-to-sql)
 │   ├── parentAccounts.js  # Parent details: checking them and saving them with a student
+│   ├── conversations.js   # Messages: who can write to whom, one chat per parent and office or teacher
 │   ├── results.js         # Exam totals, percentages, Incomplete and positions
 │   ├── test/
 │   │   ├── testServer.js  # Starts the server on a temporary MySQL database for each test file
@@ -154,7 +166,7 @@ SimpleAttendence/
 │   │   ├── classSubjects.js # /api/class-subjects (subjects of each class and their teachers)
 │   │   ├── exams.js       # /api/exams (exams, marks and results; all exam rules live here)
 │   │   ├── parents.js     # /api/parents (the parent directory: edit, disable, remove)
-│   │   ├── messages.js    # /api/messages (the school's side of the conversations)
+│   │   ├── messages.js    # /api/messages (the staff side: the office's or a teacher's chats)
 │   │   └── parentPortal.js # /api/parent (what a logged-in parent sees)
 │   └── data/              # The JSON data from before MySQL (source of sql/data.sql; not used by the server)
 │       ├── users.json
@@ -466,18 +478,19 @@ adds it automatically after login).
 | PUT    | `/api/parents/:id`     | parents permission | Edit a parent's details and login (blank password = keep current) |
 | POST   | `/api/parents/:id/disable` and `/enable` | parents permission | A disabled parent can't log in |
 | DELETE | `/api/parents/:id`     | parents permission | Remove parent, with their details, links and messages |
-| GET    | `/api/messages`        | admin / super admin | Conversations, newest first, with unread counts |
-| GET    | `/api/messages/unread` | admin / super admin | `{ count }` of unread parent messages |
-| GET    | `/api/messages/parents` | admin / super admin | Everyone a message can go to: parents with their children |
-| GET    | `/api/messages/:parentId` | admin / super admin | One conversation (marks the parent's messages read) |
-| POST   | `/api/messages`        | admin / super admin | Send `{ parentIds: [...], body }` (one message per parent, up to 2000 characters) |
+| GET    | `/api/messages`        | staff          | Conversations, newest first, with unread counts. Admins: the school office's. Teachers: their own |
+| GET    | `/api/messages/unread` | staff          | `{ count }` of unread parent messages |
+| GET    | `/api/messages/parents` | staff         | Everyone this user can write to: all parents (admins) or the parents of their students (teachers) |
+| GET    | `/api/messages/:parentId` | staff       | One conversation (marks the parent's messages read) |
+| POST   | `/api/messages`        | staff          | Send `{ parentIds: [...], body }` (one message per parent, up to 2000 characters) |
 | GET    | `/api/parent/children` | parent         | The parent's children with class, teachers, subjects, 30-day attendance and latest result |
 | GET    | `/api/parent/children/:studentId/attendance` | parent | Day by day, optional `?from=&to=` (default last 60 days) |
 | GET    | `/api/parent/children/:studentId/exams` | parent | Published exams with the child's result |
 | GET    | `/api/parent/children/:studentId/exams/:examId` | parent | The child's subject-wise result and class average, highest and lowest |
-| GET    | `/api/parent/messages` | parent         | The conversation with the school (marks school messages read) |
-| GET    | `/api/parent/messages/unread` | parent  | `{ count }` of unread school messages |
-| POST   | `/api/parent/messages` | parent         | Send `{ body }` to the school |
+| GET    | `/api/parent/contacts` | parent         | The school office and the children's teachers (what each teaches which child), with last message and unread count |
+| GET    | `/api/parent/messages?with=school\|<teacherId>` | parent | One conversation (marks the other side's messages read) |
+| GET    | `/api/parent/messages/unread` | parent  | `{ count }` of unread messages from the office and teachers |
+| POST   | `/api/parent/messages` | parent         | Send `{ to: "school" \| teacherId, body }` |
 
 ## Data safety
 

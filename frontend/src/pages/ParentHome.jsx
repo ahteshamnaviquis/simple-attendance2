@@ -1,14 +1,14 @@
 // Parent screens: an overview of each child, their attendance, their published
-// exam results, and messages with the school. A parent only ever sees their own
+// exam results, and messages with the school office and their children's teachers. A parent only ever sees their own
 // children (the backend checks every request).
 
 import { useEffect, useState } from 'react';
-import { getMyChildren, getMyMessages, getMyUnreadCount, sendMyMessage } from '../api';
+import { getMyChildren, getMyUnreadCount } from '../api';
 import Layout from '../components/Layout.jsx';
-import Conversation from '../components/Conversation.jsx';
 import ChildOverview from './parent/ChildOverview.jsx';
 import ChildAttendance from './parent/ChildAttendance.jsx';
 import ChildResults from './parent/ChildResults.jsx';
+import ParentMessages from './parent/ParentMessages.jsx';
 import useUnreadCount from '../useUnreadCount';
 
 const MENU = [
@@ -90,47 +90,5 @@ function ChildSwitcher({ childList, childId, setChildId }) {
         </button>
       ))}
     </div>
-  );
-}
-
-function ParentMessages({ onRead }) {
-  const [messages, setMessages] = useState(null);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    getMyMessages()
-      .then((list) => {
-        setMessages(list);
-        onRead();
-      })
-      .catch((err) => setError(err.message));
-  }, []);
-
-  async function handleSend(body) {
-    const sent = await sendMyMessage(body);
-    setMessages([...messages, sent]);
-  }
-
-  return (
-    <>
-      <div className="page-title">
-        <div>
-          <h1>Messages</h1>
-          <p className="subtitle">Your conversation with the school office</p>
-        </div>
-      </div>
-      {error && <p className="error">{error}</p>}
-      {messages && (
-        <section className="panel parent-conversation">
-          <Conversation
-            messages={messages}
-            viewerIsSchool={false}
-            onSend={handleSend}
-            placeholder="Write to the school…"
-            emptyText="No messages yet. You can write to the school below."
-          />
-        </section>
-      )}
-    </>
   );
 }

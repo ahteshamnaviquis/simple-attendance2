@@ -1,28 +1,33 @@
-// The school's messages with parents: conversations on the left (newest
-// first, unread ones marked), the open conversation on the right. "New message"
-// sends one message to all parents, the parents of a class, or chosen parents;
-// each parent gets it in their own private conversation.
+// Messages with parents, for staff.
+//   Admins and the super admin: the school office conversations, shared by all of them.
+//   Teachers: their own conversations with the parents of the students they teach.
+// The list shows each conversation (newest first, unread marked); "New message"
+// writes to one parent, the parents of a class, or all parents, each in their
+// own private conversation.
 //
 // initialParentId: open this parent's conversation first (from the Parents page).
 // onRead: called after a conversation is opened, so the menu badge can update.
 
 import { useEffect, useMemo, useState } from 'react';
-import { getClasses, getMessageRecipients, getMessageThread, getMessageThreads, sendMessage } from '../api';
-import Conversation from './Conversation.jsx';
-import { formatDateTime } from '../utils';
+import { getMessageRecipients, getMessageThread, getMessageThreads, sendMessage } from '../api';
+import { getSavedUser } from '../session';
+import Icon from './Icon.jsx';
+import { Avatar, ChatHeader, ChatShell, ContactItem, Conversation } from './Chat.jsx';
 
 const NEW = 'new';
 
-function childrenText(children) {
+function childrenLine(children) {
   return children.length ? children.map((c) => `${c.name} (${c.className})`).join(', ') : 'No children linked';
 }
 
 export default function Messages({ initialParentId, onRead }) {
-  const [threads, setThreads] = useState([]);
-  const [parents, setParents] = useState([]);
-  const [classes, setClasses] = useState([]);
+  const user = getSavedUser();
+  const isTeacher = user?.role === 'teacher';
+  const [threads, setThreads] = useState(null);
+  const [recipients, setRecipients] = useState([]);
   const [selected, setSelected] = useState(initialParentId || null); // a parent id, NEW or null
   const [thread, setThread] = useState(null); // { parent, messages }
+  const [search, setSearch] = useState('');
   const [error, setError] = useState('');
 
   function loadThreads() {
@@ -33,12 +38,11 @@ export default function Messages({ initialParentId, onRead }) {
 
   useEffect(() => {
     loadThreads();
-    Promise.all([getMessageRecipients(), getClasses()])
-      .then(([parentList, classList]) => {
-        setParents(parentList);
-        setClasses(classList);
-      })
+    getMessageRecipients()
+      .then(setRecipients)
       .catch((err) => setError(err.message));
+    const timer = setInterval(loadThreads, 30000);
+    return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -66,110 +70,159 @@ export default function Messages({ initialParentId, onRead }) {
     return res.sentCount;
   }
 
+  const text = search.trim().toLowerCase();
+  const shownThreads = (threads ?? []).filter(
+    (t) =>
+      !text ||
+      t.parentName.toLowerCase().includes(text) ||
+      t.children.some((c) => c.name.toLowerCase().includes(text))
+  );
+  const unreadTotal = (threads ?? []).reduce((sum, t) => sum + t.unreadCount, 0);
+  const meLabel = isTeacher ? `you (${user.name}, teacher)` : 'the school office (all admins)';
+
+  const list = (
+    <>
+      <label className="chat-search">
+        <span className="sr-only">Search conversations</span>
+        <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search parent or child" />
+      </label>
+      {threads && threads.length === 0 && (
+        <div className="chat-list-empty">
+          <p>No conversations yet.</p>
+          <p className="cell-sub">
+            {isTeacher ? 'Parents of your students can write to you here.' : 'Parents can write to the school office here.'}
+          </p>
+        </div>
+      )}
+      {shownThreads.map((t) => (
+        <ContactItem
+          key={t.parentId}
+          name={t.parentName}
+          tone="parent"
+          chip={t.relation || 'Parent'}
+          subtitle={t.children.map((c) => c.name).join(', ')}
+          lastMessage={t.lastMessage}
+          unread={t.unreadCount}
+          active={t.parentId === selected}
+          muted={t.disabled}
+          viewerIsStaff
+          onClick={() => setSelected(t.parentId)}
+        />
+      ))}
+    </>
+  );
+
   return (
     <>
       <div className="page-title">
         <div>
           <h1>Messages</h1>
-          <p className="subtitle">Conversations with parents. Every admin sees the same conversations.</p>
+          <p className="subtitle">
+            {isTeacher
+              ? 'Your private conversations with the parents of your students'
+              : 'The school office: conversations with parents, shared by every admin'}
+          </p>
         </div>
         <div className="actions">
-          <button type="button" className="secondary" onClick={loadThreads}>
-            Refresh
-          </button>
           <button type="button" onClick={() => setSelected(NEW)}>
-            New message
+            <span className="rate-cell">
+              <Icon name="send" size={16} /> New message
+            </span>
           </button>
         </div>
       </div>
 
       {error && <p className="error">{error}</p>}
 
-      <div className="inbox">
-        <nav className="thread-list panel" aria-label="Conversations">
-          {threads.length === 0 && <p className="note">No conversations yet. Use “New message” to write to parents.</p>}
-          {threads.map((t) => (
-            <button
-              key={t.parentId}
-              type="button"
-              className={t.parentId === selected ? 'thread active' : 'thread'}
-              onClick={() => setSelected(t.parentId)}
-            >
-              <span className="thread-top">
-                <span className="cell-main">{t.parentName}</span>
-                {t.unreadCount > 0 && <span className="nav-badge">{t.unreadCount}</span>}
-              </span>
-              <span className="cell-sub">{childrenText(t.children)}</span>
-              <span className={t.unreadCount > 0 ? 'thread-preview unread' : 'thread-preview'}>
-                {t.lastMessage.fromSchool ? 'You: ' : ''}
-                {t.lastMessage.body}
-              </span>
-              <span className="cell-sub">{formatDateTime(t.lastMessage.createdAt)}</span>
-            </button>
-          ))}
-        </nav>
-
-        <section className="thread-view panel">
-          {!selected && <p className="note">Choose a conversation, or start a new message.</p>}
-          {selected === NEW && <NewMessage parents={parents} classes={classes} onSend={handleSendNew} />}
-          {thread && (
-            <>
-              <div className="panel-head">
-                <div>
-                  <h2>{thread.parent.name}</h2>
-                  <p className="cell-sub">{childrenText(thread.parent.children)}</p>
-                </div>
-                {thread.parent.disabled && <span className="badge muted">Account disabled</span>}
-              </div>
-              <Conversation
-                messages={thread.messages}
-                viewerIsSchool
-                onSend={handleReply}
-                placeholder={`Write to ${thread.parent.name}…`}
-                emptyText="No messages yet. Write the first one below."
-              />
-            </>
-          )}
-        </section>
-      </div>
+      <ChatShell
+        title={isTeacher ? 'Parents' : 'School office inbox'}
+        subtitle={unreadTotal ? `${unreadTotal} unread` : 'All caught up'}
+        list={list}
+        active={Boolean(selected)}
+        onBack={() => setSelected(null)}
+      >
+        {!selected && (
+          <div className="chat-placeholder">
+            <Avatar name="Messages" icon="messages" tone="school" size="lg" />
+            <h2>Choose a conversation</h2>
+            <p className="cell-sub">Or start a new message to one parent, a class's parents or everyone.</p>
+          </div>
+        )}
+        {selected === NEW && (
+          <NewMessage recipients={recipients} isTeacher={isTeacher} onSend={handleSendNew} />
+        )}
+        {thread && (
+          <>
+            <ChatHeader
+              name={thread.parent.name}
+              tone="parent"
+              chip={thread.parent.relation ? `Parent · ${thread.parent.relation}` : 'Parent'}
+              details={[
+                `${isTeacher ? 'Your students' : 'Children'}: ${childrenLine(thread.parent.children)}`,
+                thread.parent.phone ? `Phone: ${thread.parent.phone}` : null,
+              ].filter(Boolean)}
+              note={`Private chat between ${thread.parent.name} (parent) and ${meLabel}.`}
+              aside={thread.parent.disabled && <span className="badge muted">Login disabled</span>}
+            />
+            <Conversation
+              messages={thread.messages}
+              viewerIsStaff
+              onSend={handleReply}
+              placeholder={`Write to ${thread.parent.name}…`}
+              emptyText={`Start the conversation with ${thread.parent.name}.`}
+            />
+          </>
+        )}
+      </ChatShell>
     </>
   );
 }
 
 // Choose who gets the message, then write it.
-function NewMessage({ parents, classes, onSend }) {
+function NewMessage({ recipients, isTeacher, onSend }) {
   const [audience, setAudience] = useState('choose'); // all | class | choose
   const [classId, setClassId] = useState('');
   const [chosen, setChosen] = useState([]);
+  const [filter, setFilter] = useState('');
   const [body, setBody] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const active = parents.filter((p) => !p.disabled);
-  const recipients = useMemo(() => {
+  const active = recipients.filter((p) => !p.disabled);
+  const ids = useMemo(() => {
     if (audience === 'all') return active.map((p) => p.id);
-    if (audience === 'class') {
-      return active.filter((p) => p.children.some((c) => c.classId === classId)).map((p) => p.id);
-    }
+    if (audience === 'class') return active.filter((p) => p.children.some((c) => c.classId === classId)).map((p) => p.id);
     return chosen;
-  }, [audience, classId, chosen, parents]);
+  }, [audience, classId, chosen, recipients]);
 
-  function toggle(id, on) {
-    setChosen(on ? [...chosen, id] : chosen.filter((x) => x !== id));
+  const filterText = filter.trim().toLowerCase();
+  const pickable = active.filter(
+    (p) =>
+      !filterText ||
+      p.name.toLowerCase().includes(filterText) ||
+      p.children.some((c) => c.name.toLowerCase().includes(filterText))
+  );
+  // The classes of the recipients' children (for a teacher: the classes they teach).
+  const classOptions = [
+    ...new Map(active.flatMap((p) => p.children).map((c) => [c.classId, { id: c.classId, name: c.className }])).values(),
+  ].sort((a, b) => a.name.localeCompare(b.name));
+
+  function toggle(id) {
+    setChosen(chosen.includes(id) ? chosen.filter((x) => x !== id) : [...chosen, id]);
   }
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError('');
     setMessage('');
-    if (recipients.length === 0) {
+    if (ids.length === 0) {
       setError('Please choose at least one parent.');
       return;
     }
     setSending(true);
     try {
-      const count = await onSend(recipients, body);
+      const count = await onSend(ids, body);
       setBody('');
       setChosen([]);
       setMessage(`Sent to ${count} parent${count === 1 ? '' : 's'}.`);
@@ -181,23 +234,43 @@ function NewMessage({ parents, classes, onSend }) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>New message</h2>
-      <div className="form-grid">
-        <label>
-          Send to
-          <select value={audience} onChange={(e) => setAudience(e.target.value)}>
-            <option value="choose">Chosen parents</option>
-            <option value="class">Parents of a class</option>
-            <option value="all">All parents</option>
-          </select>
-        </label>
+    <form className="new-message" onSubmit={handleSubmit}>
+      <ChatHeader
+        name="New message"
+        tone="school"
+        icon="send"
+        details={[
+          isTeacher
+            ? 'To the parents of your students. Each parent gets it in their own private chat with you.'
+            : 'From the school office. Each parent gets it in their own private chat.',
+        ]}
+      />
+      <div className="new-message-body">
+        <div className="audience-tabs" role="radiogroup" aria-label="Send to">
+          {[
+            ['choose', 'Choose parents'],
+            ['class', 'A class'],
+            ['all', isTeacher ? 'All my parents' : 'All parents'],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={audience === value}
+              className={audience === value ? 'pill selected' : 'pill'}
+              onClick={() => setAudience(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
         {audience === 'class' && (
           <label>
             Class
             <select value={classId} onChange={(e) => setClassId(e.target.value)} required>
               <option value="">Choose a class</option>
-              {classes.map((c) => (
+              {classOptions.map((c) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>
@@ -205,40 +278,54 @@ function NewMessage({ parents, classes, onSend }) {
             </select>
           </label>
         )}
-      </div>
 
-      {audience === 'choose' && (
-        <fieldset className="class-picker">
-          <legend>Parents</legend>
-          {active.length === 0 && <p className="note">No parent accounts yet. Parents are added with their child on the Students page.</p>}
-          <div className="class-options">
-            {active.map((p) => (
-              <label key={p.id} className="check-label">
-                <input type="checkbox" checked={chosen.includes(p.id)} onChange={(e) => toggle(p.id, e.target.checked)} />
-                <span>
-                  {p.name}
-                  <span className="cell-sub"> · {p.children.map((c) => c.name).join(', ') || '—'}</span>
-                </span>
-              </label>
-            ))}
+        {audience === 'choose' && (
+          <div className="recipient-picker">
+            <input type="search" value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Find a parent or child" />
+            <div className="recipient-list">
+              {pickable.length === 0 && <p className="note">No parents to show.</p>}
+              {pickable.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  className={chosen.includes(p.id) ? 'recipient selected' : 'recipient'}
+                  aria-pressed={chosen.includes(p.id)}
+                  onClick={() => toggle(p.id)}
+                >
+                  <Avatar name={p.name} tone="parent" size="sm" />
+                  <span className="recipient-text">
+                    <span className="cell-main">{p.name}</span>
+                    <span className="cell-sub">
+                      {p.relation && `${p.relation} of `}
+                      {p.children.map((c) => c.name).join(', ')}
+                    </span>
+                  </span>
+                  <span className="recipient-check" aria-hidden="true">
+                    {chosen.includes(p.id) && <Icon name="check" size={14} strokeWidth={3} />}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
-        </fieldset>
-      )}
+        )}
 
-      <label className="message-field">
-        Message
-        <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={2000} required />
-      </label>
-      <p className="note">
-        {recipients.length} parent{recipients.length === 1 ? '' : 's'} will get this message, each in their own
-        conversation. Disabled accounts are left out.
-      </p>
-      {error && <p className="error">{error}</p>}
-      {message && <p className="success">{message}</p>}
-      <div className="actions">
-        <button type="submit" disabled={sending || !body.trim()}>
-          {sending ? 'Sending…' : 'Send message'}
-        </button>
+        <label>
+          Message
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={5} maxLength={2000} required placeholder="Write your message…" />
+        </label>
+        <p className="note">
+          <strong>{ids.length}</strong> parent{ids.length === 1 ? '' : 's'} will get this message. Disabled logins are left out.
+        </p>
+        {error && <p className="error">{error}</p>}
+        {message && <p className="success">{message}</p>}
+        <div className="actions">
+          <button type="submit" disabled={sending || !body.trim()}>
+            <span className="rate-cell">
+              <Icon name="send" size={16} />
+              {sending ? 'Sending…' : 'Send message'}
+            </span>
+          </button>
+        </div>
       </div>
     </form>
   );

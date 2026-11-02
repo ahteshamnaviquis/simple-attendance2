@@ -92,9 +92,11 @@ const messages = [
   {
     id: 'm1',
     parentId: 'p1',
+    teacherId: null,
     fromSchool: true,
     senderId: 'u1',
     senderName: 'Admin User',
+    senderRole: 'admin',
     body: "Welcome! You can see your children's attendance and published results here, and message the school.",
     createdAt: '2026-10-01T08:00:00.000Z',
     readAt: null,

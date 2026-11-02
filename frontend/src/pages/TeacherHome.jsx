@@ -1,14 +1,17 @@
-// Teacher screens: dashboard, daily attendance, past reports and students.
+// Teacher screens: dashboard, daily attendance, past reports, students, and
+// messages with the parents of their students.
 // Teachers only ever see their own assigned classes (the backend filters them).
 
 import { useEffect, useState } from 'react';
-import { getClasses } from '../api';
+import { getClasses, getUnreadMessageCount } from '../api';
 import Layout from '../components/Layout.jsx';
 import Dashboard from '../components/Dashboard.jsx';
 import AttendanceForm from '../components/AttendanceForm.jsx';
 import Reports from '../components/Reports.jsx';
 import StudentsManager from '../components/StudentsManager.jsx';
 import TeacherExams from '../components/TeacherExams.jsx';
+import Messages from '../components/Messages.jsx';
+import useUnreadCount from '../useUnreadCount';
 
 const MENU = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
@@ -16,12 +19,15 @@ const MENU = [
   { id: 'reports', label: 'My reports', icon: 'reports' },
   { id: 'exams', label: 'Examinations', icon: 'exams' },
   { id: 'students', label: 'My students', icon: 'students' },
+  { id: 'messages', label: 'Messages', icon: 'messages' },
 ];
 
 export default function TeacherHome({ user, onLogout }) {
   const [page, setPage] = useState('dashboard');
   const [classes, setClasses] = useState(null); // null = still loading
   const [error, setError] = useState('');
+  const [unread, refreshUnread] = useUnreadCount(getUnreadMessageCount);
+  const items = MENU.map((item) => (item.id === 'messages' ? { ...item, badge: unread } : item));
 
   useEffect(() => {
     getClasses()
@@ -30,7 +36,7 @@ export default function TeacherHome({ user, onLogout }) {
   }, []);
 
   return (
-    <Layout user={user} items={MENU} current={page} onNavigate={setPage} onLogout={onLogout}>
+    <Layout user={user} items={items} current={page} onNavigate={setPage} onLogout={onLogout}>
       {error && <p className="error">{error}</p>}
 
       {page === 'dashboard' && (
@@ -63,6 +69,7 @@ export default function TeacherHome({ user, onLogout }) {
       {page === 'reports' && <Reports user={user} />}
       {page === 'exams' && <TeacherExams />}
       {page === 'students' && <StudentsManager />}
+      {page === 'messages' && <Messages onRead={refreshUnread} />}
     </Layout>
   );
 }
