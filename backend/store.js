@@ -27,7 +27,8 @@ const { DB } = require('./config');
 const COLLECTIONS = {
   users: { table: 'users', props: 'id name username password role disabled:bool?' },
   classes: { table: 'classes', props: 'id name teacherId' },
-  students: { table: 'students', props: 'id rollNumber name classId guardianName phone' },
+  // gender: "male" or "female" (shown to parents as son or daughter); missing = not given.
+  students: { table: 'students', props: 'id rollNumber name gender:text? classId guardianName phone' },
   subjects: { table: 'subjects', props: 'id name' },
   classSubjects: { table: 'class_subjects', props: 'id classId subjectId teacherId' },
   attendance: {
@@ -65,6 +66,7 @@ const COLLECTIONS = {
 // Columns added to a table after it was first released. CREATE TABLE IF NOT
 // EXISTS leaves an existing table as it is, so these are added on start when missing.
 const ADDED_COLUMNS = [
+  { table: 'students', column: 'gender', definition: 'VARCHAR(10) NULL AFTER name' },
   { table: 'messages', column: 'teacher_id', definition: 'VARCHAR(64) NULL AFTER parent_id' },
   { table: 'messages', column: 'sender_role', definition: "VARCHAR(20) NOT NULL DEFAULT '' AFTER sender_name" },
 ];

@@ -51,26 +51,26 @@ INSERT INTO `subjects` (`id`, `name`) VALUES ('3906b6c5-9f0d-4676-9fc5-1c133b368
 INSERT INTO `subjects` (`id`, `name`) VALUES ('cf1b866b-19ca-4c09-942e-2740dbf7ad33', 'Computer Science');
 
 -- students
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('s1', '1', 'Ahmed Hassan', 'c1', 'Hassan Ali', '0300-1111111');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('s2', '2', 'Ayesha Malik', 'c1', 'Tariq Malik', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('s3', '3', 'Bilal Ahmed', 'c1', '', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('s4', '1', 'Fatima Noor', 'c2', 'Noor Khan', '0300-2222222');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('s5', '2', 'Hamza Iqbal', 'c2', '', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('66df3d56-c97c-48d9-b9f5-9da354064119', '4', 'Javeria Zafar', 'c1', 'Zaid Zafar', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('48ab37df-2b37-4054-8d2f-1ae409fb1911', '5', 'Rida Siddiqui', 'c1', 'Kashan Siddiqui', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('dd4b666e-39df-4e12-9373-d9a674d78e22', '6', 'Sana Chaudhry', 'c1', '', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('6e089aaf-1848-4a94-960d-b58b49015041', '7', 'Dua Nawaz', 'c1', 'Areeba Nawaz', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('b12325ab-e75e-4fd9-8833-bebf1c604658', '8', 'Taha Ahmed', 'c1', 'Rida Ahmed', '0300-5242268');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('10206760-c0d7-4ca6-bbd1-64e4ade58abf', '9', 'Arham Mirza', 'c1', 'Areeba Mirza', '0300-4313344');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('8493e060-8746-4f27-b238-83f2d6deb000', '10', 'Iqra Qureshi', 'c1', 'Laiba Qureshi', '0300-5505168');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('35372cfc-9a1c-40dd-97b0-fbd2647f92ec', '3', 'Noor Zafar', 'c2', 'Taha Zafar', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('6d160de6-d12b-4b24-a8df-4d70926fc446', '4', 'Umaima Hashmi', 'c2', 'Hafsa Hashmi', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('ff7b1042-95e1-487f-9487-2ade6bb2dd5b', '5', 'Iqra Ghani', 'c2', 'Eman Ghani', '0300-3321533');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('fba34474-b07d-44ac-9e69-cf3e4575bfe2', '6', 'Ibrahim Butt', 'c2', 'Iqra Butt', '0300-4459888');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('c33a99da-df2d-49db-ba16-d3551264f36f', '7', 'Ali Javed', 'c2', '', '0300-3569449');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('006767a3-17d9-4c5a-91ba-93d178f70061', '8', 'Umaima Ghani', 'c2', '', '');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('d1341e55-9546-4a01-9193-252006332ecd', '9', 'Bilal Dar', 'c2', '', '0300-9463315');
-INSERT INTO `students` (`id`, `roll_number`, `name`, `class_id`, `guardian_name`, `phone`) VALUES ('eddd7847-9f7e-4ba5-8284-8bc3dea42d3f', '10', 'Zoya Latif', 'c2', '', '0300-6252797');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('s1', '1', 'Ahmed Hassan', NULL, 'c1', 'Hassan Ali', '0300-1111111');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('s2', '2', 'Ayesha Malik', NULL, 'c1', 'Tariq Malik', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('s3', '3', 'Bilal Ahmed', NULL, 'c1', '', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('s4', '1', 'Fatima Noor', NULL, 'c2', 'Noor Khan', '0300-2222222');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('s5', '2', 'Hamza Iqbal', NULL, 'c2', '', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('66df3d56-c97c-48d9-b9f5-9da354064119', '4', 'Javeria Zafar', NULL, 'c1', 'Zaid Zafar', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('48ab37df-2b37-4054-8d2f-1ae409fb1911', '5', 'Rida Siddiqui', NULL, 'c1', 'Kashan Siddiqui', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('dd4b666e-39df-4e12-9373-d9a674d78e22', '6', 'Sana Chaudhry', NULL, 'c1', '', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('6e089aaf-1848-4a94-960d-b58b49015041', '7', 'Dua Nawaz', NULL, 'c1', 'Areeba Nawaz', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('b12325ab-e75e-4fd9-8833-bebf1c604658', '8', 'Taha Ahmed', NULL, 'c1', 'Rida Ahmed', '0300-5242268');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('10206760-c0d7-4ca6-bbd1-64e4ade58abf', '9', 'Arham Mirza', NULL, 'c1', 'Areeba Mirza', '0300-4313344');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('8493e060-8746-4f27-b238-83f2d6deb000', '10', 'Iqra Qureshi', NULL, 'c1', 'Laiba Qureshi', '0300-5505168');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('35372cfc-9a1c-40dd-97b0-fbd2647f92ec', '3', 'Noor Zafar', NULL, 'c2', 'Taha Zafar', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('6d160de6-d12b-4b24-a8df-4d70926fc446', '4', 'Umaima Hashmi', NULL, 'c2', 'Hafsa Hashmi', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('ff7b1042-95e1-487f-9487-2ade6bb2dd5b', '5', 'Iqra Ghani', NULL, 'c2', 'Eman Ghani', '0300-3321533');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('fba34474-b07d-44ac-9e69-cf3e4575bfe2', '6', 'Ibrahim Butt', NULL, 'c2', 'Iqra Butt', '0300-4459888');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('c33a99da-df2d-49db-ba16-d3551264f36f', '7', 'Ali Javed', NULL, 'c2', '', '0300-3569449');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('006767a3-17d9-4c5a-91ba-93d178f70061', '8', 'Umaima Ghani', NULL, 'c2', '', '');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('d1341e55-9546-4a01-9193-252006332ecd', '9', 'Bilal Dar', NULL, 'c2', '', '0300-9463315');
+INSERT INTO `students` (`id`, `roll_number`, `name`, `gender`, `class_id`, `guardian_name`, `phone`) VALUES ('eddd7847-9f7e-4ba5-8284-8bc3dea42d3f', '10', 'Zoya Latif', NULL, 'c2', '', '0300-6252797');
 
 -- classSubjects
 INSERT INTO `class_subjects` (`id`, `class_id`, `subject_id`, `teacher_id`) VALUES ('c1-sub1', 'c1', 'sub1', 'u2');

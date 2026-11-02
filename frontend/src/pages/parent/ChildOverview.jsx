@@ -3,7 +3,7 @@
 
 import Icon from '../../components/Icon.jsx';
 import { PassFailBadge } from '../../components/StudentResult.jsx';
-import { formatMediumDate, formatPercent } from '../../utils';
+import { childWord, formatMediumDate, formatPercent } from '../../utils';
 
 export default function ChildOverview({ user, childList: children, unread, onOpen, onMessages }) {
   return (
@@ -50,6 +50,7 @@ function ChildCard({ child, onOpen }) {
         <div>
           <h2>{child.name}</h2>
           <p className="cell-sub">
+            {child.gender && `Your ${childWord(child.gender).toLowerCase()} · `}
             {child.className}
             {child.rollNumber && ` · Roll ${child.rollNumber}`}
             {child.classTeacher && ` · Class teacher: ${child.classTeacher}`}

@@ -136,6 +136,7 @@ router.get('/children', async (req, res) => {
       return {
         studentId: student.id,
         name: student.name,
+        gender: student.gender ?? null,
         rollNumber: student.rollNumber,
         classId: student.classId,
         className: cls?.name ?? '',
@@ -219,7 +220,8 @@ router.get('/children/:studentId/exams/:examId', async (req, res) => {
 
 // The people a parent can message: the school office first, then their
 // children's teachers (what each teaches which child), each with a summary of
-// the conversation. A teacher who no longer teaches them stays listed while
+// the conversation. Teachers with unread messages come first, then the most
+// recent conversations, then everyone else by name. A teacher who no longer teaches them stays listed while
 // there is a conversation with them, but can't get new messages.
 async function contactsFor(user) {
   const [ids, students, classes, classSubjects, subjects, users, messages] = await Promise.all([
@@ -265,7 +267,12 @@ async function contactsFor(user) {
       };
     })
     .filter(Boolean)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort(
+      (a, b) =>
+        (b.unreadCount > 0) - (a.unreadCount > 0) ||
+        (b.lastMessage?.createdAt ?? '').localeCompare(a.lastMessage?.createdAt ?? '') ||
+        a.name.localeCompare(b.name)
+    );
 
   return [school, ...teachers];
 }

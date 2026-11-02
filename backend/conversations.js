@@ -42,7 +42,8 @@ function newMessage({ parentId, teacherId, sender, body, createdAt }) {
 // The conversation a message belongs to (null teacherId = the school office).
 const inThread = (m, parentId, teacherId) => m.parentId === parentId && (m.teacherId ?? null) === (teacherId ?? null);
 
-// What each teacher teaches each of these students: { teacherId: [{ studentId, studentName, className, roles }] }.
+// What each teacher teaches each of these students:
+// { teacherId: [{ studentId, studentName, gender, className, roles }] }.
 // roles: "Class teacher" and/or subject names.
 function teachersOf(students, { classes, classSubjects, subjects }) {
   const byTeacher = new Map();
@@ -54,6 +55,7 @@ function teachersOf(students, { classes, classSubjects, subjects }) {
       entry = {
         studentId: student.id,
         studentName: student.name,
+        gender: student.gender ?? null,
         className: classes.find((c) => c.id === student.classId)?.name ?? '',
         roles: [],
       };

@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS students (
   id            VARCHAR(64)  NOT NULL PRIMARY KEY,
   roll_number   VARCHAR(20)  NOT NULL DEFAULT '', -- unique per class when filled in (checked by the API)
   name          VARCHAR(100) NOT NULL,
+  gender        VARCHAR(10)  NULL,               -- male or female (son or daughter); NULL = not given
   class_id      VARCHAR(64)  NOT NULL,
   guardian_name VARCHAR(100) NOT NULL DEFAULT '',
   phone         VARCHAR(30)  NOT NULL DEFAULT '',

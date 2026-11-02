@@ -11,7 +11,11 @@ import { getClasses, getStudents, getParents, createStudent, updateStudent, dele
 import Icon from './Icon.jsx';
 import ParentFields, { EMPTY_PARENT, initials, parentToForm } from './ParentFields.jsx';
 
-const EMPTY_STUDENT = { rollNumber: '', name: '', classId: '', guardianName: '', phone: '' };
+const EMPTY_STUDENT = { rollNumber: '', name: '', gender: '', classId: '', guardianName: '', phone: '' };
+const GENDERS = [
+  ['male', 'Boy'],
+  ['female', 'Girl'],
+];
 
 let nextKey = 1;
 const newParentEntry = () => ({ key: nextKey++, mode: 'new', details: { ...EMPTY_PARENT } });
@@ -77,6 +81,7 @@ export default function StudentsManager({ canManageParents = false }) {
       {
         rollNumber: student.rollNumber,
         name: student.name,
+        gender: student.gender ?? '',
         classId: student.classId,
         guardianName: student.guardianName,
         phone: student.phone,
@@ -229,6 +234,24 @@ export default function StudentsManager({ canManageParents = false }) {
                 Student name <span className="required">*</span>
                 <input name="name" value={form.name} onChange={handleChange} required autoFocus placeholder="e.g. Zara Khan" />
               </label>
+              <div className="span-2">
+                <span className="field-label">Boy or girl</span>
+                <div className="relation-pills" role="radiogroup" aria-label="Boy or girl">
+                  {GENDERS.map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={form.gender === value}
+                      className={form.gender === value ? 'pill selected' : 'pill'}
+                      onClick={() => setForm({ ...form, gender: form.gender === value ? '' : value })}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <span className="cell-sub">Parents see them as their son or daughter.</span>
+              </div>
               {!canManageParents && (
                 <>
                   <label>
@@ -345,7 +368,10 @@ export default function StudentsManager({ canManageParents = false }) {
             {visible.map((s) => (
               <tr key={s.id}>
                 <td>{s.rollNumber || '—'}</td>
-                <td className="cell-main">{s.name}</td>
+                <td>
+                  <div className="cell-main">{s.name}</div>
+                  {s.gender && <div className="cell-sub">{s.gender === 'male' ? 'Boy' : 'Girl'}</div>}
+                </td>
                 <td>{s.className}</td>
                 <td>
                   {s.parents.map((p) => (

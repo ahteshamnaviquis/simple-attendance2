@@ -89,3 +89,17 @@ export function formatPercent(value) {
 export function defaultPassMarks(maxMarks) {
   return Math.ceil(maxMarks * 0.33 - 1e-9);
 }
+
+// A student's gender as their parent says it: "male" -> "Son", "female" -> "Daughter".
+export function childWord(gender) {
+  return gender === 'male' ? 'Son' : gender === 'female' ? 'Daughter' : 'Child';
+}
+
+// "Ahmed Hassan (son, Grade 9)"; the son/daughter part is left out when not known.
+export function childLabel(child, { withClass = true } = {}) {
+  const parts = [];
+  if (child.gender) parts.push(childWord(child.gender).toLowerCase());
+  if (withClass && child.className) parts.push(child.className);
+  const name = child.name ?? child.studentName;
+  return parts.length ? `${name} (${parts.join(', ')})` : name;
+}

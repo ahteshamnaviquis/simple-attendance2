@@ -172,6 +172,7 @@ function describeParents({ users, parentProfiles, parentStudents, students, clas
             studentId: s.id,
             name: s.name,
             rollNumber: s.rollNumber,
+            gender: s.gender ?? null,
             classId: s.classId,
             className: classes.find((c) => c.id === s.classId)?.name ?? '',
           })),

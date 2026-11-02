@@ -107,7 +107,7 @@ const START_DATA = {
     { id: 'c2', name: 'Grade 10', teacherId: null },
   ],
   students: [
-    { id: 's1', rollNumber: '1', name: 'Ahmed Hassan', classId: 'c1', guardianName: 'Hassan Ali', phone: '' },
+    { id: 's1', rollNumber: '1', name: 'Ahmed Hassan', gender: 'male', classId: 'c1', guardianName: 'Hassan Ali', phone: '' },
     { id: 's2', rollNumber: '2', name: 'Bilal Ahmed', classId: 'c1', guardianName: '', phone: '' },
     { id: 's3', rollNumber: '1', name: 'Fatima Noor', classId: 'c2', guardianName: '', phone: '' },
   ],
@@ -169,6 +169,8 @@ test('a parent sees only their own children, with class, teachers and a summary'
 
   const ahmed = res.body[0];
   assert.equal(ahmed.className, 'Grade 9');
+  assert.equal(ahmed.gender, 'male');
+  assert.equal(res.body[1].gender, null); // not given
   assert.equal(ahmed.classTeacher, 'Sara Khan');
   assert.deepEqual(ahmed.subjects.map((s) => [s.subjectName, s.teacherName]), [
     ['English', 'Sara Khan'],
@@ -269,8 +271,10 @@ test('parents are added with the student, in one transaction', async () => {
   // Teachers can add students, but not parent accounts.
   assert.equal((await api(SARA, 'POST', '/api/students', { ...student, classId: 'c1', parents: [NEW_PARENT] })).status, 403);
 
-  const created = await api(ADMIN, 'POST', '/api/students', { ...student, parents: [NEW_PARENT] });
+  assert.equal((await api(ADMIN, 'POST', '/api/students', { ...student, gender: 'other', parents: [NEW_PARENT] })).status, 400);
+  const created = await api(ADMIN, 'POST', '/api/students', { ...student, gender: 'female', parents: [NEW_PARENT] });
   assert.equal(created.status, 201);
+  assert.equal(created.body.gender, 'female');
   assert.equal(created.body.guardianName, 'Noor Khan'); // follows the first parent
   assert.equal(created.body.phone, '0300-2222222');
   assert.equal(created.body.parents.length, 1);
@@ -283,7 +287,7 @@ test('parents are added with the student, in one transaction', async () => {
   assert.equal(noor.email, 'noor@example.com');
   assert.equal(noor.cnic, '35202-1234567-1');
   assert.equal(noor.password, undefined);
-  assert.deepEqual(noor.children.map((c) => c.name), ['Zara Khan']);
+  assert.deepEqual(noor.children.map((c) => [c.name, c.gender]), [['Zara Khan', 'female']]);
   assert.equal((await api(null, 'POST', '/api/login', { username: 'noor', password: 'noor123' })).status, 200);
 
   // A brother joins: link the same parent, so she sees both children.
@@ -417,7 +421,7 @@ test('parents and their children\'s teachers message each other', async () => {
   assert.equal(contacts.status, 200);
   assert.deepEqual(contacts.body.map((c) => [c.kind, c.name]), [['school', 'School office'], ['teacher', 'Sara Khan']]);
   assert.deepEqual(contacts.body[1].teaches, [
-    { studentId: 's1', studentName: 'Ahmed Hassan', className: 'Grade 9', roles: ['Class teacher', 'English'] },
+    { studentId: 's1', studentName: 'Ahmed Hassan', gender: 'male', className: 'Grade 9', roles: ['Class teacher', 'English'] },
   ]);
   assert.equal(contacts.body[1].canWrite, true);
 
@@ -469,6 +473,8 @@ test('parents and their children\'s teachers message each other', async () => {
   assert.equal(sara.canWrite, false);
   assert.equal(sara.messageCount, 2);
   assert.ok(after.some((c) => c.id === OMAR && c.canWrite)); // the new class teacher
+  // Teachers with a conversation come before the others.
+  assert.deepEqual(after.map((c) => c.name), ['School office', 'Sara Khan', 'Omar Farooq']);
   assert.equal((await api(PARENT, 'POST', '/api/parent/messages', { to: SARA, body: 'Hello?' })).status, 403);
   assert.equal((await api(SARA, 'GET', `/api/messages/${PARENT}`)).status, 200); // she can still read it
 });

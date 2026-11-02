@@ -10,6 +10,7 @@ import ChildAttendance from './parent/ChildAttendance.jsx';
 import ChildResults from './parent/ChildResults.jsx';
 import ParentMessages from './parent/ParentMessages.jsx';
 import useUnreadCount from '../useUnreadCount';
+import { childWord } from '../utils';
 
 const MENU = [
   { id: 'overview', label: 'My children', icon: 'dashboard' },
@@ -66,7 +67,7 @@ export default function ParentHome({ user, onLogout }) {
       {page === 'results' && child && (
         <ChildResults key={child.studentId} child={child} switcher={switcher} />
       )}
-      {page === 'messages' && <ParentMessages onRead={refreshUnread} />}
+      {page === 'messages' && <ParentMessages childList={children ?? []} onRead={refreshUnread} />}
     </Layout>
   );
 }
@@ -86,7 +87,9 @@ function ChildSwitcher({ childList, childId, setChildId }) {
           onClick={() => setChildId(c.studentId)}
         >
           {c.name}
-          <span className="cell-sub">{c.className}</span>
+          <span className="cell-sub">
+            {childWord(c.gender)} · {c.className}
+          </span>
         </button>
       ))}
     </div>

@@ -1,6 +1,7 @@
 // /api/students - list, add, edit and remove students.
 //
-// A student: { id, rollNumber, name, classId, guardianName, phone }
+// A student: { id, rollNumber, name, gender, classId, guardianName, phone }
+// gender: "male" or "female" (parents see "son" or "daughter"), or left out.
 // The list also gives each student's className and parents
 // ([{ parentId, name, relation, phone }]).
 //
@@ -37,12 +38,16 @@ function cleanStudentInput(body) {
   const student = {
     rollNumber: String(body?.rollNumber ?? '').trim(),
     name: String(body?.name ?? '').trim(),
+    gender: body?.gender ? String(body.gender) : undefined,
     classId: String(body?.classId ?? '').trim(),
     guardianName: String(body?.guardianName ?? '').trim(),
     phone: String(body?.phone ?? '').trim(),
   };
   if (!student.name) throw new HttpError(400, 'Student name is required');
   if (!student.classId) throw new HttpError(400, 'Please choose a class');
+  if (student.gender !== undefined && !['male', 'female'].includes(student.gender)) {
+    throw new HttpError(400, 'Please choose boy or girl');
+  }
   return student;
 }
 

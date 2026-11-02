@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { getParents, updateParent, setParentDisabled, deleteParent } from '../../api';
 import ParentFields, { initials, parentToForm } from '../../components/ParentFields.jsx';
+import { childWord } from '../../utils';
 
 export default function ParentsManager({ onMessage }) {
   const [parents, setParents] = useState([]);
@@ -172,7 +173,11 @@ export default function ParentsManager({ onMessage }) {
                   {p.children.length === 0 && <span className="cell-sub">None</span>}
                   {p.children.map((c) => (
                     <div key={c.studentId}>
-                      {c.name} <span className="cell-sub">· {c.className}</span>
+                      {c.name}{' '}
+                      <span className="cell-sub">
+                        · {c.gender ? `${childWord(c.gender)}, ` : ''}
+                        {c.className}
+                      </span>
                     </div>
                   ))}
                 </td>

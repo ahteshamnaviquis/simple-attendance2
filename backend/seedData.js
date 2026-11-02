@@ -24,11 +24,11 @@ const classes = [
 // A few students per class. rollNumber is unique within a class.
 // (npm run demo-data fills every class up to 10 students.)
 const students = [
-  { id: 's1', rollNumber: '1', name: 'Ahmed Hassan', classId: 'c1', guardianName: 'Hassan Ali', phone: '0300-1111111' },
-  { id: 's2', rollNumber: '2', name: 'Ayesha Malik', classId: 'c1', guardianName: 'Tariq Malik', phone: '' },
-  { id: 's3', rollNumber: '3', name: 'Bilal Ahmed', classId: 'c1', guardianName: '', phone: '' },
-  { id: 's4', rollNumber: '1', name: 'Fatima Noor', classId: 'c2', guardianName: 'Noor Khan', phone: '0300-2222222' },
-  { id: 's5', rollNumber: '2', name: 'Hamza Iqbal', classId: 'c2', guardianName: '', phone: '' },
+  { id: 's1', rollNumber: '1', name: 'Ahmed Hassan', gender: 'male', classId: 'c1', guardianName: 'Hassan Ali', phone: '0300-1111111' },
+  { id: 's2', rollNumber: '2', name: 'Ayesha Malik', gender: 'female', classId: 'c1', guardianName: 'Tariq Malik', phone: '' },
+  { id: 's3', rollNumber: '3', name: 'Bilal Ahmed', gender: 'male', classId: 'c1', guardianName: '', phone: '' },
+  { id: 's4', rollNumber: '1', name: 'Fatima Noor', gender: 'female', classId: 'c2', guardianName: 'Noor Khan', phone: '0300-2222222' },
+  { id: 's5', rollNumber: '2', name: 'Hamza Iqbal', gender: 'male', classId: 'c2', guardianName: '', phone: '' },
 ];
 
 const attendance = [];

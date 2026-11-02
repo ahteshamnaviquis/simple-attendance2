@@ -21,7 +21,8 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
   row shows how many classes reported each day. Click a cell to open the attendance
   form for that class and date; click a date to list who did not submit or was late.
 - Late reports also get a "⏱ Late" label in the Reports list.
-- Students: add, edit, remove, search, filter by class
+- Students: add, edit, remove, search, filter by class. Each student can be marked boy or
+  girl, so parents see them as their son or daughter.
 - Reports: filter by date and class, view, edit, print the list or a single report
 - Classes: add, rename, and assign a teacher
 - Subjects: add and rename the academy's subjects, and choose which subjects each class
@@ -92,8 +93,12 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
   marks are never shown.
 - Messages: start or continue a chat with the school office (admins) or with any of
   their children's teachers. Each teacher is listed with what they teach which child
-  ("Class teacher and English for Ahmed Hassan (Grade 9)"). A teacher who no longer
-  teaches their children keeps the old chat, but can't get new messages. Unread count in the menu.
+  ("Class teacher and English for your son Ahmed Hassan (Grade 9)"). With several
+  children, tabs (All children, Ahmed · Son, Fatima · Daughter) show one child's teachers.
+  Chats with unread messages come first, "1 unread · open Sara Khan" jumps to them, and an
+  open chat refreshes every 10 seconds, so new messages are read straight away and the
+  unread count in the menu goes. A teacher who no longer teaches their children keeps the
+  old chat, but can't get new messages.
 
 ## Attendance rules
 
@@ -452,7 +457,7 @@ adds it automatically after login).
 | POST   | `/api/attendance`      | logged in      | New report (409 if class+date already exists) |
 | PUT    | `/api/attendance/:id`  | logged in      | Update counts and absent students |
 | GET    | `/api/students`        | logged in      | Admin: all students. Teacher: only their classes. Optional `?classId=`. Each student has `parents: [{ parentId, name, relation, phone }]` |
-| POST   | `/api/students`        | logged in      | Add `{ name, classId, rollNumber, guardianName, phone, parents? }`. `parents` (needs the parents permission) lists `{ parentId }` to link an existing parent, `{ parentId, ...details }` to also update them, or `{ ...details }` for a new one; details = `{ name, relation, phone, altPhone, email, cnic, occupation, address, username, password }`. All saved together |
+| POST   | `/api/students`        | logged in      | Add `{ name, gender, classId, rollNumber, guardianName, phone, parents? }` (gender: `male`, `female` or left out). `parents` (needs the parents permission) lists `{ parentId }` to link an existing parent, `{ parentId, ...details }` to also update them, or `{ ...details }` for a new one; details = `{ name, relation, phone, altPhone, email, cnic, occupation, address, username, password }`. All saved together |
 | PUT    | `/api/students/:id`    | logged in      | Edit / move a student. With `parents`, they replace the student's parents (blank password = keep current) |
 | DELETE | `/api/students/:id`    | logged in      | Remove a student |
 | GET    | `/api/subjects`        | logged in      | All subjects |

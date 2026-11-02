@@ -3243,3 +3243,40 @@ textarea:focus-visible {
     max-width: 90%;
   }
 }
+
+/* Unread shortcut in a chat list, and child tabs above a parent's chats */
+.unread-link,
+.unread-link:hover:not(:disabled) {
+  min-height: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--critical);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.chat-child-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+
+.chat-child-tabs .pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 4px 12px;
+  font-size: 13px;
+}
+
+.pill-sub {
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
+}

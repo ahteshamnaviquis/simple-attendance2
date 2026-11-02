@@ -8,16 +8,19 @@
 // initialParentId: open this parent's conversation first (from the Parents page).
 // onRead: called after a conversation is opened, so the menu badge can update.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { getMessageRecipients, getMessageThread, getMessageThreads, sendMessage } from '../api';
 import { getSavedUser } from '../session';
 import Icon from './Icon.jsx';
 import { Avatar, ChatHeader, ChatShell, ContactItem, Conversation } from './Chat.jsx';
+import { childLabel } from '../utils';
 
 const NEW = 'new';
 
+const REFRESH_MS = 10000;
+
 function childrenLine(children) {
-  return children.length ? children.map((c) => `${c.name} (${c.className})`).join(', ') : 'No children linked';
+  return children.length ? children.map((c) => childLabel(c)).join(', ') : 'No children linked';
 }
 
 export default function Messages({ initialParentId, onRead }) {
@@ -29,6 +32,18 @@ export default function Messages({ initialParentId, onRead }) {
   const [thread, setThread] = useState(null); // { parent, messages }
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+
+  // Fetch the open conversation (which marks the parent's messages read).
+  function loadThread(parentId) {
+    return getMessageThread(parentId).then((data) => {
+      if (selectedRef.current !== parentId) return; // another conversation was opened meanwhile
+      setThread(data);
+      loadThreads(); // its unread count is now 0
+      onRead?.();
+    });
+  }
 
   function loadThreads() {
     return getMessageThreads()
@@ -41,20 +56,19 @@ export default function Messages({ initialParentId, onRead }) {
     getMessageRecipients()
       .then(setRecipients)
       .catch((err) => setError(err.message));
-    const timer = setInterval(loadThreads, 30000);
+    // The open conversation refreshes itself, so new messages are read straight away.
+    const timer = setInterval(() => {
+      const open = selectedRef.current;
+      if (open && open !== NEW) loadThread(open).catch(() => {});
+      else loadThreads();
+    }, REFRESH_MS);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     setThread(null);
     if (!selected || selected === NEW) return;
-    getMessageThread(selected)
-      .then((data) => {
-        setThread(data);
-        loadThreads(); // its unread count is now 0
-        onRead?.();
-      })
-      .catch((err) => setError(err.message));
+    loadThread(selected).catch((err) => setError(err.message));
   }, [selected]);
 
   async function handleReply(body) {
@@ -78,6 +92,7 @@ export default function Messages({ initialParentId, onRead }) {
       t.children.some((c) => c.name.toLowerCase().includes(text))
   );
   const unreadTotal = (threads ?? []).reduce((sum, t) => sum + t.unreadCount, 0);
+  const firstUnread = (threads ?? []).find((t) => t.unreadCount > 0);
   const meLabel = isTeacher ? `you (${user.name}, teacher)` : 'the school office (all admins)';
 
   const list = (
@@ -100,7 +115,7 @@ export default function Messages({ initialParentId, onRead }) {
           name={t.parentName}
           tone="parent"
           chip={t.relation || 'Parent'}
-          subtitle={t.children.map((c) => c.name).join(', ')}
+          subtitle={t.children.map((c) => childLabel(c, { withClass: false })).join(', ')}
           lastMessage={t.lastMessage}
           unread={t.unreadCount}
           active={t.parentId === selected}
@@ -136,7 +151,15 @@ export default function Messages({ initialParentId, onRead }) {
 
       <ChatShell
         title={isTeacher ? 'Parents' : 'School office inbox'}
-        subtitle={unreadTotal ? `${unreadTotal} unread` : 'All caught up'}
+        subtitle={
+          firstUnread ? (
+            <button type="button" className="unread-link" onClick={() => setSelected(firstUnread.parentId)}>
+              {unreadTotal} unread · open {firstUnread.parentName}
+            </button>
+          ) : (
+            'All caught up'
+          )
+        }
         list={list}
         active={Boolean(selected)}
         onBack={() => setSelected(null)}
@@ -297,7 +320,7 @@ function NewMessage({ recipients, isTeacher, onSend }) {
                     <span className="cell-main">{p.name}</span>
                     <span className="cell-sub">
                       {p.relation && `${p.relation} of `}
-                      {p.children.map((c) => c.name).join(', ')}
+                      {p.children.map((c) => childLabel(c, { withClass: false })).join(', ')}
                     </span>
                   </span>
                   <span className="recipient-check" aria-hidden="true">
