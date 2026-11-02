@@ -225,59 +225,147 @@ test('parents see only published, enabled results, and only their child\'s marks
   assert.equal((await api(PARENT, 'GET', '/api/parent/children/s1/exams/e3')).status, 404); // disabled
 });
 
-test('admins add, edit, disable and remove parents with several children', async () => {
+// A complete new parent for the student form.
+const NEW_PARENT = {
+  name: 'Noor Khan',
+  relation: 'Mother',
+  phone: '0300-2222222',
+  altPhone: '',
+  email: 'Noor@Example.com',
+  cnic: '35202-1234567-1',
+  occupation: 'Teacher',
+  address: 'House 5, Gulberg',
+  username: 'Noor',
+  password: 'noor123',
+};
+
+test('parents are added with the student, in one transaction', async () => {
+  // There is no separate "add parent".
+  assert.equal((await api(ADMIN, 'POST', '/api/parents', NEW_PARENT)).status, 404);
+
+  const student = { name: 'Zara Khan', classId: 'c2', rollNumber: '7', guardianName: '', phone: '' };
+
+  // Bad parent details: nothing is saved, not even the student.
+  const bad = [
+    [{ ...NEW_PARENT, relation: 'Cousin' }, /relation/],
+    [{ ...NEW_PARENT, phone: '' }, /phone is required/],
+    [{ ...NEW_PARENT, phone: 'call me' }, /phone number/],
+    [{ ...NEW_PARENT, email: 'nope' }, /email/],
+    [{ ...NEW_PARENT, cnic: '123' }, /CNIC/],
+    [{ ...NEW_PARENT, password: '' }, /password is required/],
+  ];
+  for (const [parent, message] of bad) {
+    const res = await api(ADMIN, 'POST', '/api/students', { ...student, parents: [parent] });
+    assert.equal(res.status, 400, JSON.stringify(parent));
+    assert.match(res.body.error, message);
+  }
+  const taken = await api(ADMIN, 'POST', '/api/students', { ...student, parents: [{ ...NEW_PARENT, username: 'sara' }] });
+  assert.equal(taken.status, 409);
+  assert.equal((await readTable('students')).some((s) => s.name === 'Zara Khan'), false);
+  assert.equal((await readTable('users')).some((u) => u.username === 'noor'), false);
+
+  // Teachers can add students, but not parent accounts.
+  assert.equal((await api(SARA, 'POST', '/api/students', { ...student, classId: 'c1', parents: [NEW_PARENT] })).status, 403);
+
+  const created = await api(ADMIN, 'POST', '/api/students', { ...student, parents: [NEW_PARENT] });
+  assert.equal(created.status, 201);
+  assert.equal(created.body.guardianName, 'Noor Khan'); // follows the first parent
+  assert.equal(created.body.phone, '0300-2222222');
+  assert.equal(created.body.parents.length, 1);
+  assert.equal(created.body.parents[0].relation, 'Mother');
+  const zaraId = created.body.id;
+  const noorId = created.body.parents[0].parentId;
+
+  const noor = (await api(ADMIN, 'GET', '/api/parents')).body.find((p) => p.id === noorId);
+  assert.equal(noor.username, 'noor');
+  assert.equal(noor.email, 'noor@example.com');
+  assert.equal(noor.cnic, '35202-1234567-1');
+  assert.equal(noor.password, undefined);
+  assert.deepEqual(noor.children.map((c) => c.name), ['Zara Khan']);
+  assert.equal((await api(null, 'POST', '/api/login', { username: 'noor', password: 'noor123' })).status, 200);
+
+  // A brother joins: link the same parent, so she sees both children.
+  const brother = await api(ADMIN, 'POST', '/api/students', {
+    name: 'Ali Khan',
+    classId: 'c1',
+    rollNumber: '9',
+    parents: [{ parentId: noorId }],
+  });
+  assert.equal(brother.status, 201);
+  const children = await api(noorId, 'GET', '/api/parent/children');
+  assert.deepEqual(children.body.map((c) => c.name), ['Ali Khan', 'Zara Khan']);
+
+  // Editing the student: update the mother's phone (blank password keeps hers) and add a father.
+  const edited = await api(ADMIN, 'PUT', `/api/students/${zaraId}`, {
+    ...student,
+    parents: [
+      { parentId: noorId, ...NEW_PARENT, phone: '0311-5555555', password: '' },
+      { ...NEW_PARENT, name: 'Imran Khan', relation: 'Father', username: 'imran', email: '' },
+    ],
+  });
+  assert.equal(edited.status, 200);
+  assert.deepEqual(edited.body.parents.map((p) => [p.name, p.relation]), [['Noor Khan', 'Mother'], ['Imran Khan', 'Father']]);
+  assert.equal(edited.body.phone, '0311-5555555');
+  assert.equal((await api(null, 'POST', '/api/login', { username: 'noor', password: 'noor123' })).status, 200);
+
+  // Same parent twice, two new parents with one username, or a non-parent: rejected.
+  assert.equal((await api(ADMIN, 'PUT', `/api/students/${zaraId}`, { ...student, parents: [{ parentId: noorId }, { parentId: noorId }] })).status, 400);
+  assert.equal((await api(ADMIN, 'PUT', `/api/students/${zaraId}`, { ...student, parents: [NEW_PARENT, NEW_PARENT] })).status, 400);
+  assert.equal((await api(ADMIN, 'PUT', `/api/students/${zaraId}`, { ...student, parents: [{ parentId: SARA }] })).status, 400);
+
+  // Leaving `parents` out keeps them; an empty list unlinks them (the accounts stay).
+  const kept = await api(ADMIN, 'PUT', `/api/students/${zaraId}`, { ...student, name: 'Zara Imran' });
+  assert.equal(kept.body.parents.length, 2);
+  const unlinked = await api(ADMIN, 'PUT', `/api/students/${zaraId}`, { ...student, parents: [] });
+  assert.deepEqual(unlinked.body.parents, []);
+  assert.ok((await readTable('users')).some((u) => u.username === 'imran'));
+
+  // Teachers see each student's parents (name, relation, phone) but can't change them.
+  const sarasView = (await api(SARA, 'GET', '/api/students')).body.find((s) => s.name === 'Ali Khan');
+  assert.deepEqual(sarasView.parents, [{ parentId: noorId, name: 'Noor Khan', relation: 'Mother', phone: '0311-5555555' }]);
+  assert.equal((await api(SARA, 'PUT', `/api/students/${brother.body.id}`, { name: 'Ali Khan', classId: 'c1', parents: [] })).status, 403);
+});
+
+test('admins edit, disable and remove parents in the directory', async () => {
   assert.equal((await api(SARA, 'GET', '/api/parents')).status, 403);
 
   const list = await api(ADMIN, 'GET', '/api/parents');
   assert.equal(list.status, 200);
   const hassan = list.body.find((p) => p.id === PARENT);
   assert.deepEqual(hassan.children.map((c) => c.className), ['Grade 9', 'Grade 10']);
-  assert.equal(hassan.password, undefined);
+  assert.equal(hassan.relation, ''); // added before parent details existed
 
-  assert.equal((await api(ADMIN, 'POST', '/api/parents', { name: 'X', username: 'x', password: 'p', studentIds: [] })).status, 400);
-  assert.equal((await api(ADMIN, 'POST', '/api/parents', { name: 'X', username: 'x', password: 'p', studentIds: ['nope'] })).status, 400);
-  assert.equal((await api(ADMIN, 'POST', '/api/parents', { name: 'X', username: 'sara', password: 'p', studentIds: ['s1'] })).status, 409);
-
-  const created = await api(ADMIN, 'POST', '/api/parents', {
-    name: 'Noor Khan',
-    username: 'Noor',
-    password: 'noor123',
-    studentIds: ['s3', 's2', 's3'],
-  });
-  assert.equal(created.status, 201);
-  assert.equal(created.body.username, 'noor');
-  assert.deepEqual(created.body.children.map((c) => c.name).sort(), ['Bilal Ahmed', 'Fatima Noor']);
-  const id = created.body.id;
-
-  // Blank password keeps the old one; children are replaced.
-  const edited = await api(ADMIN, 'PUT', `/api/parents/${id}`, { name: 'Noor Khan', username: 'noor', password: '', studentIds: ['s3'] });
+  const edited = await api(ADMIN, 'PUT', `/api/parents/${PARENT}`, { ...NEW_PARENT, name: 'Hassan Ali', relation: 'Father', username: 'hassan', password: '' });
   assert.equal(edited.status, 200);
-  assert.deepEqual(edited.body.children.map((c) => c.name), ['Fatima Noor']);
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'noor', password: 'noor123' })).status, 200);
+  assert.equal(edited.body.relation, 'Father');
+  assert.equal((await api(ADMIN, 'PUT', `/api/parents/${PARENT}`, { ...NEW_PARENT, relation: '' })).status, 400);
+  assert.equal((await api(null, 'POST', '/api/login', { username: 'hassan', password: 'parent123' })).status, 200);
+
+  const temp = await api(ADMIN, 'POST', '/api/students', {
+    name: 'Temp Child',
+    classId: 'c2',
+    parents: [{ ...NEW_PARENT, name: 'Temp Parent', username: 'temp' }],
+  });
+  const id = temp.body.parents[0].parentId;
 
   // Disabled parents can't log in and are logged out.
   assert.equal((await api(ADMIN, 'POST', `/api/parents/${id}/disable`)).body.disabled, true);
-  const blocked = await api(null, 'POST', '/api/login', { username: 'noor', password: 'noor123' });
+  const blocked = await api(null, 'POST', '/api/login', { username: 'temp', password: 'noor123' });
   assert.equal(blocked.status, 403);
   assert.match(blocked.body.error, /contact the school/);
   assert.equal((await api(id, 'GET', '/api/parent/children')).status, 401);
   assert.equal((await api(ADMIN, 'POST', `/api/parents/${id}/enable`)).body.disabled, false);
 
-  // Removing a parent removes their links and messages.
+  // Removing a student removes them from their parents.
+  assert.equal((await api(ADMIN, 'DELETE', `/api/students/${temp.body.id}`)).status, 200);
+  assert.deepEqual((await api(ADMIN, 'GET', '/api/parents')).body.find((p) => p.id === id).children, []);
+
+  // Removing a parent removes their profile, links and messages.
   await api(ADMIN, 'POST', '/api/messages', { parentIds: [id], body: 'Hello' });
   assert.equal((await api(ADMIN, 'DELETE', `/api/parents/${id}`)).status, 204);
-  assert.equal((await readTable('parentStudents')).some((l) => l.parentId === id), false);
+  assert.equal((await readTable('parentProfiles')).some((p) => p.id === id), false);
   assert.equal((await readTable('messages')).some((m) => m.parentId === id), false);
-  assert.equal((await api(ADMIN, 'DELETE', `/api/teachers/${SARA}`)).status, 403); // still not a parent route
   assert.equal((await api(ADMIN, 'DELETE', `/api/parents/${SARA}`)).status, 404);
-});
-
-test('removing a student removes them from their parents', async () => {
-  const created = await api(ADMIN, 'POST', '/api/students', { name: 'Temp Child', classId: 'c2' });
-  const parent = await api(ADMIN, 'POST', '/api/parents', { name: 'Temp', username: 'temp', password: 'p', studentIds: [created.body.id] });
-  assert.equal((await api(ADMIN, 'DELETE', `/api/students/${created.body.id}`)).status, 200);
-  const after = (await api(ADMIN, 'GET', '/api/parents')).body.find((p) => p.id === parent.body.id);
-  assert.deepEqual(after.children, []);
 });
 
 test('the school and parents message each other, with unread counts', async () => {
@@ -320,11 +408,20 @@ test('the school and parents message each other, with unread counts', async () =
   assert.deepEqual(other.body.map((m) => m.body), ['School closes early on Friday.']);
 });
 
-test('the super admin can stop admins managing parents', async () => {
+test('admins keep messages when the super admin stops them managing parents', async () => {
   const settings = (await api(null, 'GET', '/api/settings')).body;
   const off = { ...settings, adminPermissions: { ...settings.adminPermissions, parents: false } };
   assert.equal((await api(SUPER, 'PUT', '/api/settings', off)).status, 200);
   assert.equal((await api(ADMIN, 'GET', '/api/parents')).status, 403);
-  assert.equal((await api(ADMIN, 'GET', '/api/messages')).status, 403);
+  assert.equal((await api(ADMIN, 'POST', '/api/students', { name: 'X', classId: 'c1', parents: [] })).status, 403);
   assert.equal((await api(SUPER, 'GET', '/api/parents')).status, 200);
+
+  // Messages stay with every admin and the super admin.
+  assert.equal((await api(ADMIN, 'GET', '/api/messages')).status, 200);
+  const recipients = await api(ADMIN, 'GET', '/api/messages/parents');
+  assert.equal(recipients.status, 200);
+  assert.ok(recipients.body.some((p) => p.id === PARENT && p.children.length === 2));
+  assert.equal(recipients.body[0].username, undefined);
+  assert.equal((await api(ADMIN, 'POST', '/api/messages', { parentIds: [PARENT], body: 'Still here' })).status, 201);
+  assert.equal((await api(SARA, 'GET', '/api/messages/parents')).status, 403);
 });

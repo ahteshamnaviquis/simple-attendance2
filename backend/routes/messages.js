@@ -1,6 +1,6 @@
 // /api/messages - the school's side of the conversations with parents.
-// Needs the "parents" permission. Every admin with it sees every conversation:
-// parents write to "the school", not to one person.
+// For every admin and the super admin (not a permission they can lose): parents
+// write to "the school", not to one person, so all of them see every conversation.
 //
 // A message (the messages table):
 // { id, parentId, fromSchool, senderId, senderName, body, createdAt, readAt }
@@ -8,12 +8,13 @@
 //
 //   GET  /             conversations: each parent with messages, newest first
 //   GET  /unread       { count } of parent messages nobody has read yet
+//   GET  /parents      everyone a message can go to: parents with their children
 //   GET  /:parentId    one conversation (marks the parent's messages read)
 //   POST /             { parentIds, body } send the same message to one or more parents
 
 const express = require('express');
 const { readData, updateData } = require('../store');
-const { HttpError, newId, requireArea } = require('../helpers');
+const { HttpError, newId, requireRole } = require('../helpers');
 const { listParents } = require('./parents');
 
 const MAX_MESSAGE_LENGTH = 2000;
@@ -28,7 +29,7 @@ function cleanMessageBody(value) {
 }
 
 const router = express.Router();
-router.use(requireArea('parents'));
+router.use(requireRole('admin', 'superadmin'));
 
 const isUnread = (m) => !m.fromSchool && !m.readAt;
 
@@ -58,6 +59,20 @@ router.get('/', async (req, res) => {
 router.get('/unread', async (req, res) => {
   const messages = await readData('messages');
   res.json({ count: messages.filter(isUnread).length });
+});
+
+// GET /api/messages/parents
+router.get('/parents', async (req, res) => {
+  const parents = await listParents();
+  res.json(
+    parents.map((p) => ({
+      id: p.id,
+      name: p.name,
+      relation: p.relation,
+      disabled: p.disabled,
+      children: p.children,
+    }))
+  );
 });
 
 // GET /api/messages/:parentId

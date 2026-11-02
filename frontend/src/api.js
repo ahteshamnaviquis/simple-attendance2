@@ -96,8 +96,8 @@ export const saveExamMarks = (id, subjectId, marks) => request('PUT', `/api/exam
 export const getExamResults = (id) => request('GET', `/api/exams/${id}/results`);
 
 // Parent accounts (admins with the "parents" permission, and the super admin).
+// New parents are added with their child: createStudent / updateStudent with { ..., parents }.
 export const getParents = () => request('GET', '/api/parents');
-export const createParent = (parent) => request('POST', '/api/parents', parent); // { ..., studentIds }
 export const updateParent = (id, parent) => request('PUT', `/api/parents/${id}`, parent);
 export const setParentDisabled = (id, disabled) =>
   request('POST', `/api/parents/${id}/${disabled ? 'disable' : 'enable'}`);
@@ -105,6 +105,7 @@ export const deleteParent = (id) => request('DELETE', `/api/parents/${id}`);
 
 // The school's side of the conversations with parents.
 export const getMessageThreads = () => request('GET', '/api/messages');
+export const getMessageRecipients = () => request('GET', '/api/messages/parents');
 export const getUnreadMessageCount = () => request('GET', '/api/messages/unread');
 export const getMessageThread = (parentId) => request('GET', `/api/messages/${parentId}`);
 export const sendMessage = (parentIds, body) => request('POST', '/api/messages', { parentIds, body });

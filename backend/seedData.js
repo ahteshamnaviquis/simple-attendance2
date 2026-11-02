@@ -69,6 +69,19 @@ const classSubjects = classes.flatMap((cls) =>
   }))
 );
 
+const parentProfiles = [
+  {
+    id: 'p1',
+    relation: 'Father',
+    phone: '0300-1111111',
+    altPhone: '',
+    email: 'hassan.ali@example.com',
+    cnic: '',
+    occupation: 'Shopkeeper',
+    address: 'House 12, Street 4, Model Town',
+  },
+];
+
 // The demo parent has two children, in different classes.
 const parentStudents = [
   { id: 'ps1', parentId: 'p1', studentId: 's1' },
@@ -126,6 +139,7 @@ module.exports = {
   classSubjects,
   exams,
   marks,
+  parentProfiles,
   parentStudents,
   messages,
   settings,

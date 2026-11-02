@@ -55,13 +55,24 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
   Enter marks, save as a draft, and submit them. Teachers can't create or publish exams
   or see other teachers' subjects.
 
-**Parents** (managed by admins with the *Parents* permission, on by default, and the super admin)
-- Parents: add, edit, disable and remove parent accounts. Each parent can follow one
-  or more children, in any classes (a child can also have more than one parent account).
-  The name starts as the first chosen child's guardian name.
-- Messages: one private conversation per parent. Write to one parent, the parents of a
-  class, or all parents at once (each gets the message in their own conversation).
-  Unread replies show as a count next to *Messages*; every admin sees the same conversations.
+**Parents** (admins with the *Parents* permission, on by default, and the super admin)
+- Parents are added on the student form, together with the student: relation (Father,
+  Mother, Guardian, ...), name, phone, other phone, email, CNIC, occupation, address, and
+  a username and password for the parent portal (the username is suggested from the name,
+  and *Generate* makes an easy-to-read password). A student can have up to four parents.
+  For a brother or sister, *Link an existing parent* finds the parent by name, phone,
+  username or child, so one login follows all their children. Editing a student can
+  update a parent's details, add another parent, or unlink one.
+  Student, parents and links are saved together: if anything is wrong, nothing is saved.
+- Parents page: the directory of parents with relation, contacts and children. Edit
+  details and login, disable or remove a parent, or open their messages. There is no
+  separate "add parent".
+- Teachers see each student's parents (name, relation, phone) but can't add or change them.
+
+**Messages** (every admin and the super admin, whatever the permissions)
+- One private conversation per parent. Write to one parent, the parents of a class, or
+  all parents at once (each gets the message in their own conversation). Unread replies
+  show as a count next to *Messages*; every admin sees the same conversations.
 
 **Parent** (their own login)
 - My children: each child's class, roll number, class teacher, subjects and subject
@@ -122,6 +133,7 @@ SimpleAttendence/
 │   ├── sql/
 │   │   ├── schema.sql     # The tables (the server runs this itself on start)
 │   │   └── data.sql       # The data from the JSON files as INSERTs (npm run json-to-sql)
+│   ├── parentAccounts.js  # Parent details: checking them and saving them with a student
 │   ├── results.js         # Exam totals, percentages, Incomplete and positions
 │   ├── test/
 │   │   ├── testServer.js  # Starts the server on a temporary MySQL database for each test file
@@ -141,7 +153,7 @@ SimpleAttendence/
 │   │   ├── subjects.js    # /api/subjects
 │   │   ├── classSubjects.js # /api/class-subjects (subjects of each class and their teachers)
 │   │   ├── exams.js       # /api/exams (exams, marks and results; all exam rules live here)
-│   │   ├── parents.js     # /api/parents (parent accounts and their children)
+│   │   ├── parents.js     # /api/parents (the parent directory: edit, disable, remove)
 │   │   ├── messages.js    # /api/messages (the school's side of the conversations)
 │   │   └── parentPortal.js # /api/parent (what a logged-in parent sees)
 │   └── data/              # The JSON data from before MySQL (source of sql/data.sql; not used by the server)
@@ -427,9 +439,9 @@ adds it automatically after login).
 | GET    | `/api/attendance/:id`  | logged in      | One report |
 | POST   | `/api/attendance`      | logged in      | New report (409 if class+date already exists) |
 | PUT    | `/api/attendance/:id`  | logged in      | Update counts and absent students |
-| GET    | `/api/students`        | logged in      | Admin: all students. Teacher: only their classes. Optional `?classId=` |
-| POST   | `/api/students`        | logged in      | Add `{ name, classId, rollNumber, guardianName, phone }` |
-| PUT    | `/api/students/:id`    | logged in      | Edit / move a student |
+| GET    | `/api/students`        | logged in      | Admin: all students. Teacher: only their classes. Optional `?classId=`. Each student has `parents: [{ parentId, name, relation, phone }]` |
+| POST   | `/api/students`        | logged in      | Add `{ name, classId, rollNumber, guardianName, phone, parents? }`. `parents` (needs the parents permission) lists `{ parentId }` to link an existing parent, `{ parentId, ...details }` to also update them, or `{ ...details }` for a new one; details = `{ name, relation, phone, altPhone, email, cnic, occupation, address, username, password }`. All saved together |
+| PUT    | `/api/students/:id`    | logged in      | Edit / move a student. With `parents`, they replace the student's parents (blank password = keep current) |
 | DELETE | `/api/students/:id`    | logged in      | Remove a student |
 | GET    | `/api/subjects`        | logged in      | All subjects |
 | POST   | `/api/subjects`        | admin          | Add subject `{ name }` |
@@ -450,15 +462,15 @@ adds it automatically after login).
 | POST   | `/api/exams/:id/publish` | super admin  | Publish results (every subject submitted) |
 | POST   | `/api/exams/:id/unpublish` | super admin | Back to open |
 | GET    | `/api/exams/:id/results` | super admin  | Result sheet: per-student totals, percentages, positions and summary |
-| GET    | `/api/parents`         | parents permission | Parent accounts with their children |
-| POST   | `/api/parents`         | parents permission | Add parent `{ name, username, password, studentIds: [...] }` (at least one child) |
-| PUT    | `/api/parents/:id`     | parents permission | Edit parent and replace their children (blank password = keep current) |
+| GET    | `/api/parents`         | parents permission | Parents with relation, contacts and children |
+| PUT    | `/api/parents/:id`     | parents permission | Edit a parent's details and login (blank password = keep current) |
 | POST   | `/api/parents/:id/disable` and `/enable` | parents permission | A disabled parent can't log in |
-| DELETE | `/api/parents/:id`     | parents permission | Remove parent, with their links and messages |
-| GET    | `/api/messages`        | parents permission | Conversations, newest first, with unread counts |
-| GET    | `/api/messages/unread` | parents permission | `{ count }` of unread parent messages |
-| GET    | `/api/messages/:parentId` | parents permission | One conversation (marks the parent's messages read) |
-| POST   | `/api/messages`        | parents permission | Send `{ parentIds: [...], body }` (one message per parent, up to 2000 characters) |
+| DELETE | `/api/parents/:id`     | parents permission | Remove parent, with their details, links and messages |
+| GET    | `/api/messages`        | admin / super admin | Conversations, newest first, with unread counts |
+| GET    | `/api/messages/unread` | admin / super admin | `{ count }` of unread parent messages |
+| GET    | `/api/messages/parents` | admin / super admin | Everyone a message can go to: parents with their children |
+| GET    | `/api/messages/:parentId` | admin / super admin | One conversation (marks the parent's messages read) |
+| POST   | `/api/messages`        | admin / super admin | Send `{ parentIds: [...], body }` (one message per parent, up to 2000 characters) |
 | GET    | `/api/parent/children` | parent         | The parent's children with class, teachers, subjects, 30-day attendance and latest result |
 | GET    | `/api/parent/children/:studentId/attendance` | parent | Day by day, optional `?from=&to=` (default last 60 days) |
 | GET    | `/api/parent/children/:studentId/exams` | parent | Published exams with the child's result |

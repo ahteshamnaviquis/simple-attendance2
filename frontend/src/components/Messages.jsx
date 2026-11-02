@@ -7,7 +7,7 @@
 // onRead: called after a conversation is opened, so the menu badge can update.
 
 import { useEffect, useMemo, useState } from 'react';
-import { getClasses, getMessageThread, getMessageThreads, getParents, sendMessage } from '../api';
+import { getClasses, getMessageRecipients, getMessageThread, getMessageThreads, sendMessage } from '../api';
 import Conversation from './Conversation.jsx';
 import { formatDateTime } from '../utils';
 
@@ -33,7 +33,7 @@ export default function Messages({ initialParentId, onRead }) {
 
   useEffect(() => {
     loadThreads();
-    Promise.all([getParents(), getClasses()])
+    Promise.all([getMessageRecipients(), getClasses()])
       .then(([parentList, classList]) => {
         setParents(parentList);
         setClasses(classList);
@@ -210,7 +210,7 @@ function NewMessage({ parents, classes, onSend }) {
       {audience === 'choose' && (
         <fieldset className="class-picker">
           <legend>Parents</legend>
-          {active.length === 0 && <p className="note">No parent accounts yet. Add them on the Parents page.</p>}
+          {active.length === 0 && <p className="note">No parent accounts yet. Parents are added with their child on the Students page.</p>}
           <div className="class-options">
             {active.map((p) => (
               <label key={p.id} className="check-label">

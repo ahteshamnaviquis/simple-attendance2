@@ -133,6 +133,20 @@ CREATE TABLE IF NOT EXISTS marks (
   CONSTRAINT fk_marks_subject FOREIGN KEY (subject_id) REFERENCES subjects (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- A parent's details (id = their user id): relation to their children and contacts.
+CREATE TABLE IF NOT EXISTS parent_profiles (
+  seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  relation   VARCHAR(30)  NOT NULL,             -- Father, Mother, Guardian, ...
+  phone      VARCHAR(30)  NOT NULL,
+  alt_phone  VARCHAR(30)  NOT NULL DEFAULT '',
+  email      VARCHAR(120) NOT NULL DEFAULT '',
+  cnic       VARCHAR(20)  NOT NULL DEFAULT '',  -- national ID card number
+  occupation VARCHAR(100) NOT NULL DEFAULT '',
+  address    VARCHAR(255) NOT NULL DEFAULT '',
+  CONSTRAINT fk_parent_profiles_user FOREIGN KEY (id) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
 -- Which students each parent account can see. A parent can have several
 -- children, and a child can have more than one parent account.
 CREATE TABLE IF NOT EXISTS parent_students (

@@ -11,6 +11,7 @@ DELETE FROM files;
 DELETE FROM settings;
 DELETE FROM messages;
 DELETE FROM parent_students;
+DELETE FROM parent_profiles;
 DELETE FROM marks;
 DELETE FROM exams;
 DELETE FROM attendance;

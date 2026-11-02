@@ -1,6 +1,7 @@
 // Admin: the dashboard and attendance reports, plus the areas the super admin
 // allows in Settings (by default students, classes, subjects and parents).
-// Parents also brings Messages, the conversations with parents.
+// Messages with parents are always there. With the parents permission, the
+// student form also adds the student's parents.
 
 import { useState } from 'react';
 import Layout from '../components/Layout.jsx';
@@ -27,12 +28,12 @@ const MENU = [
   { id: 'subjects', label: 'Subjects', icon: 'subjects', area: 'subjects' },
   { id: 'teachers', label: 'Teachers', icon: 'teachers', area: 'teachers' },
   { id: 'parents', label: 'Parents', icon: 'parents', area: 'parents' },
-  { id: 'messages', label: 'Messages', icon: 'messages', area: 'parents' },
+  { id: 'messages', label: 'Messages', icon: 'messages' },
 ];
 
 export default function AdminHome({ user, onLogout }) {
   const { adminPermissions } = useSettings();
-  const [unread, refreshUnread] = useUnreadCount(getUnreadMessageCount, adminPermissions.parents);
+  const [unread, refreshUnread] = useUnreadCount(getUnreadMessageCount);
   const items = MENU.filter((item) => !item.area || adminPermissions[item.area]).map((item) =>
     item.id === 'messages' ? { ...item, badge: unread } : item
   );
@@ -54,7 +55,7 @@ export default function AdminHome({ user, onLogout }) {
       {page === 'dashboard' && <Dashboard user={user} onShowReports={() => setPage('reports')} />}
       {page === 'reports' && <Reports user={user} />}
       {page === 'exams' && <Exams />}
-      {page === 'students' && <StudentsManager />}
+      {page === 'students' && <StudentsManager canManageParents={adminPermissions.parents} />}
       {page === 'classes' && <ClassesManager />}
       {page === 'subjects' && <SubjectsManager />}
       {page === 'teachers' && <TeachersManager />}

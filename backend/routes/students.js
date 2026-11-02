@@ -1,6 +1,14 @@
 // /api/students - list, add, edit and remove students.
 //
 // A student: { id, rollNumber, name, classId, guardianName, phone }
+// The list also gives each student's className and parents
+// ([{ parentId, name, relation, phone }]).
+//
+// Parents are added with the student: POST and PUT take an optional `parents`
+// list (see parentAccounts.js), which needs the "parents" permission. It adds
+// new parent accounts, updates or links existing ones (a brother's or sister's
+// parent), and replaces the student's parents, all in one transaction.
+// guardianName and phone then follow the first parent.
 //
 // Admins can manage every student. Teachers can only manage students in the
 // classes assigned to them, and can only move a student between their own classes.
@@ -8,8 +16,9 @@
 // absent students' names as text.
 
 const express = require('express');
-const { readData, updateData } = require('../store');
+const { readData, updateData, updateMany } = require('../store');
 const { HttpError, newId, isAdmin, can, requireLogin } = require('../helpers');
+const { cleanParentEntries, applyParentEntries } = require('../parentAccounts');
 
 const router = express.Router();
 
@@ -35,6 +44,29 @@ function cleanStudentInput(body) {
   if (!student.name) throw new HttpError(400, 'Student name is required');
   if (!student.classId) throw new HttpError(400, 'Please choose a class');
   return student;
+}
+
+// The cleaned `parents` list of a request, or null when it has none.
+function parentEntriesOf(user, body) {
+  if (body?.parents === undefined) return null;
+  if (!can(user, 'parents')) throw new HttpError(403, 'You are not allowed to add or change parents');
+  return cleanParentEntries(body.parents);
+}
+
+// The collections a save touches: the student, plus the parents when given.
+function collectionsFor(entries) {
+  return entries ? ['students', 'users', 'parentProfiles', 'parentStudents'] : ['students'];
+}
+
+// Link the student's parents (when given) and copy the first parent's name and
+// phone onto the student, so screens that show the guardian stay correct.
+function withParents(data, student, entries) {
+  if (!entries) return student;
+  const [firstId] = applyParentEntries(data, student.id, entries);
+  if (!firstId) return student;
+  const parent = data.users.find((u) => u.id === firstId);
+  const profile = data.parentProfiles.find((p) => p.id === firstId);
+  return { ...student, guardianName: parent.name, phone: profile?.phone || student.phone };
 }
 
 // Checks the class exists, the user may use it, and the roll number is free.
@@ -64,40 +96,67 @@ function compareStudents(a, b) {
   );
 }
 
+// The students the user may see, with class name and parents.
+async function visibleStudents(user) {
+  const [students, classes, users, parentProfiles, parentStudents] = await Promise.all([
+    readData('students'),
+    readData('classes'),
+    readData('users'),
+    readData('parentProfiles'),
+    readData('parentStudents'),
+  ]);
+  const visibleClasses = classes.filter((c) => canSeeClass(user, c));
+  const parentsOf = (studentId) =>
+    parentStudents
+      .filter((l) => l.studentId === studentId)
+      .map((l) => {
+        const parent = users.find((u) => u.id === l.parentId);
+        const profile = parentProfiles.find((p) => p.id === l.parentId);
+        return { parentId: l.parentId, name: parent.name, relation: profile?.relation ?? '', phone: profile?.phone ?? '' };
+      });
+
+  return students
+    .map((s) => {
+      const cls = visibleClasses.find((c) => c.id === s.classId);
+      return cls ? { ...s, className: cls.name, parents: parentsOf(s.id) } : null;
+    })
+    .filter(Boolean)
+    .sort(compareStudents);
+}
+
+async function findVisibleStudent(user, id) {
+  return (await visibleStudents(user)).find((s) => s.id === id);
+}
+
 // GET /api/students?classId=...
 // Admins see all students, teachers only students in their classes.
 router.get('/', requireLogin, async (req, res) => {
-  const [students, classes] = await Promise.all([readData('students'), readData('classes')]);
-  const visibleClasses = classes.filter((c) => canSeeClass(req.user, c));
-
-  let list = students
-    .map((s) => {
-      const cls = visibleClasses.find((c) => c.id === s.classId);
-      return cls ? { ...s, className: cls.name } : null;
-    })
-    .filter(Boolean);
+  let list = await visibleStudents(req.user);
   if (req.query.classId) list = list.filter((s) => s.classId === req.query.classId);
-
-  res.json(list.sort(compareStudents));
+  res.json(list);
 });
 
 // POST /api/students
 router.post('/', requireLogin, async (req, res) => {
   const input = cleanStudentInput(req.body);
-  let created;
-  await updateData('students', async (students) => {
-    await checkStudent(req.user, students, input);
-    created = { id: newId(), ...input };
-    return [...students, created];
+  const entries = parentEntriesOf(req.user, req.body);
+  const id = newId();
+  await updateMany(collectionsFor(entries), async (data) => {
+    await checkStudent(req.user, data.students, input);
+    const changed = { ...data };
+    const student = withParents(changed, { id, ...input }, entries);
+    changed.students = [...data.students, student];
+    return changed;
   });
-  res.status(201).json(created);
+  res.status(201).json(await findVisibleStudent(req.user, id));
 });
 
 // PUT /api/students/:id
 router.put('/:id', requireLogin, async (req, res) => {
   const input = cleanStudentInput(req.body);
-  let updated;
-  await updateData('students', async (students) => {
+  const entries = parentEntriesOf(req.user, req.body);
+  await updateMany(collectionsFor(entries), async (data) => {
+    const { students } = data;
     const index = students.findIndex((s) => s.id === req.params.id);
     if (index === -1) throw new HttpError(404, 'Student not found');
 
@@ -109,12 +168,12 @@ router.put('/:id', requireLogin, async (req, res) => {
     }
     await checkStudent(req.user, students, input, req.params.id);
 
-    updated = { ...students[index], ...input };
-    const copy = [...students];
-    copy[index] = updated;
-    return copy;
+    const changed = { ...data };
+    const updated = withParents(changed, { ...students[index], ...input }, entries);
+    changed.students = students.map((s, i) => (i === index ? updated : s));
+    return changed;
   });
-  res.json(updated);
+  res.json(await findVisibleStudent(req.user, req.params.id));
 });
 
 // DELETE /api/students/:id

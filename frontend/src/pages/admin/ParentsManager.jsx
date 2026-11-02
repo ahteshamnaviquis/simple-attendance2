@@ -1,113 +1,52 @@
-// Parent accounts: add, edit, disable and remove parents, and choose which
-// children (one or more students, in any class) each parent can see.
+// The parent directory: every parent with their relation, contacts and
+// children. Edit a parent's details and login, disable or remove them, or open
+// their messages. Parents are added on the Students page, with their child.
 // onMessage(parentId): open the conversation with that parent.
 
-import { useEffect, useMemo, useState } from 'react';
-import {
-  getParents,
-  getStudents,
-  getClasses,
-  createParent,
-  updateParent,
-  setParentDisabled,
-  deleteParent,
-} from '../../api';
-
-const EMPTY_FORM = { name: '', username: '', password: '', studentIds: [] };
+import { useEffect, useState } from 'react';
+import { getParents, updateParent, setParentDisabled, deleteParent } from '../../api';
+import ParentFields, { initials, parentToForm } from '../../components/ParentFields.jsx';
 
 export default function ParentsManager({ onMessage }) {
   const [parents, setParents] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [classes, setClasses] = useState([]);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [editingId, setEditingId] = useState(null); // null = adding a new parent
-  const [pickerClassId, setPickerClassId] = useState('');
+  const [editing, setEditing] = useState(null); // { id, details } while editing a parent
   const [search, setSearch] = useState('');
-  const [listSearch, setListSearch] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
   function load() {
-    Promise.all([getParents(), getStudents(), getClasses()])
-      .then(([parentList, studentList, classList]) => {
-        setParents(parentList);
-        setStudents(studentList);
-        setClasses(classList);
-      })
+    getParents()
+      .then(setParents)
       .catch((err) => setError(err.message));
   }
 
   useEffect(load, []);
 
-  // Students shown in the child picker: the chosen class and search, plus
-  // everyone already chosen, so a choice never disappears from view.
-  const pickable = useMemo(() => {
-    const text = search.trim().toLowerCase();
-    return students.filter(
-      (s) =>
-        form.studentIds.includes(s.id) ||
-        ((!pickerClassId || s.classId === pickerClassId) &&
-          (!text || s.name.toLowerCase().includes(text) || s.guardianName.toLowerCase().includes(text)))
-    );
-  }, [students, pickerClassId, search, form.studentIds]);
-
-  const shownParents = parents.filter((p) => {
-    const text = listSearch.trim().toLowerCase();
-    return (
+  const text = search.trim().toLowerCase();
+  const shown = parents.filter(
+    (p) =>
       !text ||
       p.name.toLowerCase().includes(text) ||
       p.username.includes(text) ||
+      p.phone.includes(text) ||
       p.children.some((c) => c.name.toLowerCase().includes(text))
-    );
-  });
+  );
 
   function startEdit(parent) {
-    setEditingId(parent.id);
-    setForm({
-      name: parent.name,
-      username: parent.username,
-      password: '',
-      studentIds: parent.children.map((c) => c.studentId),
-    });
+    setEditing({ id: parent.id, details: parentToForm(parent) });
     setError('');
     setMessage('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function resetForm() {
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-    setError('');
-  }
-
-  function handleChange(event) {
-    setForm({ ...form, [event.target.name]: event.target.value });
-  }
-
-  function toggleChild(student, on) {
-    const studentIds = on ? [...form.studentIds, student.id] : form.studentIds.filter((id) => id !== student.id);
-    // A new parent's name starts as the first child's guardian, when known.
-    const name = on && !form.name && student.guardianName ? student.guardianName : form.name;
-    setForm({ ...form, name, studentIds });
-  }
-
-  async function handleSubmit(event) {
+  async function handleSave(event) {
     event.preventDefault();
     setError('');
-    setMessage('');
-    if (form.studentIds.length === 0) {
-      setError('Please choose at least one child.');
-      return;
-    }
     try {
-      if (editingId) {
-        await updateParent(editingId, form);
-        setMessage(`Saved changes to ${form.name}.`);
-      } else {
-        await createParent(form);
-        setMessage(`Added parent ${form.name}. They can now log in with username “${form.username.trim().toLowerCase()}”.`);
-      }
-      resetForm();
+      const { usernameEdited, ...details } = editing.details;
+      await updateParent(editing.id, details);
+      setMessage(`Saved changes to ${details.name}.`);
+      setEditing(null);
       load();
     } catch (err) {
       setError(err.message);
@@ -132,14 +71,14 @@ export default function ParentsManager({ onMessage }) {
 
   async function handleRemove(parent) {
     const ok = window.confirm(
-      `Remove ${parent.name}?\n\nTheir account and their messages with the school are deleted. Their children are not changed. This can't be undone.`
+      `Remove ${parent.name}?\n\nTheir login and their messages with the school are deleted. Their children are not changed. This can't be undone.`
     );
     if (!ok) return;
     setError('');
     setMessage('');
     try {
       await deleteParent(parent.id);
-      if (editingId === parent.id) resetForm();
+      if (editing?.id === parent.id) setEditing(null);
       setMessage(`Removed ${parent.name}.`);
       load();
     } catch (err) {
@@ -152,105 +91,55 @@ export default function ParentsManager({ onMessage }) {
       <div className="page-title">
         <div>
           <h1>Parents</h1>
-          <p className="subtitle">Parent accounts and the children each parent can follow</p>
+          <p className="subtitle">
+            {parents.length} parent{parents.length === 1 ? '' : 's'}. New parents are added on the Students page,
+            together with their child.
+          </p>
         </div>
       </div>
 
-      <form className="card" onSubmit={handleSubmit}>
-        <h2>{editingId ? 'Edit parent' : 'Add parent'}</h2>
-        <div className="form-grid">
-          <label>
-            Name
-            <input name="name" value={form.name} onChange={handleChange} required />
-          </label>
-          <label>
-            Username
-            <input name="username" value={form.username} onChange={handleChange} required />
-          </label>
-          <label>
-            Password
-            <input
-              name="password"
-              value={form.password}
-              onChange={handleChange}
-              required={!editingId}
-              placeholder={editingId ? 'Leave blank to keep current' : ''}
+      {editing && (
+        <form className="card student-form" onSubmit={handleSave}>
+          <div className="form-hero">
+            <span className="form-hero-icon" aria-hidden="true">
+              {initials(editing.details.name)}
+            </span>
+            <div>
+              <h2>Edit {editing.details.name || 'parent'}</h2>
+              <p className="subtitle">Contact details and portal login. Children are changed on the student form.</p>
+            </div>
+          </div>
+          <section className="form-section">
+            <ParentFields
+              value={editing.details}
+              isNew={false}
+              idPrefix="edit-parent"
+              onChange={(details) => setEditing({ ...editing, details })}
             />
-          </label>
-        </div>
-
-        <fieldset className="class-picker">
-          <legend>
-            Children ({form.studentIds.length} chosen)
-          </legend>
-          <div className="form-grid">
-            <label>
-              Class
-              <select value={pickerClassId} onChange={(e) => setPickerClassId(e.target.value)}>
-                <option value="">All classes</option>
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Search
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Student or guardian name"
-              />
-            </label>
-          </div>
-          <div className="class-options child-options">
-            {pickable.map((s) => (
-              <label key={s.id} className="check-label">
-                <input
-                  type="checkbox"
-                  checked={form.studentIds.includes(s.id)}
-                  onChange={(e) => toggleChild(s, e.target.checked)}
-                />
-                <span>
-                  {s.name}
-                  <span className="cell-sub">
-                    {' '}
-                    · {s.className}
-                    {s.rollNumber && `, roll ${s.rollNumber}`}
-                    {s.guardianName && ` · guardian ${s.guardianName}`}
-                  </span>
-                </span>
-              </label>
-            ))}
-            {pickable.length === 0 && <p className="note">No students match.</p>}
-          </div>
-          <p className="note">A parent can have several children, in any classes.</p>
-        </fieldset>
-
-        <p className="note">Passwords are stored as plain text. This is only acceptable for a local demo.</p>
-        {error && <p className="error">{error}</p>}
-        <div className="actions">
-          <button type="submit">{editingId ? 'Save changes' : 'Add parent'}</button>
-          {editingId && (
-            <button type="button" className="secondary" onClick={resetForm}>
+          </section>
+          {error && <p className="error">{error}</p>}
+          <div className="form-footer">
+            <button type="submit" className="btn-lg">
+              Save changes
+            </button>
+            <button type="button" className="secondary btn-lg" onClick={() => setEditing(null)}>
               Cancel
             </button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
 
       {message && <p className="success">{message}</p>}
+      {!editing && error && <p className="error">{error}</p>}
 
       <div className="filters">
         <label>
           Find a parent
           <input
             type="search"
-            value={listSearch}
-            onChange={(e) => setListSearch(e.target.value)}
-            placeholder="Parent, username or child"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Name, phone, username or child"
           />
         </label>
       </div>
@@ -259,20 +148,28 @@ export default function ParentsManager({ onMessage }) {
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Username</th>
+              <th>Parent</th>
+              <th>Contact</th>
               <th>Children</th>
               <th>Status</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
-            {shownParents.map((p) => (
+            {shown.map((p) => (
               <tr key={p.id} className={p.disabled ? 'disabled-row' : ''}>
-                <td className="cell-main">{p.name}</td>
-                <td>{p.username}</td>
                 <td>
-                  {p.children.length === 0 && <span className="cell-sub">None (removed students)</span>}
+                  <div className="cell-main">{p.name}</div>
+                  <div className="cell-sub">
+                    {[p.relation, `username ${p.username}`, p.occupation].filter(Boolean).join(' · ')}
+                  </div>
+                </td>
+                <td>
+                  <div>{p.phone || '—'}</div>
+                  <div className="cell-sub">{[p.altPhone, p.email].filter(Boolean).join(' · ')}</div>
+                </td>
+                <td>
+                  {p.children.length === 0 && <span className="cell-sub">None</span>}
                   {p.children.map((c) => (
                     <div key={c.studentId}>
                       {c.name} <span className="cell-sub">· {c.className}</span>
@@ -298,9 +195,11 @@ export default function ParentsManager({ onMessage }) {
                 </td>
               </tr>
             ))}
-            {shownParents.length === 0 && (
+            {shown.length === 0 && (
               <tr>
-                <td colSpan="5">{parents.length ? 'No parents match.' : 'No parents yet.'}</td>
+                <td colSpan="5">
+                  {parents.length ? 'No parents match.' : 'No parents yet. Add them with their child on the Students page.'}
+                </td>
               </tr>
             )}
           </tbody>

@@ -5,6 +5,8 @@
 //   readData(name)              -> every row, in the order they were added
 //   updateData(name, changeFn)  -> changeFn gets the current list and returns
 //                                  the new one; only the differences are saved
+//   updateMany(names, changeFn) -> the same for several collections at once,
+//                                  in one transaction (all saved, or none)
 // "settings" is one object ({ theme, adminPermissions }) instead of a list.
 //
 // All updates go through a single queue and each runs in a transaction, so two
@@ -46,6 +48,12 @@ const COLLECTIONS = {
       'id examId subjectId studentId studentName rollNumber obtained:number absent:bool remarks ' +
       'updatedAt:timestamp updatedBy',
   },
+  // One row per parent account (id = the parent's user id): how they are related
+  // to their children and how to reach them.
+  parentProfiles: {
+    table: 'parent_profiles',
+    props: 'id relation phone altPhone email cnic occupation address',
+  },
   parentStudents: { table: 'parent_students', props: 'id parentId studentId' },
   messages: {
     table: 'messages',
@@ -54,7 +62,7 @@ const COLLECTIONS = {
 };
 
 // The order to fill an empty database in, so every row's parents already exist.
-const LOAD_ORDER = ['users', 'classes', 'subjects', 'students', 'classSubjects', 'attendance', 'exams', 'marks', 'parentStudents', 'messages', 'settings'];
+const LOAD_ORDER = ['users', 'classes', 'subjects', 'students', 'classSubjects', 'attendance', 'exams', 'marks', 'parentProfiles', 'parentStudents', 'messages', 'settings'];
 
 for (const collection of Object.values(COLLECTIONS)) {
   collection.columns = collection.props.split(' ').map((spec) => {
@@ -202,22 +210,36 @@ async function inTransaction(work) {
 // The write queue: each update waits for the previous one to finish.
 let queue = Promise.resolve();
 
-// Read a collection, let `changeFn` modify it, then save the differences.
-// `changeFn` receives the current data (and the transaction's connection, for
-// saving a file in the same transaction) and returns the new data.
-// Returns whatever `changeFn` returned.
-function updateData(name, changeFn) {
+// Read several collections, let `changeFn` modify them, then save the
+// differences, all in one transaction. `changeFn` receives { name: data } (and
+// the transaction's connection) and returns { name: newData } for the
+// collections it changed. They are saved in LOAD_ORDER, so a new row's parents
+// (a new user before its profile) are saved first.
+// Returns the saved data of every collection in `names`.
+function updateMany(names, changeFn) {
   const task = queue.then(() =>
     inTransaction(async (conn) => {
-      const current = await readData(name, conn, { lock: true });
-      const updated = await changeFn(current, conn);
-      await saveChanges(conn, name, current, updated);
+      const current = {};
+      for (const name of names) current[name] = await readData(name, conn, { lock: true });
+      const updated = { ...current, ...(await changeFn(current, conn)) };
+      for (const name of LOAD_ORDER) {
+        if (names.includes(name)) await saveChanges(conn, name, current[name], updated[name]);
+      }
       return updated;
     })
   );
   // Keep the queue going even if this task fails.
   queue = task.catch(() => {});
   return task;
+}
+
+// Read a collection, let `changeFn` modify it, then save the differences.
+// `changeFn` receives the current data (and the transaction's connection, for
+// saving a file in the same transaction) and returns the new data.
+// Returns the saved data.
+async function updateData(name, changeFn) {
+  const saved = await updateMany([name], async (data, conn) => ({ [name]: await changeFn(data[name], conn) }));
+  return saved[name];
 }
 
 // ---------- Files (the logo) ----------
@@ -300,6 +322,7 @@ function closeDatabase() {
 module.exports = {
   readData,
   updateData,
+  updateMany,
   readFile,
   writeFile,
   deleteFile,
