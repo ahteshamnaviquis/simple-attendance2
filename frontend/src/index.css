@@ -3262,21 +3262,13 @@ textarea:focus-visible {
 .chat-child-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin: 2px 0 6px;
-}
-
-.chat-child-tabs .pill {
-  display: inline-flex;
   align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 4px 12px;
-  font-size: 13px;
+  gap: 8px;
 }
 
-.pill-sub {
-  font-size: 11px;
+.chat-child-tabs-label {
+  margin-right: 4px;
+  color: var(--text-2);
+  font-size: 13px;
   font-weight: 600;
-  opacity: 0.75;
 }

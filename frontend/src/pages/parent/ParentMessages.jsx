@@ -109,35 +109,41 @@ export default function ParentMessages({ childList = [], onRead }) {
     );
   }
 
+  // Above the chat box: which child's teachers to show.
+  const childTabs = childList.length > 1 && (
+    <div className="chat-child-tabs" role="tablist" aria-label="Show teachers of">
+      <span className="chat-child-tabs-label">Show teachers of</span>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={!childId}
+        className={!childId ? 'child-tab active' : 'child-tab'}
+        onClick={() => setChildId('')}
+      >
+        All children
+        <span className="cell-sub">{childList.length} children</span>
+      </button>
+      {childList.map((c) => (
+        <button
+          key={c.studentId}
+          type="button"
+          role="tab"
+          aria-selected={childId === c.studentId}
+          className={childId === c.studentId ? 'child-tab active' : 'child-tab'}
+          onClick={() => setChildId(c.studentId)}
+          title={childLabel(c)}
+        >
+          {c.name}
+          <span className="cell-sub">
+            {childWord(c.gender)} · {c.className}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+
   const list = contacts && (
     <>
-      {childList.length > 1 && (
-        <div className="chat-child-tabs" role="tablist" aria-label="Show teachers of">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={!childId}
-            className={!childId ? 'pill selected' : 'pill'}
-            onClick={() => setChildId('')}
-          >
-            All children
-          </button>
-          {childList.map((c) => (
-            <button
-              key={c.studentId}
-              type="button"
-              role="tab"
-              aria-selected={childId === c.studentId}
-              className={childId === c.studentId ? 'pill selected' : 'pill'}
-              onClick={() => setChildId(c.studentId)}
-              title={childLabel(c)}
-            >
-              {c.name.split(' ')[0]}
-              <span className="pill-sub">{childWord(c.gender)}</span>
-            </button>
-          ))}
-        </div>
-      )}
       <p className="chat-group-label">School</p>
       {school && item(school)}
       <p className="chat-group-label">
@@ -186,6 +192,7 @@ export default function ParentMessages({ childList = [], onRead }) {
         </div>
       </div>
       {error && <p className="error">{error}</p>}
+      {childTabs}
 
       <ChatShell
         title="Chats"
