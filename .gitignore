@@ -8,3 +8,8 @@ data-backup-*/
 mobile/
 # The logo the super admin uploads
 backend/data/logo
+
+# Local editor settings (SQLTools connection holds the DB password)
+.vscode/
+# Ad-hoc backups of the backend (may contain .env)
+*.zip
