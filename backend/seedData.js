@@ -12,6 +12,7 @@ const users = [
   { id: 'u7', name: 'Kamran Javed', username: 'kamran', password: 'teacher123', role: 'teacher' },
   { id: 'u8', name: 'Farah Naz', username: 'farah', password: 'teacher123', role: 'teacher' },
   { id: 'u9', name: 'Zainab Malik', username: 'zainab', password: 'teacher123', role: 'teacher' },
+  { id: 'p1', name: 'Hassan Ali', username: 'parent', password: 'parent123', role: 'parent' },
 ];
 
 // Each class with its class teacher (attendance and students).
@@ -68,6 +69,25 @@ const classSubjects = classes.flatMap((cls) =>
   }))
 );
 
+// The demo parent has two children, in different classes.
+const parentStudents = [
+  { id: 'ps1', parentId: 'p1', studentId: 's1' },
+  { id: 'ps2', parentId: 'p1', studentId: 's4' },
+];
+
+const messages = [
+  {
+    id: 'm1',
+    parentId: 'p1',
+    fromSchool: true,
+    senderId: 'u1',
+    senderName: 'Admin User',
+    body: "Welcome! You can see your children's attendance and published results here, and message the school.",
+    createdAt: '2026-10-01T08:00:00.000Z',
+    readAt: null,
+  },
+];
+
 // Examinations start empty: the admin creates them, subject teachers enter marks.
 const exams = [];
 const marks = [];
@@ -93,6 +113,7 @@ const settings = {
     subjects: true,
     teachers: false,
     exams: false,
+    parents: true,
   },
 };
 
@@ -105,6 +126,8 @@ module.exports = {
   classSubjects,
   exams,
   marks,
+  parentStudents,
+  messages,
   settings,
   SUBJECT_TEACHERS, // used by scripts/addDemoData.js
 };

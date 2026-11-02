@@ -42,7 +42,9 @@ const lines = [
   'SET NAMES utf8mb4;',
   'START TRANSACTION;',
   'SET FOREIGN_KEY_CHECKS = 0;',
-  ...[...LOAD_ORDER, 'files'].reverse().map((name) => `DELETE FROM ${name === 'classSubjects' ? 'class_subjects' : name};`),
+  ...[...LOAD_ORDER, 'files']
+    .reverse()
+    .map((name) => `DELETE FROM ${['settings', 'files'].includes(name) ? name : rowsFor(name, []).table};`),
   'SET FOREIGN_KEY_CHECKS = 1;',
 ];
 

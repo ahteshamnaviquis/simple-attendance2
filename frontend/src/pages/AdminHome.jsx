@@ -1,5 +1,6 @@
 // Admin: the dashboard and attendance reports, plus the areas the super admin
-// allows in Settings (by default students, classes and subjects).
+// allows in Settings (by default students, classes, subjects and parents).
+// Parents also brings Messages, the conversations with parents.
 
 import { useState } from 'react';
 import Layout from '../components/Layout.jsx';
@@ -10,6 +11,10 @@ import Reports from '../components/Reports.jsx';
 import StudentsManager from '../components/StudentsManager.jsx';
 import Exams from '../components/Exams.jsx';
 import SubjectsManager from './admin/SubjectsManager.jsx';
+import ParentsManager from './admin/ParentsManager.jsx';
+import Messages from '../components/Messages.jsx';
+import { getUnreadMessageCount } from '../api';
+import useUnreadCount from '../useUnreadCount';
 import { useSettings } from '../theme';
 
 // area: the admin permission the item needs (none = always shown).
@@ -21,15 +26,31 @@ const MENU = [
   { id: 'classes', label: 'Classes', icon: 'classes', area: 'classes' },
   { id: 'subjects', label: 'Subjects', icon: 'subjects', area: 'subjects' },
   { id: 'teachers', label: 'Teachers', icon: 'teachers', area: 'teachers' },
+  { id: 'parents', label: 'Parents', icon: 'parents', area: 'parents' },
+  { id: 'messages', label: 'Messages', icon: 'messages', area: 'parents' },
 ];
 
 export default function AdminHome({ user, onLogout }) {
   const { adminPermissions } = useSettings();
-  const items = MENU.filter((item) => !item.area || adminPermissions[item.area]);
+  const [unread, refreshUnread] = useUnreadCount(getUnreadMessageCount, adminPermissions.parents);
+  const items = MENU.filter((item) => !item.area || adminPermissions[item.area]).map((item) =>
+    item.id === 'messages' ? { ...item, badge: unread } : item
+  );
   const [page, setPage] = useState('dashboard');
+  const [messageParentId, setMessageParentId] = useState(null);
+
+  function openMessages(parentId) {
+    setMessageParentId(parentId);
+    setPage('messages');
+  }
+
+  function navigate(id) {
+    setMessageParentId(null);
+    setPage(id);
+  }
 
   return (
-    <Layout user={user} items={items} current={page} onNavigate={setPage} onLogout={onLogout}>
+    <Layout user={user} items={items} current={page} onNavigate={navigate} onLogout={onLogout}>
       {page === 'dashboard' && <Dashboard user={user} onShowReports={() => setPage('reports')} />}
       {page === 'reports' && <Reports user={user} />}
       {page === 'exams' && <Exams />}
@@ -37,6 +58,10 @@ export default function AdminHome({ user, onLogout }) {
       {page === 'classes' && <ClassesManager />}
       {page === 'subjects' && <SubjectsManager />}
       {page === 'teachers' && <TeachersManager />}
+      {page === 'parents' && <ParentsManager onMessage={openMessages} />}
+      {page === 'messages' && (
+        <Messages key={messageParentId} initialParentId={messageParentId} onRead={refreshUnread} />
+      )}
     </Layout>
   );
 }

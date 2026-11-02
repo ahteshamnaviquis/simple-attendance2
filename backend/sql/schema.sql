@@ -21,9 +21,12 @@ CREATE TABLE IF NOT EXISTS users (
   name     VARCHAR(100) NOT NULL,
   username VARCHAR(60)  NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL, -- plain text: LOCAL DEMO ONLY
-  role     ENUM('superadmin', 'admin', 'teacher') NOT NULL,
-  disabled BOOLEAN NULL           -- teachers only; NULL = never disabled
+  role     ENUM('superadmin', 'admin', 'teacher', 'parent') NOT NULL,
+  disabled BOOLEAN NULL           -- teachers and parents; NULL = never disabled
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Databases made before parent accounts existed: allow the "parent" role.
+ALTER TABLE users MODIFY role ENUM('superadmin', 'admin', 'teacher', 'parent') NOT NULL;
 
 CREATE TABLE IF NOT EXISTS classes (
   seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
@@ -128,6 +131,34 @@ CREATE TABLE IF NOT EXISTS marks (
   UNIQUE KEY uq_mark (exam_id, subject_id, student_id),
   CONSTRAINT fk_marks_exam FOREIGN KEY (exam_id) REFERENCES exams (id) ON DELETE CASCADE,
   CONSTRAINT fk_marks_subject FOREIGN KEY (subject_id) REFERENCES subjects (id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Which students each parent account can see. A parent can have several
+-- children, and a child can have more than one parent account.
+CREATE TABLE IF NOT EXISTS parent_students (
+  seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  parent_id  VARCHAR(64)  NOT NULL,
+  student_id VARCHAR(64)  NOT NULL,
+  UNIQUE KEY uq_parent_student (parent_id, student_id),
+  CONSTRAINT fk_parent_students_parent FOREIGN KEY (parent_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT fk_parent_students_student FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Messages between the school (admins and the super admin) and a parent:
+-- one conversation per parent. read_at is set when the other side reads it.
+CREATE TABLE IF NOT EXISTS messages (
+  seq         INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id          VARCHAR(64)  NOT NULL PRIMARY KEY,
+  parent_id   VARCHAR(64)  NOT NULL,          -- whose conversation it is
+  from_school BOOLEAN      NOT NULL,          -- TRUE: sent by staff, FALSE: by the parent
+  sender_id   VARCHAR(64)  NOT NULL,
+  sender_name VARCHAR(100) NOT NULL,          -- kept as text, like attendance.created_by
+  body        TEXT         NOT NULL,
+  created_at  DATETIME(3)  NOT NULL,          -- UTC
+  read_at     DATETIME(3)  NULL,
+  KEY idx_messages_parent (parent_id),
+  CONSTRAINT fk_messages_parent FOREIGN KEY (parent_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- School-wide settings: one row per part ("theme", "adminPermissions").

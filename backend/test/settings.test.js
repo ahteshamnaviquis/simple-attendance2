@@ -58,6 +58,7 @@ test('anyone can read the settings; they start with the defaults', async () => {
     subjects: true,
     teachers: false,
     exams: false,
+    parents: true,
   });
   current = res.body;
 });

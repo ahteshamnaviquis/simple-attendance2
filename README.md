@@ -55,6 +55,24 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
   Enter marks, save as a draft, and submit them. Teachers can't create or publish exams
   or see other teachers' subjects.
 
+**Parents** (managed by admins with the *Parents* permission, on by default, and the super admin)
+- Parents: add, edit, disable and remove parent accounts. Each parent can follow one
+  or more children, in any classes (a child can also have more than one parent account).
+  The name starts as the first chosen child's guardian name.
+- Messages: one private conversation per parent. Write to one parent, the parents of a
+  class, or all parents at once (each gets the message in their own conversation).
+  Unread replies show as a count next to *Messages*; every admin sees the same conversations.
+
+**Parent** (their own login)
+- My children: each child's class, roll number, class teacher, subjects and subject
+  teachers, attendance over the last 30 days and their latest published result
+- Attendance: day by day for the last 30 to 180 days, with the absence reason. A child is
+  absent on a day when the class report names them among the absent students.
+- Results: published exams only, with marks per subject, total, percentage, position,
+  Pass/Fail and the class average and highest. A printable result card. Other students'
+  marks are never shown.
+- Messages: the conversation with the school, with an unread count in the menu
+
 ## Attendance rules
 
 | Rule | How it works |
@@ -122,7 +140,10 @@ SimpleAttendence/
 │   │   ├── attendance.js  # /api/attendance (all attendance rules live here)
 │   │   ├── subjects.js    # /api/subjects
 │   │   ├── classSubjects.js # /api/class-subjects (subjects of each class and their teachers)
-│   │   └── exams.js       # /api/exams (exams, marks and results; all exam rules live here)
+│   │   ├── exams.js       # /api/exams (exams, marks and results; all exam rules live here)
+│   │   ├── parents.js     # /api/parents (parent accounts and their children)
+│   │   ├── messages.js    # /api/messages (the school's side of the conversations)
+│   │   └── parentPortal.js # /api/parent (what a logged-in parent sees)
 │   └── data/              # The JSON data from before MySQL (source of sql/data.sql; not used by the server)
 │       ├── users.json
 │       ├── classes.json
@@ -336,6 +357,7 @@ admin, the server adds the `superadmin` account when it starts.
 | hina     | teacher123 | teacher |                  | Biology |
 | farah    | teacher123 | teacher |                  | Islamiyat, Pakistan Studies |
 | zainab   | teacher123 | teacher |                  | Computer Science |
+| parent   | parent123  | parent  | (children: Ahmed Hassan, Grade 9; Fatima Noor, Grade 10) | |
 
 This is the starting data (`backend/seedData.js`), used whenever a data file doesn't
 exist yet: two classes (Grade 9, Grade 10) that both study all nine subjects above. The
@@ -386,7 +408,7 @@ adds it automatically after login).
 | POST   | `/api/login`           | anyone         | `{ username, password }` → the user (no password), or 401 |
 | GET    | `/api/users`           | admin / super admin | All users without passwords |
 | GET    | `/api/settings`        | anyone         | `{ theme, adminPermissions }` (the login page uses the theme) |
-| PUT    | `/api/settings`        | super admin    | Save `{ theme: { schoolName, accentColor, sidebarColor, font, corners, logoSize, logoShape, logoBackground, showSchoolName }, adminPermissions: { students, classes, subjects, teachers, exams } }`. Colors must be dark enough for white text |
+| PUT    | `/api/settings`        | super admin    | Save `{ theme: { schoolName, accentColor, sidebarColor, font, corners, logoSize, logoShape, logoBackground, showSchoolName }, adminPermissions: { students, classes, subjects, teachers, exams, parents } }`. Colors must be dark enough for white text |
 | GET    | `/api/settings/logo`   | anyone         | The uploaded logo image (404 if none) |
 | PUT    | `/api/settings/logo`   | super admin    | Upload the logo: the image itself as the body, with its `Content-Type` (PNG, JPEG, WebP or GIF, up to 1 MB) |
 | DELETE | `/api/settings/logo`   | super admin    | Remove the logo (the check mark is shown again) |
@@ -428,6 +450,22 @@ adds it automatically after login).
 | POST   | `/api/exams/:id/publish` | super admin  | Publish results (every subject submitted) |
 | POST   | `/api/exams/:id/unpublish` | super admin | Back to open |
 | GET    | `/api/exams/:id/results` | super admin  | Result sheet: per-student totals, percentages, positions and summary |
+| GET    | `/api/parents`         | parents permission | Parent accounts with their children |
+| POST   | `/api/parents`         | parents permission | Add parent `{ name, username, password, studentIds: [...] }` (at least one child) |
+| PUT    | `/api/parents/:id`     | parents permission | Edit parent and replace their children (blank password = keep current) |
+| POST   | `/api/parents/:id/disable` and `/enable` | parents permission | A disabled parent can't log in |
+| DELETE | `/api/parents/:id`     | parents permission | Remove parent, with their links and messages |
+| GET    | `/api/messages`        | parents permission | Conversations, newest first, with unread counts |
+| GET    | `/api/messages/unread` | parents permission | `{ count }` of unread parent messages |
+| GET    | `/api/messages/:parentId` | parents permission | One conversation (marks the parent's messages read) |
+| POST   | `/api/messages`        | parents permission | Send `{ parentIds: [...], body }` (one message per parent, up to 2000 characters) |
+| GET    | `/api/parent/children` | parent         | The parent's children with class, teachers, subjects, 30-day attendance and latest result |
+| GET    | `/api/parent/children/:studentId/attendance` | parent | Day by day, optional `?from=&to=` (default last 60 days) |
+| GET    | `/api/parent/children/:studentId/exams` | parent | Published exams with the child's result |
+| GET    | `/api/parent/children/:studentId/exams/:examId` | parent | The child's subject-wise result and class average, highest and lowest |
+| GET    | `/api/parent/messages` | parent         | The conversation with the school (marks school messages read) |
+| GET    | `/api/parent/messages/unread` | parent  | `{ count }` of unread school messages |
+| POST   | `/api/parent/messages` | parent         | Send `{ body }` to the school |
 
 ## Data safety
 

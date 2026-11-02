@@ -8,6 +8,7 @@ const FEATURES = [
   'Daily class reports with absent students and reasons',
   'A 14-day tracker of missed and late submissions',
   'Students, classes and teachers in one place',
+  'Parents follow attendance and results, and message the school',
 ];
 
 export default function LoginPage({ onLogin }) {

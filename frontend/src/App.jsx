@@ -3,6 +3,7 @@
 //   superadmin    -> SuperAdminHome (examinations, teachers, admins, settings)
 //   admin         -> AdminHome (its menu follows the admin permissions)
 //   teacher       -> TeacherHome
+//   parent        -> ParentHome (their own children only)
 //
 // It also loads the settings (theme and admin permissions) once and shares them.
 //
@@ -13,6 +14,7 @@ import LoginPage from './pages/LoginPage.jsx';
 import AdminHome from './pages/AdminHome.jsx';
 import SuperAdminHome from './pages/SuperAdminHome.jsx';
 import TeacherHome from './pages/TeacherHome.jsx';
+import ParentHome from './pages/ParentHome.jsx';
 import { getSavedUser, saveUser, clearUser } from './session';
 import { getSettings } from './api';
 import { applyTheme, DEFAULT_SETTINGS, SettingsContext } from './theme';
@@ -54,6 +56,8 @@ export default function App() {
     screen = <AdminHome user={user} onLogout={handleLogout} />;
   } else if (user.role === 'teacher') {
     screen = <TeacherHome user={user} onLogout={handleLogout} />;
+  } else if (user.role === 'parent') {
+    screen = <ParentHome user={user} onLogout={handleLogout} />;
   } else {
     screen = <p className="error">Unknown role: {user.role}</p>;
   }

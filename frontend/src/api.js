@@ -94,3 +94,28 @@ export const reopenExamSubject = (id, subjectId) => request('POST', `/api/exams/
 export const getExamMarks = (id, subjectId) => request('GET', `/api/exams/${id}/marks${query({ subjectId })}`);
 export const saveExamMarks = (id, subjectId, marks) => request('PUT', `/api/exams/${id}/marks`, { subjectId, marks });
 export const getExamResults = (id) => request('GET', `/api/exams/${id}/results`);
+
+// Parent accounts (admins with the "parents" permission, and the super admin).
+export const getParents = () => request('GET', '/api/parents');
+export const createParent = (parent) => request('POST', '/api/parents', parent); // { ..., studentIds }
+export const updateParent = (id, parent) => request('PUT', `/api/parents/${id}`, parent);
+export const setParentDisabled = (id, disabled) =>
+  request('POST', `/api/parents/${id}/${disabled ? 'disable' : 'enable'}`);
+export const deleteParent = (id) => request('DELETE', `/api/parents/${id}`);
+
+// The school's side of the conversations with parents.
+export const getMessageThreads = () => request('GET', '/api/messages');
+export const getUnreadMessageCount = () => request('GET', '/api/messages/unread');
+export const getMessageThread = (parentId) => request('GET', `/api/messages/${parentId}`);
+export const sendMessage = (parentIds, body) => request('POST', '/api/messages', { parentIds, body });
+
+// The parent portal: only the logged-in parent's own children.
+export const getMyChildren = () => request('GET', '/api/parent/children');
+export const getChildAttendance = (studentId, filters = {}) =>
+  request('GET', `/api/parent/children/${studentId}/attendance${query(filters)}`);
+export const getChildExams = (studentId) => request('GET', `/api/parent/children/${studentId}/exams`);
+export const getChildExamResult = (studentId, examId) =>
+  request('GET', `/api/parent/children/${studentId}/exams/${examId}`);
+export const getMyMessages = () => request('GET', '/api/parent/messages');
+export const getMyUnreadCount = () => request('GET', '/api/parent/messages/unread');
+export const sendMyMessage = (body) => request('POST', '/api/parent/messages', { body });

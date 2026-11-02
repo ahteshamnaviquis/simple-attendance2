@@ -1,12 +1,12 @@
 // Page frame for logged-in users: navy sidebar with navigation on the left,
 // the current screen on the right. On a phone the sidebar stacks on top.
-// items: [{ id, label, icon }]
+// items: [{ id, label, icon, badge }] - badge: a number shown next to the label (0 = none)
 
 import Icon from './Icon.jsx';
 import Brand from './Brand.jsx';
 import { useSettings } from '../theme';
 
-const ROLE_LABELS = { superadmin: 'Super admin', admin: 'Administrator', teacher: 'Teacher' };
+const ROLE_LABELS = { superadmin: 'Super admin', admin: 'Administrator', teacher: 'Teacher', parent: 'Parent' };
 
 function initials(name) {
   return name
@@ -35,6 +35,11 @@ export default function Layout({ user, items, current, onNavigate, onLogout, chi
             >
               <Icon name={item.icon} />
               {item.label}
+              {item.badge > 0 && (
+                <span className="nav-badge" aria-label={`${item.badge} unread`}>
+                  {item.badge}
+                </span>
+              )}
             </button>
           ))}
         </nav>

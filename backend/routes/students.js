@@ -18,9 +18,10 @@ function canUseClass(user, cls) {
   return can(user, 'students') || (cls && cls.teacherId === user.id);
 }
 
-// Reading: every admin (the dashboard counts students), or the class teacher.
+// Reading: every admin (the dashboard counts students), whoever manages parents
+// (to choose their children), or the class teacher.
 function canSeeClass(user, cls) {
-  return isAdmin(user) || canUseClass(user, cls);
+  return isAdmin(user) || can(user, 'parents') || canUseClass(user, cls);
 }
 
 function cleanStudentInput(body) {

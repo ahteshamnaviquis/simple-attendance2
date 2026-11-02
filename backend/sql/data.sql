@@ -9,6 +9,8 @@ START TRANSACTION;
 SET FOREIGN_KEY_CHECKS = 0;
 DELETE FROM files;
 DELETE FROM settings;
+DELETE FROM messages;
+DELETE FROM parent_students;
 DELETE FROM marks;
 DELETE FROM exams;
 DELETE FROM attendance;

@@ -112,7 +112,7 @@ export const DEFAULT_SETTINGS = {
     logoBackground: 'accent',
     showSchoolName: true,
   },
-  adminPermissions: { students: true, classes: true, subjects: true, teachers: false, exams: false },
+  adminPermissions: { students: true, classes: true, subjects: true, teachers: false, exams: false, parents: true },
 };
 
 // The current settings, for any screen that needs the school name or permissions.

@@ -52,10 +52,10 @@ async function loadCurrentUser(req, res, next) {
   next();
 }
 
-// The areas each role may manage. The super admin always has teachers and
-// exams; admins have whatever the super admin allowed in the settings table.
+// The areas each role may manage. The super admin always has teachers, exams
+// and parents; admins have whatever the super admin allowed in the settings table.
 async function permissionsFor(user) {
-  if (user.role === 'superadmin') return { teachers: true, exams: true };
+  if (user.role === 'superadmin') return { teachers: true, exams: true, parents: true };
   if (user.role === 'admin') {
     const { readSettings } = require('./settings'); // here, not at the top: settings.js uses this file
     return (await readSettings()).adminPermissions;
@@ -63,7 +63,7 @@ async function permissionsFor(user) {
   return {};
 }
 
-// True when the user may manage this area (students, classes, subjects, teachers, exams).
+// True when the user may manage this area (students, classes, subjects, teachers, exams, parents).
 function can(user, area) {
   return Boolean(user?.permissions?.[area]);
 }
@@ -95,15 +95,17 @@ function requireRole(...roles) {
 }
 
 // Two kinds of administrator:
-//   superadmin - admin accounts, settings, teachers and examinations
+//   superadmin - admin accounts, settings, teachers, examinations and parents
 //   admin      - dashboard and attendance reports, plus the areas the super
-//                admin allows (by default students, classes and subjects)
+//                admin allows (by default students, classes, subjects and parents)
+// Parents only use their own /api/parent routes, so they are not in requireLogin.
 function isAdmin(user) {
   return user?.role === 'admin';
 }
 
 const requireLogin = requireRole('superadmin', 'admin', 'teacher');
 const requireSuperAdmin = requireRole('superadmin');
+const requireParent = requireRole('parent');
 
 module.exports = {
   HttpError,
@@ -118,4 +120,5 @@ module.exports = {
   requireArea,
   requireLogin,
   requireSuperAdmin,
+  requireParent,
 };

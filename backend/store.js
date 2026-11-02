@@ -46,10 +46,15 @@ const COLLECTIONS = {
       'id examId subjectId studentId studentName rollNumber obtained:number absent:bool remarks ' +
       'updatedAt:timestamp updatedBy',
   },
+  parentStudents: { table: 'parent_students', props: 'id parentId studentId' },
+  messages: {
+    table: 'messages',
+    props: 'id parentId fromSchool:bool senderId senderName body createdAt:timestamp readAt:timestamp',
+  },
 };
 
 // The order to fill an empty database in, so every row's parents already exist.
-const LOAD_ORDER = ['users', 'classes', 'subjects', 'students', 'classSubjects', 'attendance', 'exams', 'marks', 'settings'];
+const LOAD_ORDER = ['users', 'classes', 'subjects', 'students', 'classSubjects', 'attendance', 'exams', 'marks', 'parentStudents', 'messages', 'settings'];
 
 for (const collection of Object.values(COLLECTIONS)) {
   collection.columns = collection.props.split(' ').map((spec) => {

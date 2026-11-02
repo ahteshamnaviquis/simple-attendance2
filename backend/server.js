@@ -18,6 +18,9 @@ const studentsRouter = require('./routes/students');
 const subjectsRouter = require('./routes/subjects');
 const classSubjectsRouter = require('./routes/classSubjects');
 const examsRouter = require('./routes/exams');
+const { router: parentsRouter } = require('./routes/parents');
+const { router: messagesRouter } = require('./routes/messages');
+const parentPortalRouter = require('./routes/parentPortal');
 
 const app = express();
 
@@ -56,7 +59,6 @@ app.post('/api/login', async (req, res) => {
   }
 
   const users = await readData('users');
-  console.log(`Attempting login for username: ${users}`);
   const user = users.find(
     (u) => u.username.toLowerCase() === username && u.password === password
   );
@@ -66,7 +68,12 @@ app.post('/api/login', async (req, res) => {
   if (user.disabled) {
     return res
       .status(403)
-      .json({ error: 'This account has been disabled. Please contact the super admin.' });
+      .json({
+        error:
+          user.role === 'parent'
+            ? 'This account has been disabled. Please contact the school.'
+            : 'This account has been disabled. Please contact the super admin.',
+      });
   }
   res.json(publicUser(user));
 });
@@ -86,6 +93,9 @@ app.use('/api/students', studentsRouter);
 app.use('/api/subjects', subjectsRouter);
 app.use('/api/class-subjects', classSubjectsRouter);
 app.use('/api/exams', examsRouter);
+app.use('/api/parents', parentsRouter);
+app.use('/api/messages', messagesRouter);
+app.use('/api/parent', parentPortalRouter);
 
 // Unknown API routes
 app.use('/api', (req, res) => {

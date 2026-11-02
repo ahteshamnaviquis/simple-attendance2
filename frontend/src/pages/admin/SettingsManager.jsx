@@ -25,6 +25,7 @@ const AREAS = [
   { id: 'subjects', label: 'Subjects', help: "The subject list, each class's subjects and subject teachers" },
   { id: 'teachers', label: 'Teachers', help: 'Add and edit teacher accounts' },
   { id: 'exams', label: 'Examinations', help: 'Create, edit and publish exams, and enter or reopen marks' },
+  { id: 'parents', label: 'Parents', help: 'Parent accounts, which children they see, and messages with parents' },
 ];
 
 const isHexColor = (text) => /^#[0-9a-f]{6}$/i.test(text);
