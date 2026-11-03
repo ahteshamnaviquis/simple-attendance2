@@ -12,10 +12,15 @@ module.exports = {
   PORT: Number(process.env.PORT) || 5050,
 
   // The website allowed to call this API from the browser (CORS).
-  // Several addresses can be listed, separated by commas.
-  FRONTEND_URLS: (process.env.FRONTEND_URL || 'http://localhost:5173')
+  // Several addresses can be listed, separated by commas. Only the scheme and
+  // host count (the browser sends no path), so https://example.com/att works too.
+  FRONTEND_URLS: (process.env.FRONTEND_URL || 'http://localhost:5173,https://zatechnologz.com')
     .split(',')
-    .map((url) => url.trim().replace(/\/$/, '')),
+    .map((url) => originOf(url.trim())),
+
+  // The path the API is served under when the host doesn't remove it, for
+  // example "/att" for https://example.com/att/api/... (empty = none).
+  BASE_PATH: (process.env.BASE_PATH || '').trim().replace(/\/+$/, ''),
 
   // Railway (which sets RAILWAY_ENVIRONMENT) needs 0.0.0.0 to reach the app.
   // Locally 127.0.0.1 keeps the API private to this computer.
@@ -25,6 +30,15 @@ module.exports = {
   // don't exist yet (the user needs permission for that).
   DB: databaseSettings(),
 };
+
+// "https://example.com/att/" -> "https://example.com"
+function originOf(url) {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url.replace(/\/$/, '');
+  }
+}
 
 // DATABASE_URL (or MYSQL_URL, which Railway's MySQL sets), for example
 // mysql://user:password@host:3306/attendance, wins over the separate DB_* values.

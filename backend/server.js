@@ -6,7 +6,7 @@
 
 const express = require('express');
 const seedData = require('./seedData');
-const { PORT, HOST, DB, FRONTEND_URLS } = require('./config');
+const { PORT, HOST, DB, FRONTEND_URLS, BASE_PATH } = require('./config');
 const { initDatabase, readData, updateData } = require('./store');
 const { publicUser, loadCurrentUser, requireRole } = require('./helpers');
 const adminsRouter = require('./routes/admins');
@@ -23,6 +23,17 @@ const { router: messagesRouter } = require('./routes/messages');
 const parentPortalRouter = require('./routes/parentPortal');
 
 const app = express();
+
+// Served under a path (BASE_PATH in .env, such as "/att"): remove it, so
+// /att/api/login is handled as /api/login.
+if (BASE_PATH) {
+  app.use((req, res, next) => {
+    if (req.url === BASE_PATH || req.url.startsWith(BASE_PATH + '/') || req.url.startsWith(BASE_PATH + '?')) {
+      req.url = req.url.slice(BASE_PATH.length) || '/';
+    }
+    next();
+  });
+}
 
 // CORS: let the frontend (FRONTEND_URL in .env) call this API from the browser.
 app.use((req, res, next) => {

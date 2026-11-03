@@ -11,7 +11,8 @@
     "demo-data": "node scripts/addDemoData.js",
     "seed-subjects": "node scripts/addDemoData.js --subjects-only",
     "test": "node --test",
-    "json-to-sql": "node scripts/jsonToSql.js"
+    "json-to-sql": "node scripts/jsonToSql.js",
+    "setup-db": "node scripts/setupDatabase.js"
   },
   "dependencies": {
     "express": "^5.1.0",

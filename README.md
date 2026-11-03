@@ -257,7 +257,12 @@ DB_NAME=attendance
 - `PORT`: port the API listens on. Railway sets its own `PORT` automatically.
 - `FRONTEND_URL`: the website allowed to call the API from the browser (CORS). To
   allow several, separate them with commas. On Railway, set this as a variable to
-  your deployed frontend's address. The default allows `http://localhost:5173`.
+  your deployed frontend's address. Only the scheme and host count, so
+  `https://example.com/att` is the same as `https://example.com`. The default allows
+  `http://localhost:5173` and `https://zatechnologz.com`.
+- `BASE_PATH` (optional): the path the API is served under when the web host passes it
+  on, such as `/att` for `https://example.com/att/api/...`. The server removes it, so
+  `/att/api/login` works like `/api/login`. Leave it out when the API is at the root.
 
 **`frontend/.env`**
 ```
@@ -309,7 +314,14 @@ again.
 
 **Load the same data as the JSON files** (the users, classes, students, 25 reports, exams
 and marks in `backend/data`): `backend/sql/data.sql` has all of it as INSERT statements.
-In PowerShell, from the `backend` folder:
+In one step, from the `backend` folder (creates the database and tables if needed, then
+loads the data; `node scripts/setupDatabase.js <file.sql>` loads another file):
+
+```powershell
+npm run setup-db
+```
+
+Or with the `mysql` client:
 
 ```powershell
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS attendance CHARACTER SET utf8mb4"
@@ -332,9 +344,12 @@ removals.
 
 ## Mobile app (Android)
 
-The `mobile` folder is a React Native app (Expo) with the same features as the web
+The `mobile` folder is a React Native app (Expo) with the day-to-day features of the web
 frontend: login, dashboards, submission tracker, attendance form, reports, students,
-classes and teachers. Print is web-only.
+classes and teachers, messages with parents (for teachers, admins and the super admin,
+with unread badges), and the parent portal (children, attendance, results and messages).
+Admin tabs follow the super admin's admin permissions. Examinations and marks, subjects,
+the parents directory, admin accounts, settings and print are web-only.
 
 **`mobile/.env`**
 ```
