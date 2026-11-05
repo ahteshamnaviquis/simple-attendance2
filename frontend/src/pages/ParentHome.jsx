@@ -65,6 +65,8 @@ export default function ParentHome({ user, onLogout }) {
         <ChildOverview
           user={user}
           childList={children}
+          child={child}
+          switcher={switcher}
           unread={unread}
           onOpen={openChildPage}
           onMessages={() => setPage('messages')}
@@ -85,26 +87,44 @@ export default function ParentHome({ user, onLogout }) {
   );
 }
 
-// Tabs to switch between children (hidden with only one child).
+// Tabs to switch between children (hidden with only one child). The chosen
+// child stays chosen on every page (overview, attendance, results, diary).
 function ChildSwitcher({ childList, childId, setChildId }) {
   if (childList.length < 2) return null;
   return (
-    <div className="child-tabs no-print" role="tablist" aria-label="Child">
-      {childList.map((c) => (
-        <button
-          key={c.studentId}
-          type="button"
-          role="tab"
-          aria-selected={c.studentId === childId}
-          className={c.studentId === childId ? 'child-tab active' : 'child-tab'}
-          onClick={() => setChildId(c.studentId)}
-        >
-          {c.name}
-          <span className="cell-sub">
-            {childWord(c.gender)} · {c.className}
-          </span>
-        </button>
-      ))}
+    <div className="profile-tabs no-print" role="tablist" aria-label="Child">
+      {childList.map((c) => {
+        const active = c.studentId === childId;
+        return (
+          <button
+            key={c.studentId}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            className={`profile-tab kid-${c.gender ?? 'unknown'}${active ? ' active' : ''}`}
+            onClick={() => setChildId(c.studentId)}
+          >
+            <span className="profile-avatar" aria-hidden="true">
+              {initials(c.name)}
+            </span>
+            <span className="profile-text">
+              <span className="profile-name">{c.name}</span>
+              <span className="profile-sub">
+                {childWord(c.gender)} · {c.className}
+              </span>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
+}
+
+function initials(name) {
+  return name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0].toUpperCase())
+    .join('');
 }

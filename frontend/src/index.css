@@ -3548,3 +3548,203 @@ button.with-icon,
 .lightbox-nav:disabled {
   visibility: hidden;
 }
+
+/* ---------- Parent: tabs for each child ----------
+   A son's tab is blue, a daughter's pink (--kid, --kid-soft, --kid-dark);
+   a child with no gender given uses the school's accent colour. */
+.kid-male {
+  --kid: #2f6fe0;
+  --kid-dark: #1d4ea8;
+  --kid-soft: #eaf1fe;
+  --kid-line: #c6d8fb;
+}
+
+.kid-female {
+  --kid: #d63384;
+  --kid-dark: #a61e62;
+  --kid-soft: #fdedf5;
+  --kid-line: #f6c4dc;
+}
+
+.kid-unknown {
+  --kid: var(--accent);
+  --kid-dark: var(--accent-dark);
+  --kid-soft: var(--accent-soft);
+  --kid-line: color-mix(in srgb, var(--accent) 30%, white);
+}
+
+.profile-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 6px;
+  overflow-x: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) + 4px);
+  box-shadow: var(--shadow);
+}
+
+.profile-tab,
+.profile-tab:hover:not(:disabled) {
+  flex: 1 1 0;
+  min-width: 200px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text);
+  font-weight: 400;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.profile-tab:hover:not(:disabled) {
+  background: var(--kid-soft);
+}
+
+.profile-tab.active,
+.profile-tab.active:hover:not(:disabled) {
+  background: var(--kid-soft);
+  border-color: var(--kid-line);
+  box-shadow: inset 0 -3px 0 var(--kid);
+}
+
+.profile-tab:focus-visible {
+  outline-color: var(--kid-line);
+}
+
+.profile-avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--kid-soft);
+  color: var(--kid-dark);
+  box-shadow: inset 0 0 0 1px var(--kid-line);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: background 0.15s, color 0.15s;
+}
+
+.profile-tab.active .profile-avatar {
+  background: var(--kid);
+  color: #ffffff;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--kid) 35%, transparent);
+}
+
+.profile-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profile-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-tab.active .profile-name {
+  color: var(--kid-dark);
+}
+
+.profile-sub {
+  color: var(--text-3);
+  font-size: 13px;
+}
+
+/* Overview: the tabs sit on top of the chosen child's card, like folder tabs.
+   The active tab opens into the card, which takes the child's colour. */
+.child-folder.with-tabs {
+  display: flex;
+  flex-direction: column;
+  filter: drop-shadow(0 1px 2px rgba(16, 24, 40, 0.06));
+}
+
+.child-folder.with-tabs .profile-tabs {
+  gap: 4px;
+  padding: 0 0 0 12px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  flex-wrap: wrap;
+}
+
+.child-folder.with-tabs .profile-tab,
+.child-folder.with-tabs .profile-tab:hover:not(:disabled) {
+  flex: 0 1 280px;
+  min-width: 190px;
+  margin-bottom: -1px;
+  padding: 12px 18px;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: calc(var(--radius) + 2px) calc(var(--radius) + 2px) 0 0;
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+.child-folder.with-tabs .profile-tab:hover:not(:disabled) {
+  background: var(--kid-soft);
+}
+
+.child-folder.with-tabs .profile-tab.active,
+.child-folder.with-tabs .profile-tab.active:hover:not(:disabled) {
+  position: relative;
+  z-index: 1;
+  background: var(--kid-soft);
+  border-color: var(--kid-line);
+  box-shadow: inset 0 3px 0 var(--kid);
+}
+
+.child-folder.with-tabs .child-card {
+  position: relative;
+  border-color: var(--kid-line);
+  border-top-left-radius: 0;
+  box-shadow: none;
+  background: linear-gradient(180deg, var(--kid-soft) 0, var(--surface) 140px);
+}
+
+.child-folder .child-card .kpi {
+  border-color: color-mix(in srgb, var(--kid-line) 55%, var(--border));
+}
+
+.child-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.child-folder.with-tabs .child-facts {
+  margin-top: 0;
+}
+
+.fact-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--kid-line, var(--border));
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.fact-label {
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

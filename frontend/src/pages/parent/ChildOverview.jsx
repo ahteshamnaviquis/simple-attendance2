@@ -1,11 +1,12 @@
-// A parent's home page: one card per child with their class, attendance over
-// the last 30 days, latest published result, and who teaches them.
+// A parent's home page: tabs for their children (with more than one), and the
+// chosen child's class, attendance over the last 30 days, latest published
+// result, and who teaches them.
 
 import Icon from '../../components/Icon.jsx';
 import { PassFailBadge } from '../../components/StudentResult.jsx';
 import { childWord, formatMediumDate, formatPercent } from '../../utils';
 
-export default function ChildOverview({ user, childList: children, unread, onOpen, onMessages }) {
+export default function ChildOverview({ user, childList: children, child, switcher, unread, onOpen, onMessages }) {
   return (
     <>
       <div className="page-title">
@@ -33,14 +34,18 @@ export default function ChildOverview({ user, childList: children, unread, onOpe
         </div>
       )}
 
-      {children.map((child) => (
-        <ChildCard key={child.studentId} child={child} onOpen={onOpen} />
-      ))}
+      {/* With several children, the tabs and the chosen child's card are one unit. */}
+      {child && (
+        <div className={`child-folder kid-${child.gender ?? 'unknown'}${switcher ? ' with-tabs' : ''}`}>
+          {switcher}
+          <ChildCard key={child.studentId} child={child} withTabs={Boolean(switcher)} onOpen={onOpen} />
+        </div>
+      )}
     </>
   );
 }
 
-function ChildCard({ child, onOpen }) {
+function ChildCard({ child, withTabs, onOpen }) {
   const { attendance, latestExam } = child;
   const rateTone = attendance.rate === null ? '' : attendance.rate >= 90 ? 'good' : attendance.rate >= 75 ? 'warning' : 'fail';
 
@@ -48,13 +53,29 @@ function ChildCard({ child, onOpen }) {
     <section className="panel child-card">
       <div className="panel-head">
         <div>
-          <h2>{child.name}</h2>
-          <p className="cell-sub">
-            {child.gender && `Your ${childWord(child.gender).toLowerCase()} · `}
-            {child.className}
-            {child.rollNumber && ` · Roll ${child.rollNumber}`}
-            {child.classTeacher && ` · Class teacher: ${child.classTeacher}`}
-          </p>
+          {/* The tab already shows the name, son/daughter and class. */}
+          {!withTabs && (
+            <>
+              <h2>{child.name}</h2>
+              <p className="cell-sub">
+                {child.gender && `Your ${childWord(child.gender).toLowerCase()} · `}
+                {child.className}
+              </p>
+            </>
+          )}
+          <div className="child-facts">
+            {child.rollNumber && (
+              <span className="fact-chip">
+                <span className="fact-label">Roll no.</span> {child.rollNumber}
+              </span>
+            )}
+            <span className="fact-chip">
+              <span className="fact-label">Class teacher</span> {child.classTeacher || 'Not assigned yet'}
+            </span>
+            <span className="fact-chip">
+              <span className="fact-label">Subjects</span> {child.subjects.length}
+            </span>
+          </div>
         </div>
         <div className="actions">
           <button type="button" className="secondary small" onClick={() => onOpen(child.studentId, 'attendance')}>
