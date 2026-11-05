@@ -3272,3 +3272,279 @@ textarea:focus-visible {
   font-size: 13px;
   font-weight: 600;
 }
+
+/* ---------- Diary, leaves, complaints & suggestions ---------- */
+.badge.bad {
+  background: var(--critical-soft);
+  color: var(--critical);
+}
+
+.diary-text {
+  display: block;
+  margin-top: 14px;
+}
+
+.diary-text textarea,
+.feedback-reply textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+}
+
+.diary-day {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.diary-date {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 6px 0 0;
+  font-size: 17px;
+}
+
+.diary-entry-head,
+.leave-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.diary-entry-head .actions {
+  margin: 0;
+}
+
+.diary-entry h3,
+.leave-item h3 {
+  margin: 6px 0 0;
+  font-size: 16px;
+}
+
+.diary-class {
+  margin-left: 8px;
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.diary-body {
+  margin: 10px 0 6px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.status-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.status-filter .chip.active,
+.status-filter .chip.active:hover:not(:disabled) {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent-dark);
+}
+
+.leave-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.leave-decision {
+  margin: 8px 0 4px;
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.leave-note {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-2);
+}
+
+.leave-review {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.leave-review input {
+  flex: 1 1 240px;
+}
+
+.kind-toggle {
+  display: flex;
+}
+
+.feedback-reply {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.feedback-answer {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+}
+
+.feedback-answer .field-label,
+.feedback-answer .diary-body {
+  margin: 0 0 4px;
+}
+
+/* ---------- Gallery ---------- */
+button.with-icon,
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.album-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.album-card,
+.album-card:hover:not(:disabled) {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--text);
+  font-weight: 400;
+  text-align: left;
+}
+
+.album-card:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.album-cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 3;
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.album-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px 12px;
+}
+
+.album-title {
+  font-weight: 700;
+}
+
+.album-description {
+  margin: 8px 0 0;
+  max-width: 720px;
+  white-space: pre-wrap;
+}
+
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.photo-tile,
+.photo-tile:hover:not(:disabled) {
+  aspect-ratio: 1;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+}
+
+.photo-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s;
+}
+
+.photo-tile:hover img {
+  transform: scale(1.04);
+}
+
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  background: rgba(10, 14, 22, 0.92);
+  color: #ffffff;
+}
+
+.lightbox-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+}
+
+.lightbox-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lightbox-link {
+  color: #ffffff;
+}
+
+.lightbox-stage {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0 8px 16px;
+}
+
+.lightbox-stage img {
+  max-width: calc(100% - 120px);
+  max-height: 100%;
+  margin: 0 auto;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.lightbox .icon-button {
+  color: #ffffff;
+}
+
+.lightbox-nav:disabled {
+  visibility: hidden;
+}

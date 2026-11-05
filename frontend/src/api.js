@@ -124,3 +124,33 @@ export const getMessageContacts = () => request('GET', '/api/parent/contacts');
 export const getMyMessages = (contact) => request('GET', `/api/parent/messages${query({ with: contact })}`);
 export const getMyUnreadCount = () => request('GET', '/api/parent/messages/unread');
 export const sendMyMessage = (to, body) => request('POST', '/api/parent/messages', { to, body });
+
+// ---------- Diary, leaves, complaints & suggestions, gallery ----------
+
+export const getDiary = (filters = {}) => request('GET', `/api/diary${query(filters)}`); // { from, to, classId, studentId }
+export const getDiaryOptions = () => request('GET', '/api/diary/options');
+export const createDiaryEntry = (entry) => request('POST', '/api/diary', entry);
+export const updateDiaryEntry = (id, entry) => request('PUT', `/api/diary/${id}`, entry);
+export const deleteDiaryEntry = (id) => request('DELETE', `/api/diary/${id}`);
+
+export const getLeaves = (filters = {}) => request('GET', `/api/leaves${query(filters)}`); // { status, classId, studentId }
+export const getPendingLeaveCount = () => request('GET', '/api/leaves/pending-count');
+export const applyForLeave = (leave) => request('POST', '/api/leaves', leave);
+export const reviewLeave = (id, status, note) => request('POST', `/api/leaves/${id}/review`, { status, note });
+export const withdrawLeave = (id) => request('DELETE', `/api/leaves/${id}`);
+
+export const getFeedback = (filters = {}) => request('GET', `/api/feedback${query(filters)}`); // { kind, status }
+export const getOpenFeedbackCount = () => request('GET', '/api/feedback/open-count');
+export const sendFeedback = (item) => request('POST', '/api/feedback', item);
+export const replyToFeedback = (id, reply, status) => request('POST', `/api/feedback/${id}/reply`, { reply, status });
+export const deleteFeedback = (id) => request('DELETE', `/api/feedback/${id}`);
+
+export const getAlbums = () => request('GET', '/api/gallery/albums');
+export const getAlbum = (id) => request('GET', `/api/gallery/albums/${id}`);
+export const createAlbum = (album) => request('POST', '/api/gallery/albums', album);
+export const updateAlbum = (id, album) => request('PUT', `/api/gallery/albums/${id}`, album);
+export const deleteAlbum = (id) => request('DELETE', `/api/gallery/albums/${id}`);
+export const uploadPhoto = (albumId, file) => request('POST', `/api/gallery/albums/${albumId}/photos`, file);
+export const deletePhoto = (id) => request('DELETE', `/api/gallery/photos/${id}`);
+// The address of a photo (works in an <img>, which can't send the login header).
+export const photoUrl = (id) => `${API_URL}/api/gallery/photos/${id}/image`;

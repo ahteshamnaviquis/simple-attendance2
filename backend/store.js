@@ -61,6 +61,29 @@ const COLLECTIONS = {
     props:
       'id parentId teacherId fromSchool:bool senderId senderName senderRole body createdAt:timestamp readAt:timestamp',
   },
+  diary: {
+    table: 'diary',
+    props:
+      'id classId className subjectId subjectName date:date title body createdById createdBy ' +
+      'createdAt:timestamp updatedAt:timestamp',
+  },
+  leaves: {
+    table: 'leaves',
+    props:
+      'id studentId studentName classId className parentId parentName fromDate:date toDate:date reason status ' +
+      'reviewNote reviewedById reviewedBy reviewedAt:timestamp createdAt:timestamp',
+  },
+  feedback: {
+    table: 'feedback',
+    props:
+      'id kind subject body fromId fromName fromRole studentId studentName status reply repliedBy ' +
+      'repliedAt:timestamp createdAt:timestamp',
+  },
+  galleryAlbums: {
+    table: 'gallery_albums',
+    props: 'id title description date:date classId className createdById createdBy createdAt:timestamp',
+  },
+  galleryPhotos: { table: 'gallery_photos', props: 'id albumId type createdBy createdAt:timestamp' },
 };
 
 // Columns added to a table after it was first released. CREATE TABLE IF NOT
@@ -72,7 +95,7 @@ const ADDED_COLUMNS = [
 ];
 
 // The order to fill an empty database in, so every row's parents already exist.
-const LOAD_ORDER = ['users', 'classes', 'subjects', 'students', 'classSubjects', 'attendance', 'exams', 'marks', 'parentProfiles', 'parentStudents', 'messages', 'settings'];
+const LOAD_ORDER = ['users', 'classes', 'subjects', 'students', 'classSubjects', 'attendance', 'exams', 'marks', 'parentProfiles', 'parentStudents', 'messages', 'diary', 'leaves', 'feedback', 'galleryAlbums', 'galleryPhotos', 'settings'];
 
 for (const collection of Object.values(COLLECTIONS)) {
   collection.columns = collection.props.split(' ').map((spec) => {
@@ -195,10 +218,13 @@ async function saveSettings(conn, before, after) {
   if (removed.length) await conn.query('DELETE FROM settings WHERE name IN (?)', [removed]);
   for (const [key, value] of Object.entries(after)) {
     if (JSON.stringify(value) === JSON.stringify(before[key])) continue;
-    await conn.query(
-      'INSERT INTO settings (name, value) VALUES (?, ?) AS new ON DUPLICATE KEY UPDATE value = new.value',
-      [key, JSON.stringify(value)]
-    );
+    // Replace the row (in this transaction). Not "INSERT ... AS new ON DUPLICATE
+    // KEY UPDATE": that is MySQL 8 only, and cPanel hosts often run MariaDB.
+    if (key in before) {
+      await conn.query('UPDATE settings SET value = ? WHERE name = ?', [JSON.stringify(value), key]);
+    } else {
+      await conn.query('INSERT INTO settings (name, value) VALUES (?, ?)', [key, JSON.stringify(value)]);
+    }
   }
 }
 
@@ -252,19 +278,19 @@ async function updateData(name, changeFn) {
   return saved[name];
 }
 
-// ---------- Files (the logo) ----------
+// ---------- Files (the logo and gallery photos) ----------
 
 async function readFile(name, conn = pool) {
   const [rows] = await conn.query('SELECT type, data FROM files WHERE name = ?', [name]);
   return rows[0] ?? null;
 }
 
+// Replaces the file. Callers pass a transaction's connection (see routes/settings.js),
+// so the delete and insert happen together. Plain DELETE + INSERT works on MySQL
+// and on MariaDB, which cPanel hosts often run.
 async function writeFile(name, type, data, conn = pool) {
-  await conn.query(
-    'INSERT INTO files (name, type, data) VALUES (?, ?, ?) AS new ' +
-      'ON DUPLICATE KEY UPDATE type = new.type, data = new.data, updated_at = CURRENT_TIMESTAMP(3)',
-    [name, type, data]
-  );
+  await conn.query('DELETE FROM files WHERE name = ?', [name]);
+  await conn.query('INSERT INTO files (name, type, data) VALUES (?, ?, ?)', [name, type, data]);
 }
 
 async function deleteFile(name, conn = pool) {

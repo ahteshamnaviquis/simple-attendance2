@@ -14,7 +14,7 @@ module.exports = {
   // The website allowed to call this API from the browser (CORS).
   // Several addresses can be listed, separated by commas. Only the scheme and
   // host count (the browser sends no path), so https://example.com/att works too.
-  FRONTEND_URLS: (process.env.FRONTEND_URL || 'http://localhost:5173,https://zatechnologz.com')
+  FRONTEND_URLS: (process.env.FRONTEND_URL || 'http://localhost:5174,https://zatechnologz.com')
     .split(',')
     .map((url) => originOf(url.trim())),
 

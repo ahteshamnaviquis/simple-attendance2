@@ -13,3 +13,8 @@ backend/data/logo
 .vscode/
 # Ad-hoc backups of the backend (may contain .env)
 *.zip
+
+# Made by npm run import-data (real school data)
+backend/sql/import.sql
+backend/sql/import-data/
+backend/scripts/data/

@@ -14,7 +14,11 @@ import Exams from '../components/Exams.jsx';
 import SubjectsManager from './admin/SubjectsManager.jsx';
 import ParentsManager from './admin/ParentsManager.jsx';
 import Messages from '../components/Messages.jsx';
-import { getUnreadMessageCount } from '../api';
+import Diary from '../components/Diary.jsx';
+import Leaves from '../components/Leaves.jsx';
+import Feedback from '../components/Feedback.jsx';
+import Gallery from '../components/Gallery.jsx';
+import { getOpenFeedbackCount, getPendingLeaveCount, getUnreadMessageCount } from '../api';
 import useUnreadCount from '../useUnreadCount';
 import { useSettings } from '../theme';
 
@@ -29,14 +33,22 @@ const MENU = [
   { id: 'teachers', label: 'Teachers', icon: 'teachers', area: 'teachers' },
   { id: 'parents', label: 'Parents', icon: 'parents', area: 'parents' },
   { id: 'messages', label: 'Messages', icon: 'messages' },
+  { id: 'diary', label: 'Diary', icon: 'diary' },
+  { id: 'leaves', label: 'Leaves', icon: 'leaves', badgeLabel: 'pending' },
+  { id: 'feedback', label: 'Complaints & suggestions', icon: 'feedback', badgeLabel: 'open' },
+  { id: 'gallery', label: 'Gallery', icon: 'gallery' },
 ];
 
 export default function AdminHome({ user, onLogout }) {
   const { adminPermissions } = useSettings();
   const [unread, refreshUnread] = useUnreadCount(getUnreadMessageCount);
-  const items = MENU.filter((item) => !item.area || adminPermissions[item.area]).map((item) =>
-    item.id === 'messages' ? { ...item, badge: unread } : item
-  );
+  const [pendingLeaves, refreshLeaves] = useUnreadCount(getPendingLeaveCount);
+  const [openFeedback, refreshFeedback] = useUnreadCount(getOpenFeedbackCount);
+  const badges = { messages: unread, leaves: pendingLeaves, feedback: openFeedback };
+  const items = MENU.filter((item) => !item.area || adminPermissions[item.area]).map((item) => ({
+    ...item,
+    badge: badges[item.id],
+  }));
   const [page, setPage] = useState('dashboard');
   const [messageParentId, setMessageParentId] = useState(null);
 
@@ -63,6 +75,10 @@ export default function AdminHome({ user, onLogout }) {
       {page === 'messages' && (
         <Messages key={messageParentId} initialParentId={messageParentId} onRead={refreshUnread} />
       )}
+      {page === 'diary' && <Diary user={user} />}
+      {page === 'leaves' && <Leaves user={user} onChange={refreshLeaves} />}
+      {page === 'feedback' && <Feedback user={user} onChange={refreshFeedback} />}
+      {page === 'gallery' && <Gallery user={user} />}
     </Layout>
   );
 }

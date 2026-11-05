@@ -100,6 +100,27 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
   unread count in the menu goes. A teacher who no longer teaches their children keeps the
   old chat, but can't get new messages.
 
+**Diary, leaves, complaints & suggestions, gallery** (web only)
+- Diary: homework and notes for a class on a day, for one subject or the whole class.
+  The class teacher writes for their class (any subject, or none), a subject teacher for
+  the subjects they teach in that class, and admins and the super admin for any class.
+  Parents read their child's class diary (child tabs with several children). Filter by
+  class and dates; the writer or the office can edit or remove an entry.
+- Leaves: a parent applies for leave for their child (first and last day, reason). The
+  class teacher of that class, admins and the super admin approve or reject it with an
+  optional note, and can change the decision later. Pending applications come first and
+  are counted next to *Leaves* in the menu. The parent sees the decision and can withdraw
+  an application while it is pending.
+- Complaints & suggestions: parents (optionally about one child) and teachers write to
+  the school office. Every admin and the super admin read them, reply, and mark them
+  resolved or open again; open ones are counted next to the menu item. The writer sees
+  the reply, and can remove theirs while it has no reply.
+- Gallery: photo albums for the whole school or one class. Admins and the super admin
+  make albums for the school or any class, a teacher for a class they teach. Upload
+  several photos at once (PNG, JPEG, WebP or GIF, up to 5 MB each), view them large
+  (arrow keys to move), and remove photos or whole albums. Parents see the school's
+  albums and their children's classes' albums.
+
 ## Attendance rules
 
 | Rule | How it works |
@@ -132,6 +153,20 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
 | Changing an exam | A subject that already has marks can't be removed, and its maximum can't go below the highest mark entered. An exam can only be deleted while it has no marks. |
 | History | Marks store the student's name and roll number. If a student moves to another class or is removed, their marks stay and appear under "Students who have left the class" (not ranked). Exams keep the class and subject names they were created with. Changing a class's subjects or teachers doesn't change existing exams or marks; a new subject teacher gets access to that subject. |
 
+## Diary, leaves, complaints and gallery rules
+
+| Rule | How it works |
+|------|--------------|
+| Diary: who writes | Class teacher: their class, any of its subjects or none. Subject teacher: only their subjects in that class. Admins and the super admin: any class and subject. |
+| Diary: who reads | Admins and the super admin: every class. Teachers: the classes they teach. Parents: their children's classes. |
+| Diary: changing | The writer (while they still teach that class and subject) or an admin / the super admin. Entries keep the class, subject and writer's names as text. |
+| Leave dates | First day on or before the last day, at most 60 days, starting no more than 30 days ago. A child can't have two pending or approved leaves that overlap. |
+| Leave decisions | The class teacher of the class the leave was made in, admins and the super admin. Only a pending leave can be withdrawn by the parent. |
+| Complaints & suggestions | Only parents and teachers write them, only the school office (admins and the super admin) reads and answers them. Removing is allowed until there is a reply. |
+| Gallery: who sees | Everyone: whole-school albums. Class albums: the office, the class's teachers, and its students' parents. |
+| Gallery: who manages | Admins and the super admin: every album. A teacher: the albums they made (for a class they teach). Removing an album removes its photos. At most 200 photos per album. |
+| Photos | Stored in the `files` table as `gallery-<photo id>`. The image address works without the login header (an `<img>` can't send it); photo ids are random, so it can't be guessed. Local prototype only. |
+
 ## Folder structure
 
 ```
@@ -152,11 +187,14 @@ SimpleAttendence/
 │   ├── parentAccounts.js  # Parent details: checking them and saving them with a student
 │   ├── conversations.js   # Messages: who can write to whom, one chat per parent and office or teacher
 │   ├── results.js         # Exam totals, percentages, Incomplete and positions
+│   ├── schoolAccess.js    # Who teaches / reads which classes (diary, leaves, gallery)
+│   ├── images.js          # Allowed image types (logo, gallery photos)
 │   ├── test/
 │   │   ├── testServer.js  # Starts the server on a temporary MySQL database for each test file
 │   │   ├── exams.test.js  # npm test: API tests for examinations
 │   │   ├── admins.test.js # Super admin and admin accounts
-│   │   └── settings.test.js # Theme and admin permissions
+│   │   ├── settings.test.js # Theme and admin permissions
+│   │   └── schoolLife.test.js # Diary, leaves, complaints & suggestions, gallery
 │   ├── scripts/
 │   │   ├── addDemoData.js # npm run demo-data: extra teachers, classes, students, 14 days of reports
 │   │   └── jsonToSql.js   # npm run json-to-sql: JSON data files -> sql/data.sql
@@ -172,7 +210,11 @@ SimpleAttendence/
 │   │   ├── exams.js       # /api/exams (exams, marks and results; all exam rules live here)
 │   │   ├── parents.js     # /api/parents (the parent directory: edit, disable, remove)
 │   │   ├── messages.js    # /api/messages (the staff side: the office's or a teacher's chats)
-│   │   └── parentPortal.js # /api/parent (what a logged-in parent sees)
+│   │   ├── parentPortal.js # /api/parent (what a logged-in parent sees)
+│   │   ├── diary.js       # /api/diary (class diary)
+│   │   ├── leaves.js      # /api/leaves (leave applications)
+│   │   ├── feedback.js    # /api/feedback (complaints & suggestions)
+│   │   └── gallery.js     # /api/gallery (albums and photos)
 │   └── data/              # The JSON data from before MySQL (source of sql/data.sql; not used by the server)
 │       ├── users.json
 │       ├── classes.json
@@ -214,6 +256,10 @@ SimpleAttendence/
         │   ├── ExamForm.jsx         # Create / edit an exam and its subjects
         │   ├── MarksEntry.jsx       # Marks grid for one subject (save draft, submit)
         │   ├── ExamResults.jsx      # Class result sheet
+        │   ├── Diary.jsx            # Class diary (staff write, parents read)
+        │   ├── Leaves.jsx           # Leave applications (parents apply, staff decide)
+        │   ├── Feedback.jsx         # Complaints & suggestions
+        │   ├── Gallery.jsx          # Albums, photo upload and viewer
         │   └── StudentResult.jsx    # One student's result (also the printed card)
         └── pages/
             ├── LoginPage.jsx
@@ -337,7 +383,8 @@ SQL with `node scripts/jsonToSql.js <folder> <output.sql>`, then load that file 
 way. `npm run json-to-sql` remakes `sql/data.sql` from `backend/data`.
 
 **Tables:** `users`, `classes`, `students`, `subjects`, `class_subjects`, `attendance`,
-`exams`, `marks`, `settings` and `files` (the uploaded logo). Lists inside a row (a
+`exams`, `marks`, `parent_profiles`, `parent_students`, `messages`, `diary`, `leaves`, `feedback`,
+`gallery_albums`, `gallery_photos`, `settings` and `files` (the uploaded logo and gallery photos). Lists inside a row (a
 report's absent students, an exam's subjects) are JSON columns. Copies such as a report's
 class and teacher name are kept on purpose, so history stays readable after renames and
 removals.
@@ -349,7 +396,7 @@ frontend: login, dashboards, submission tracker, attendance form, reports, stude
 classes and teachers, messages with parents (for teachers, admins and the super admin,
 with unread badges), and the parent portal (children, attendance, results and messages).
 Admin tabs follow the super admin's admin permissions. Examinations and marks, subjects,
-the parents directory, admin accounts, settings and print are web-only.
+the diary, leaves, complaints & suggestions, the gallery, the parents directory, admin accounts, settings and print are web-only.
 
 **`mobile/.env`**
 ```

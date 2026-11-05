@@ -21,6 +21,10 @@ const examsRouter = require('./routes/exams');
 const { router: parentsRouter } = require('./routes/parents');
 const { router: messagesRouter } = require('./routes/messages');
 const parentPortalRouter = require('./routes/parentPortal');
+const diaryRouter = require('./routes/diary');
+const leavesRouter = require('./routes/leaves');
+const feedbackRouter = require('./routes/feedback');
+const galleryRouter = require('./routes/gallery');
 
 const app = express();
 
@@ -107,6 +111,10 @@ app.use('/api/exams', examsRouter);
 app.use('/api/parents', parentsRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/parent', parentPortalRouter);
+app.use('/api/diary', diaryRouter);
+app.use('/api/leaves', leavesRouter);
+app.use('/api/feedback', feedbackRouter);
+app.use('/api/gallery', galleryRouter);
 
 // Unknown API routes
 app.use('/api', (req, res) => {

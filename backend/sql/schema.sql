@@ -181,6 +181,98 @@ CREATE TABLE IF NOT EXISTS messages (
   CONSTRAINT fk_messages_parent FOREIGN KEY (parent_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
+-- Class diary: homework and notes a teacher (or admin) writes for a class on a day,
+-- optionally for one subject. Parents see the diary of their children's classes.
+CREATE TABLE IF NOT EXISTS diary (
+  seq           INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+  class_id      VARCHAR(64)  NOT NULL,
+  class_name    VARCHAR(100) NOT NULL,
+  subject_id    VARCHAR(64)  NULL,             -- NULL: for the whole class, no subject
+  subject_name  VARCHAR(100) NULL,
+  date          DATE         NOT NULL,
+  title         VARCHAR(150) NOT NULL DEFAULT '',
+  body          TEXT         NOT NULL,
+  created_by_id VARCHAR(64)  NOT NULL,
+  created_by    VARCHAR(100) NOT NULL,
+  created_at    DATETIME(3)  NOT NULL,         -- UTC
+  updated_at    DATETIME(3)  NOT NULL,
+  KEY idx_diary_class_date (class_id, date),
+  CONSTRAINT fk_diary_class FOREIGN KEY (class_id) REFERENCES classes (id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Leave applications: a parent asks for leave for their child; the class
+-- teacher or an admin approves or rejects it. Names are kept as text, like
+-- attendance.class_name, so the history stays readable.
+CREATE TABLE IF NOT EXISTS leaves (
+  seq            INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id             VARCHAR(64)  NOT NULL PRIMARY KEY,
+  student_id     VARCHAR(64)  NOT NULL,
+  student_name   VARCHAR(100) NOT NULL,
+  class_id       VARCHAR(64)  NOT NULL,
+  class_name     VARCHAR(100) NOT NULL,
+  parent_id      VARCHAR(64)  NOT NULL,
+  parent_name    VARCHAR(100) NOT NULL,
+  from_date      DATE         NOT NULL,
+  to_date        DATE         NOT NULL,
+  reason         TEXT         NOT NULL,
+  status         ENUM('pending', 'approved', 'rejected') NOT NULL,
+  review_note    VARCHAR(500) NOT NULL DEFAULT '',
+  reviewed_by_id VARCHAR(64)  NULL,
+  reviewed_by    VARCHAR(100) NULL,
+  reviewed_at    DATETIME(3)  NULL,
+  created_at     DATETIME(3)  NOT NULL,         -- UTC
+  KEY idx_leaves_student (student_id),
+  KEY idx_leaves_class (class_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Complaints and suggestions from parents and teachers to the school office.
+-- An admin replies and marks it resolved.
+CREATE TABLE IF NOT EXISTS feedback (
+  seq          INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id           VARCHAR(64)  NOT NULL PRIMARY KEY,
+  kind         ENUM('complaint', 'suggestion') NOT NULL,
+  subject      VARCHAR(150) NOT NULL,
+  body         TEXT         NOT NULL,
+  from_id      VARCHAR(64)  NOT NULL,
+  from_name    VARCHAR(100) NOT NULL,
+  from_role    VARCHAR(20)  NOT NULL,           -- parent or teacher
+  student_id   VARCHAR(64)  NULL,               -- a parent may say which child it is about
+  student_name VARCHAR(100) NULL,
+  status       ENUM('open', 'resolved') NOT NULL,
+  reply        TEXT         NOT NULL,
+  replied_by   VARCHAR(100) NULL,
+  replied_at   DATETIME(3)  NULL,
+  created_at   DATETIME(3)  NOT NULL,           -- UTC
+  KEY idx_feedback_from (from_id)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Photo gallery: albums for the whole school (class_id NULL) or one class.
+-- Each photo's image is in the files table as "gallery-<photo id>".
+CREATE TABLE IF NOT EXISTS gallery_albums (
+  seq           INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+  title         VARCHAR(150) NOT NULL,
+  description   VARCHAR(500) NOT NULL DEFAULT '',
+  date          DATE         NOT NULL,
+  class_id      VARCHAR(64)  NULL,             -- NULL: the whole school
+  class_name    VARCHAR(100) NULL,
+  created_by_id VARCHAR(64)  NOT NULL,
+  created_by    VARCHAR(100) NOT NULL,
+  created_at    DATETIME(3)  NOT NULL          -- UTC
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+CREATE TABLE IF NOT EXISTS gallery_photos (
+  seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  album_id   VARCHAR(64)  NOT NULL,
+  type       VARCHAR(50)  NOT NULL,            -- image/png, image/jpeg, ...
+  created_by VARCHAR(100) NOT NULL,
+  created_at DATETIME(3)  NOT NULL,            -- UTC
+  KEY idx_gallery_photos_album (album_id),
+  CONSTRAINT fk_gallery_photos_album FOREIGN KEY (album_id) REFERENCES gallery_albums (id) ON DELETE CASCADE
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
 -- School-wide settings: one row per part ("theme", "adminPermissions").
 CREATE TABLE IF NOT EXISTS settings (
   seq   INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
@@ -188,7 +280,7 @@ CREATE TABLE IF NOT EXISTS settings (
   value JSON         NOT NULL
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Uploaded files, such as the logo.
+-- Uploaded files: the logo, and the gallery's photos.
 CREATE TABLE IF NOT EXISTS files (
   name       VARCHAR(50)  NOT NULL PRIMARY KEY,
   type       VARCHAR(50)  NOT NULL,

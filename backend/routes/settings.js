@@ -9,21 +9,15 @@ const express = require('express');
 const { updateData, readFile, writeFile, deleteFile } = require('../store');
 const { HttpError, requireSuperAdmin } = require('../helpers');
 const { readSettings, cleanSettingsInput } = require('../settings');
+const { IMAGE_TYPES } = require('../images');
 
 const router = express.Router();
 
 const LOGO_FILE = 'logo';
 const MAX_LOGO_BYTES = 1024 * 1024;
 
-// Allowed logo types and how their files start. SVG is not allowed: it can
-// contain scripts.
-const LOGO_TYPES = {
-  'image/png': (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
-  'image/jpeg': (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff,
-  'image/gif': (b) => b.subarray(0, 4).toString('latin1') === 'GIF8',
-  'image/webp': (b) =>
-    b.subarray(0, 4).toString('latin1') === 'RIFF' && b.subarray(8, 12).toString('latin1') === 'WEBP',
-};
+// Allowed logo types (PNG, JPEG, WebP, GIF) and how their files start.
+const LOGO_TYPES = IMAGE_TYPES;
 
 // GET /api/settings
 router.get('/', async (req, res) => {

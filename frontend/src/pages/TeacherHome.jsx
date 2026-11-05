@@ -3,7 +3,7 @@
 // Teachers only ever see their own assigned classes (the backend filters them).
 
 import { useEffect, useState } from 'react';
-import { getClasses, getUnreadMessageCount } from '../api';
+import { getClasses, getPendingLeaveCount, getUnreadMessageCount } from '../api';
 import Layout from '../components/Layout.jsx';
 import Dashboard from '../components/Dashboard.jsx';
 import AttendanceForm from '../components/AttendanceForm.jsx';
@@ -11,6 +11,10 @@ import Reports from '../components/Reports.jsx';
 import StudentsManager from '../components/StudentsManager.jsx';
 import TeacherExams from '../components/TeacherExams.jsx';
 import Messages from '../components/Messages.jsx';
+import Diary from '../components/Diary.jsx';
+import Leaves from '../components/Leaves.jsx';
+import Feedback from '../components/Feedback.jsx';
+import Gallery from '../components/Gallery.jsx';
 import useUnreadCount from '../useUnreadCount';
 
 const MENU = [
@@ -20,6 +24,10 @@ const MENU = [
   { id: 'exams', label: 'Examinations', icon: 'exams' },
   { id: 'students', label: 'My students', icon: 'students' },
   { id: 'messages', label: 'Messages', icon: 'messages' },
+  { id: 'diary', label: 'Diary', icon: 'diary' },
+  { id: 'leaves', label: 'Leaves', icon: 'leaves', badgeLabel: 'pending' },
+  { id: 'feedback', label: 'Complaints & suggestions', icon: 'feedback', badgeLabel: 'open' },
+  { id: 'gallery', label: 'Gallery', icon: 'gallery' },
 ];
 
 export default function TeacherHome({ user, onLogout }) {
@@ -27,7 +35,9 @@ export default function TeacherHome({ user, onLogout }) {
   const [classes, setClasses] = useState(null); // null = still loading
   const [error, setError] = useState('');
   const [unread, refreshUnread] = useUnreadCount(getUnreadMessageCount);
-  const items = MENU.map((item) => (item.id === 'messages' ? { ...item, badge: unread } : item));
+  const [pendingLeaves, refreshLeaves] = useUnreadCount(getPendingLeaveCount);
+  const badges = { messages: unread, leaves: pendingLeaves };
+  const items = MENU.map((item) => ({ ...item, badge: badges[item.id] }));
 
   useEffect(() => {
     getClasses()
@@ -70,6 +80,10 @@ export default function TeacherHome({ user, onLogout }) {
       {page === 'exams' && <TeacherExams />}
       {page === 'students' && <StudentsManager />}
       {page === 'messages' && <Messages onRead={refreshUnread} />}
+      {page === 'diary' && <Diary user={user} />}
+      {page === 'leaves' && <Leaves user={user} onChange={refreshLeaves} />}
+      {page === 'feedback' && <Feedback user={user} />}
+      {page === 'gallery' && <Gallery user={user} />}
     </Layout>
   );
 }
