@@ -16,6 +16,7 @@ import Feedback from '../components/Feedback.jsx';
 import Gallery from '../components/Gallery.jsx';
 import useUnreadCount from '../useUnreadCount';
 import { childWord } from '../utils';
+import Avatar from '../components/Avatar.jsx';
 
 const MENU = [
   { id: 'overview', label: 'My children', icon: 'dashboard' },
@@ -104,9 +105,13 @@ function ChildSwitcher({ childList, childId, setChildId }) {
             className={`profile-tab kid-${c.gender ?? 'unknown'}${active ? ' active' : ''}`}
             onClick={() => setChildId(c.studentId)}
           >
-            <span className="profile-avatar" aria-hidden="true">
-              {initials(c.name)}
-            </span>
+            {c.photo ? (
+              <Avatar name={c.name} id={c.studentId} photo={c.photo} size={42} className="profile-photo" />
+            ) : (
+              <span className="profile-avatar" aria-hidden="true">
+                {initials(c.name)}
+              </span>
+            )}
             <span className="profile-text">
               <span className="profile-name">{c.name}</span>
               <span className="profile-sub">

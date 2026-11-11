@@ -4353,3 +4353,64 @@ button.with-icon,
   letter-spacing: 0.08em;
   font-weight: 600;
 }
+
+/* A person's photo, or their initials on a colour (components/Avatar.jsx). */
+.person-avatar {
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  object-fit: cover;
+  color: #ffffff;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  vertical-align: middle;
+  user-select: none;
+}
+
+img.person-avatar {
+  background: #f0f2f5;
+}
+
+/* A name with its avatar in a table cell. */
+.person-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* The photo part of the teacher, student and parent forms. */
+.photo-editor {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.photo-editor-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.photo-editor-actions .actions {
+  margin: 0;
+}
+
+.photo-editor-label {
+  font-weight: 600;
+}
+
+.file-button.small {
+  min-height: 34px;
+  padding: 5px 12px;
+  font-size: 14px;
+}
+
+/* A child's photo on the parent's child tabs keeps the son/daughter colour as a ring. */
+.profile-photo {
+  box-shadow: 0 0 0 2px var(--kid-dark);
+}

@@ -138,6 +138,16 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
   unread count in the menu goes. A teacher who no longer teaches their children keeps the
   old chat, but can't get new messages.
 
+**Photos** (web)
+- Teachers, students and parents can have a profile photo (PNG, JPEG, WebP or GIF, up to
+  2 MB). Upload, change or remove it on their form: the Teachers page (whoever manages
+  teachers), the Students page (admins with the students permission, and the class
+  teacher for their own students) and the Parents page. For someone new, the chosen
+  photo is saved together with the form.
+- Without a photo, the first letters of the name are shown (Sara Khan → SK, Muhammad
+  Ali Khan → MAK) on a colour picked from the person, which stays the same everywhere.
+- Parents see their children's photos on their child tabs.
+
 **Diary, leaves, complaints & suggestions, gallery** (web only)
 - Diary: homework and notes for a class on a day, for one subject or the whole class.
   The class teacher writes for their class (any subject, or none), a subject teacher for
@@ -615,6 +625,9 @@ the first one.
 | Method | URL                    | Who            | What it does |
 |--------|------------------------|----------------|--------------|
 | GET    | `/api/health`          | anyone         | `{ status: "ok", time }` |
+| PUT    | `/api/teachers/:id/photo`, `/api/students/:id/photo`, `/api/parents/:id/photo` | whoever may edit that person | Body: the image with its Content-Type; replaces the photo |
+| DELETE | the same `/photo` addresses | the same | Removes the photo |
+| GET    | `/api/photos/:academyId/:key` | anyone (for `<img>`) | A profile photo; the key is random and changes with each upload |
 | GET    | `/api/platform/academies` | platform owner | Every academy with its super admins and counts |
 | POST   | `/api/platform/academies` | platform owner | `{ name, prefix, superAdmin: { name, username, password } }` adds an academy and its first super admin (prefix: 3 letters, left out = from the name) |
 | PUT    | `/api/platform/academies/:id` | platform owner | `{ name }` renames it |

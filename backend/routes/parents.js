@@ -14,6 +14,7 @@ const express = require('express');
 const { readData, updateData, updateMany } = require('../store');
 const { HttpError, requireArea, academyPrefix } = require('../helpers');
 const { cleanParentDetails, saveParentDetails, describeParents } = require('../parentAccounts');
+const { photoRoutes, deletePhotoOf } = require('../photos');
 
 const router = express.Router();
 router.use(requireArea('parents'));
@@ -76,11 +77,20 @@ for (const [action, disabled] of [['disable', true], ['enable', false]]) {
   });
 }
 
+// PUT and DELETE /api/parents/:id/photo - the parent's profile photo (photos.js).
+photoRoutes(router, {
+  collection: 'users',
+  guard: (req, res, next) => next(), // the "parents" permission is checked for the whole router
+  find: (req, users) => findParentIndex(users, req.params.id),
+  view: (req, parent) => findParent(parent.id),
+});
+
 // DELETE /api/parents/:id
 // The database also removes their profile, links to students and messages.
 router.delete('/:id', async (req, res) => {
-  await updateData('users', (users) => {
+  await updateData('users', async (users, conn) => {
     const index = findParentIndex(users, req.params.id);
+    await deletePhotoOf(users[index], conn);
     return users.filter((_, i) => i !== index);
   });
   res.status(204).end();

@@ -137,6 +137,7 @@ router.get('/children', async (req, res) => {
         studentId: student.id,
         name: student.name,
         gender: student.gender ?? null,
+        photo: student.photo ?? null,
         rollNumber: student.rollNumber,
         classId: student.classId,
         className: cls?.name ?? '',

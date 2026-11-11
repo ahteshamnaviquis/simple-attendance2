@@ -14,6 +14,7 @@ const {
   academyPrefix,
 } = require('../helpers');
 const { withPrefix } = require('../usernamePrefix');
+const { photoRoutes, deletePhotoOf } = require('../photos');
 
 const router = express.Router();
 
@@ -106,14 +107,23 @@ for (const [action, disabled] of [['disable', true], ['enable', false]]) {
   });
 }
 
+// PUT and DELETE /api/teachers/:id/photo - the teacher's profile photo (photos.js).
+photoRoutes(router, {
+  collection: 'users',
+  guard: requireArea('teachers'),
+  find: (req, users) => findTeacherIndex(users, req.params.id),
+  view: (req, teacher) => publicUser(teacher),
+});
+
 // DELETE /api/teachers/:id - super admin only.
 // Their classes and subjects become unassigned. Attendance reports and marks
 // keep the teacher's name as text, so history stays readable. Their
 // conversations with parents are removed.
 router.delete('/:id', requireSuperAdmin, async (req, res) => {
   const id = req.params.id;
-  await updateData('users', (users) => {
+  await updateData('users', async (users, conn) => {
     const index = findTeacherIndex(users, id);
+    await deletePhotoOf(users[index], conn);
     return users.filter((_, i) => i !== index);
   });
   const unassign = (rows) => rows.map((r) => (r.teacherId === id ? { ...r, teacherId: null } : r));
