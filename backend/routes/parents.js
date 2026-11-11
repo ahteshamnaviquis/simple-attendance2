@@ -12,7 +12,7 @@
 
 const express = require('express');
 const { readData, updateData, updateMany } = require('../store');
-const { HttpError, requireArea } = require('../helpers');
+const { HttpError, requireArea, academyPrefix } = require('../helpers');
 const { cleanParentDetails, saveParentDetails, describeParents } = require('../parentAccounts');
 
 const router = express.Router();
@@ -51,10 +51,11 @@ router.get('/', async (req, res) => {
 // Children are changed on the student form.
 router.put('/:id', async (req, res) => {
   const details = cleanParentDetails(req.body, { isNew: false });
+  const prefix = await academyPrefix();
   await updateMany(['users', 'parentProfiles'], (data) => {
     findParentIndex(data.users, req.params.id);
     const changed = { ...data };
-    saveParentDetails(changed, details, req.params.id);
+    saveParentDetails(changed, details, req.params.id, prefix);
     return changed;
   });
   res.json(await findParent(req.params.id));

@@ -12,7 +12,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { startServer, stopServer, readTable } = require('./testServer');
+const { startServer, stopServer, readTable, defaultPrefix } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
@@ -20,6 +20,7 @@ const SARA = 'u2';
 const ALI = 'u3';
 
 let baseUrl;
+let P; // the academy's username prefix: logins are "<P>.sara"
 
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
@@ -61,6 +62,7 @@ const START_DATA = {
 
 test.before(async () => {
   baseUrl = await startServer(START_DATA);
+  P = await defaultPrefix();
 });
 
 test.after(stopServer);
@@ -418,7 +420,7 @@ test('marks of a student who left the class are kept but not ranked', async () =
 });
 
 test('existing features keep working', async () => {
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'sara', password: 'teacher123' })).status, 200);
+  assert.equal((await api(null, 'POST', '/api/login', { username: `${P}.sara`, password: 'teacher123' })).status, 200);
   assert.equal((await api(SARA, 'GET', '/api/classes')).body.length, 2);
   assert.equal((await api(ALI, 'GET', '/api/students')).body.length, 2); // still only his own class
   const report = await api(SARA, 'POST', '/api/attendance', {

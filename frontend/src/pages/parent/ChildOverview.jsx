@@ -131,22 +131,75 @@ function ChildCard({ child, withTabs, onOpen }) {
       </div>
 
       {child.subjects.length > 0 && (
-        <>
-          <h3>Subjects and teachers</h3>
-          <div className="table-box">
-            <table className="clean">
-              <tbody>
-                {child.subjects.map((s) => (
-                  <tr key={s.subjectId}>
-                    <td className="cell-main">{s.subjectName}</td>
-                    <td>{s.teacherName || <span className="cell-sub">Not assigned yet</span>}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="subjects-block">
+          <div className="subjects-head">
+            <h3>Subjects and teachers</h3>
+            <span className="cell-sub">
+              {child.subjects.length} subject{child.subjects.length === 1 ? '' : 's'}
+            </span>
           </div>
-        </>
+          <div className="subject-grid">
+            {child.subjects.map((s) => (
+              <SubjectCard key={s.subjectId} subject={s} classTeacher={child.classTeacher} />
+            ))}
+          </div>
+        </div>
       )}
     </section>
+  );
+}
+
+// Each subject gets its own color, the same every time (from its name).
+const SUBJECT_TONES = ['blue', 'violet', 'green', 'amber', 'rose', 'teal', 'indigo', 'orange'];
+
+function subjectTone(name) {
+  let hash = 0;
+  for (const ch of name) hash = (hash * 31 + ch.charCodeAt(0)) >>> 0;
+  return SUBJECT_TONES[hash % SUBJECT_TONES.length];
+}
+
+// "Pakistan Studies" -> "PS", "English" -> "En"
+function subjectMark(name) {
+  const words = name.split(/\s+/).filter(Boolean);
+  return words.length > 1 ? (words[0][0] + words[1][0]).toUpperCase() : name.slice(0, 2);
+}
+
+const initialsOf = (name) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join('');
+
+function SubjectCard({ subject, classTeacher }) {
+  const tone = subjectTone(subject.subjectName);
+  const teacher = subject.teacherName;
+  return (
+    <div className={`subject-card tone-${tone}`}>
+      <div className="subject-card-top">
+        <span className="subject-mark" aria-hidden="true">
+          {subjectMark(subject.subjectName)}
+        </span>
+        <span className="subject-name">{subject.subjectName}</span>
+      </div>
+      <div className="subject-teacher">
+        {teacher ? (
+          <>
+            <span className="subject-avatar" aria-hidden="true">
+              {initialsOf(teacher)}
+            </span>
+            <span className="subject-teacher-text">
+              <span className="subject-teacher-name">{teacher}</span>
+              <span className="subject-teacher-role">
+                {teacher === classTeacher ? 'Subject & class teacher' : 'Subject teacher'}
+              </span>
+            </span>
+          </>
+        ) : (
+          <span className="subject-teacher-none">Teacher not assigned yet</span>
+        )}
+      </div>
+    </div>
   );
 }

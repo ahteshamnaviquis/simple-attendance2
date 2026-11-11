@@ -5,7 +5,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { startServer, stopServer, readTable } = require('./testServer');
+const { startServer, stopServer, readTable, defaultPrefix } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
@@ -13,6 +13,7 @@ const SARA = 'u2';
 const ALI = 'u3';
 
 let baseUrl;
+let P; // the academy's username prefix: logins are "<P>.sara"
 
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
@@ -72,6 +73,7 @@ const START_DATA = {
 
 test.before(async () => {
   baseUrl = await startServer(START_DATA);
+  P = await defaultPrefix();
 });
 
 test.after(stopServer);
@@ -91,7 +93,7 @@ test('a disabled teacher cannot log in or use the API until enabled', async () =
   assert.equal(disabled.body.disabled, true);
   assert.equal(disabled.body.password, undefined);
 
-  const login = await api(null, 'POST', '/api/login', { username: 'sara', password: 'teacher123' });
+  const login = await api(null, 'POST', '/api/login', { username: `${P}.sara`, password: 'teacher123' });
   assert.equal(login.status, 403);
   assert.match(login.body.error, /disabled/);
   assert.equal((await api(SARA, 'GET', '/api/classes')).status, 401);
@@ -100,7 +102,7 @@ test('a disabled teacher cannot log in or use the API until enabled', async () =
   assert.equal((await readTable('classes'))[0].teacherId, SARA);
 
   assert.equal((await api(SUPER, 'POST', `/api/teachers/${SARA}/enable`)).status, 200);
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'sara', password: 'teacher123' })).status, 200);
+  assert.equal((await api(null, 'POST', '/api/login', { username: `${P}.sara`, password: 'teacher123' })).status, 200);
   assert.equal((await api(SARA, 'GET', '/api/classes')).status, 200);
 });
 
@@ -132,7 +134,7 @@ test('the super admin removes an exam that has marks, with its marks', async () 
 
 test('removing a teacher unassigns their classes and subjects', async () => {
   assert.equal((await api(SUPER, 'DELETE', `/api/teachers/${SARA}`)).status, 204);
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'sara', password: 'teacher123' })).status, 401);
+  assert.equal((await api(null, 'POST', '/api/login', { username: `${P}.sara`, password: 'teacher123' })).status, 401);
   assert.equal((await readTable('classes'))[0].teacherId, null);
   assert.equal((await readTable('classSubjects'))[0].teacherId, null);
   assert.ok((await readTable('users')).some((u) => u.id === ALI));

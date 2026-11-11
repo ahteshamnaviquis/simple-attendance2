@@ -63,4 +63,6 @@ module.exports = {
   stopServer,
   readTable: (name) => store.readData(name), // what is saved now, e.g. readTable('marks')
   readFile: (name) => store.readFile(name), // an uploaded file, or null
+  // The first academy's username prefix: new usernames there are "<prefix>.<name>".
+  defaultPrefix: async () => (await store.readData('academies')).find((a) => a.id === store.DEFAULT_ACADEMY)?.prefix,
 };

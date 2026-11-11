@@ -11,7 +11,9 @@ const {
   requireLogin,
   requireArea,
   requireSuperAdmin,
+  academyPrefix,
 } = require('../helpers');
+const { withPrefix } = require('../usernamePrefix');
 
 const router = express.Router();
 
@@ -56,6 +58,7 @@ router.get('/', requireLogin, async (req, res) => {
 // POST /api/teachers
 router.post('/', requireArea('teachers'), async (req, res) => {
   const input = cleanTeacherInput(req.body, true);
+  input.username = withPrefix(await academyPrefix(), input.username);
   let created;
   await updateData('users', (users) => {
     checkUsernameFree(users, input.username);
@@ -68,10 +71,12 @@ router.post('/', requireArea('teachers'), async (req, res) => {
 // PUT /api/teachers/:id
 router.put('/:id', requireArea('teachers'), async (req, res) => {
   const input = cleanTeacherInput(req.body, false);
+  const prefix = await academyPrefix();
   let updated;
   await updateData('users', (users) => {
     const index = users.findIndex((u) => u.id === req.params.id && u.role === 'teacher');
     if (index === -1) throw new HttpError(404, 'Teacher not found');
+    input.username = withPrefix(prefix, input.username, users[index].username);
     checkUsernameFree(users, input.username, req.params.id);
 
     updated = { ...users[index], name: input.name, username: input.username };

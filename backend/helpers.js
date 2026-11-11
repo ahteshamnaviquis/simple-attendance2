@@ -1,7 +1,7 @@
 // Small shared helpers for the API routes.
 
 const crypto = require('crypto');
-const { readData } = require('./store');
+const { readData, unscoped, withAcademy, currentAcademy, DEFAULT_ACADEMY } = require('./store');
 
 // An error with an HTTP status code. Throw it from a route (or from inside
 // updateData) and the error handler in server.js sends it to the browser.
@@ -37,19 +37,43 @@ function isValidDate(text) {
 }
 
 // Middleware: works out who is calling from the X-User-Id header that the
-// frontend sends after login, and puts that user on req.user.
+// frontend sends after login, and puts that user on req.user. The rest of the
+// request then only sees that user's academy (see withAcademy in store.js):
+//   a user of an academy   -> their academy
+//   the platform owner     -> no academy (they use /api/platform, which picks one)
+//   nobody logged in       -> the academy in ?academy= or the X-Academy-Id
+//                             header, otherwise the first one (for the login
+//                             page's look and the logo)
 //
 // NOT REAL SECURITY: anyone can send any id in this header. It only lets the
 // backend apply the role rules for honest users of a local prototype.
 async function loadCurrentUser(req, res, next) {
   const id = req.get('X-User-Id');
   req.user = null;
-  if (id) {
-    const users = await readData('users');
-    const user = users.find((u) => u.id === id && !u.disabled); // a disabled user is logged out
-    if (user) req.user = { ...publicUser(user), permissions: await permissionsFor(user) };
+  const [users, academies] = await unscoped(() => Promise.all([id ? readData('users') : [], readData('academies')]));
+
+  let academyId;
+  const user = id && users.find((u) => u.id === id && !u.disabled); // a disabled user is logged out
+  if (user?.role === 'owner') {
+    req.user = { ...publicUser(user), permissions: {} };
+    academyId = null;
+  } else if (user && academies.some((a) => a.id === user.academyId && !a.disabled)) {
+    // (a user of a disabled academy is logged out too)
+    academyId = user.academyId;
+    req.user = { ...publicUser(user), permissions: await withAcademy(academyId, () => permissionsFor(user)) };
+  } else {
+    const asked = String(req.query?.academy || req.get('X-Academy-Id') || '');
+    const academy =
+      academies.find((a) => a.id === asked) ?? academies.find((a) => a.id === DEFAULT_ACADEMY) ?? academies[0];
+    academyId = academy?.id ?? null;
   }
-  next();
+  withAcademy(academyId, next);
+}
+
+// The current academy's username prefix (see usernamePrefix.js), '' for none.
+async function academyPrefix() {
+  const id = currentAcademy();
+  return (await readData('academies')).find((a) => a.id === id)?.prefix ?? '';
 }
 
 // The areas each role may manage. The super admin always has teachers, exams
@@ -103,8 +127,11 @@ function isAdmin(user) {
   return user?.role === 'admin';
 }
 
+// Above them all, the platform owner (role "owner", no academy) adds academies
+// and their super admins (routes/platform.js), and sees nothing else.
 const requireLogin = requireRole('superadmin', 'admin', 'teacher');
 const requireSuperAdmin = requireRole('superadmin');
+const requireOwner = requireRole('owner');
 const requireParent = requireRole('parent');
 
 module.exports = {
@@ -114,11 +141,13 @@ module.exports = {
   todayString,
   isValidDate,
   loadCurrentUser,
+  academyPrefix,
   isAdmin,
   can,
   requireRole,
   requireArea,
   requireLogin,
   requireSuperAdmin,
+  requireOwner,
   requireParent,
 };

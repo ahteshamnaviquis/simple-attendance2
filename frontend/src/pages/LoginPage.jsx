@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { login } from '../api';
+import { useEffect, useState } from 'react';
+import { login, getDemoLogins, demoLogin } from '../api';
 import Icon from '../components/Icon.jsx';
 import Brand from '../components/Brand.jsx';
 import { useSettings } from '../theme';
@@ -11,12 +11,47 @@ const FEATURES = [
   'Parents follow attendance and results, and message the school',
 ];
 
+const ROLE_GROUPS = [
+  { roles: ['superadmin', 'admin'], title: 'Admins' },
+  { roles: ['teacher'], title: 'Teachers' },
+  { roles: ['parent'], title: 'Parents' },
+];
+const ROLE_LABEL = { superadmin: 'Super admin', admin: 'Admin', teacher: 'Teacher', parent: 'Parent' };
+
+function initials(name) {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0].toUpperCase())
+    .join('');
+}
+
 export default function LoginPage({ onLogin }) {
   const { theme } = useSettings();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Demo quick login: filled only when the backend has DEMO_LOGIN=true.
+  const [demoUsers, setDemoUsers] = useState([]);
+
+  useEffect(() => {
+    getDemoLogins()
+      .then((data) => setDemoUsers(data?.enabled ? data.users : []))
+      .catch(() => setDemoUsers([]));
+  }, []);
+
+  async function handleDemoLogin(userId) {
+    setError('');
+    setLoading(true);
+    try {
+      onLogin(await demoLogin(userId));
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -84,6 +119,41 @@ export default function LoginPage({ onLogin }) {
             {loading ? 'Signing in…' : 'Sign in'}
           </button>
           <p className="note center">Demo only. Do not use real passwords.</p>
+
+          {demoUsers.length > 0 && (
+            <div className="demo-login">
+              <div className="demo-login-head">
+                <span>Quick demo login</span>
+              </div>
+              {ROLE_GROUPS.map(({ roles, title }) => {
+                const users = demoUsers.filter((u) => roles.includes(u.role));
+                if (!users.length) return null;
+                return (
+                  <div key={title} className="demo-login-group">
+                    <h3>{title}</h3>
+                    <div className="demo-login-list">
+                      {users.map((u) => (
+                        <button
+                          key={u.id}
+                          type="button"
+                          className={`demo-profile role-${u.role}`}
+                          onClick={() => handleDemoLogin(u.id)}
+                          disabled={loading}
+                          title={`Sign in as ${u.name} (${u.username})`}
+                        >
+                          <span className="demo-avatar">{initials(u.name)}</span>
+                          <span className="demo-profile-text">
+                            <strong>{u.name}</strong>
+                            <small>{ROLE_LABEL[u.role] || u.role}</small>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </form>
       </main>
     </div>

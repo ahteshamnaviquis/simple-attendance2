@@ -7,7 +7,7 @@ import Icon from './Icon.jsx';
 import Brand from './Brand.jsx';
 import { useSettings } from '../theme';
 
-const ROLE_LABELS = { superadmin: 'Super admin', admin: 'Administrator', teacher: 'Teacher', parent: 'Parent' };
+const ROLE_LABELS = { owner: 'Platform owner', superadmin: 'Super admin', admin: 'Administrator', teacher: 'Teacher', parent: 'Parent' };
 
 function initials(name) {
   return name

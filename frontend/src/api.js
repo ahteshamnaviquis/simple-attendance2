@@ -1,6 +1,6 @@
 // All calls to the backend. VITE_API_URL (frontend/.env) is the backend address.
 
-import { getSavedUser, clearUser } from './session';
+import { getSavedUser, clearUser, getSavedAcademy } from './session';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -14,6 +14,8 @@ async function request(method, path, body) {
       'Content-Type': isFile ? body.type : 'application/json',
       // Tells the backend who is logged in. Prototype only - not secure.
       ...(user && { 'X-User-Id': user.id }),
+      // Before login: which academy's look to show (see session.js).
+      ...(!user && getSavedAcademy() && { 'X-Academy-Id': getSavedAcademy() }),
     },
     body: isFile ? body : body && JSON.stringify(body),
   });
@@ -37,13 +39,18 @@ function query(params) {
 }
 
 export const login = (username, password) => request('POST', '/api/login', { username, password });
+// Demo quick login (only when the backend has DEMO_LOGIN=true).
+export const getDemoLogins = () => request('GET', '/api/demo-login');
+export const demoLogin = (userId) => request('POST', '/api/demo-login', { userId });
 
 export const getSettings = () => request('GET', '/api/settings');
 export const saveSettings = (settings) => request('PUT', '/api/settings', settings);
 export const uploadLogo = (file) => request('PUT', '/api/settings/logo', file);
 export const removeLogo = () => request('DELETE', '/api/settings/logo');
 // The address of the uploaded logo image; the version makes browsers fetch a new upload.
-export const logoUrl = (logo) => `${API_URL}/api/settings/logo?v=${logo.version}`;
+// An <img> sends no login, so the address names the academy.
+export const logoUrl = (logo, academyId) =>
+  `${API_URL}/api/settings/logo${query({ v: logo.version, academy: academyId })}`;
 
 export const getAdmins = () => request('GET', '/api/admins');
 export const createAdmin = (admin) => request('POST', '/api/admins', admin);
@@ -154,3 +161,16 @@ export const uploadPhoto = (albumId, file) => request('POST', `/api/gallery/albu
 export const deletePhoto = (id) => request('DELETE', `/api/gallery/photos/${id}`);
 // The address of a photo (works in an <img>, which can't send the login header).
 export const photoUrl = (id) => `${API_URL}/api/gallery/photos/${id}/image`;
+
+// ---------- The platform owner: academies and their super admins ----------
+
+export const getAcademies = () => request('GET', '/api/platform/academies');
+// { name, superAdmin: { name, username, password } }
+export const createAcademy = (academy) => request('POST', '/api/platform/academies', academy);
+export const renameAcademy = (id, name) => request('PUT', `/api/platform/academies/${id}`, { name });
+export const setAcademyDisabled = (id, disabled) =>
+  request('POST', `/api/platform/academies/${id}/${disabled ? 'disable' : 'enable'}`);
+export const createAcademySuperAdmin = (academyId, account) =>
+  request('POST', `/api/platform/academies/${academyId}/super-admins`, account);
+export const updateAcademySuperAdmin = (id, account) => request('PUT', `/api/platform/super-admins/${id}`, account);
+export const deleteAcademySuperAdmin = (id) => request('DELETE', `/api/platform/super-admins/${id}`);

@@ -29,6 +29,7 @@ async function main() {
   const conn = await mysql.createConnection({ ...DB, multipleStatements: true });
   try {
     await conn.query(fs.readFileSync(dataFile, 'utf8'));
+    await initDatabase(); // again: the loaded rows (and logo) go to the first academy
     const [rows] = await conn.query(
       `SELECT 'users' AS name, COUNT(*) AS n FROM users
        UNION ALL SELECT 'classes', COUNT(*) FROM classes

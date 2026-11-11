@@ -15,22 +15,40 @@
 -- class is renamed or a teacher or student is removed. For the same reason
 -- attendance.teacher_id and marks.student_id have no foreign key.
 
+-- The academies (schools) that use the system. The platform owner adds them;
+-- every other table's rows belong to one academy (academy_id). Rows from
+-- before there were several academies belong to "default".
+CREATE TABLE IF NOT EXISTS academies (
+  seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  name       VARCHAR(100) NOT NULL,
+  prefix     VARCHAR(3)   NULL,  -- 3 letters every new username starts with ("gvs" -> "gvs.sara"); never changed
+  disabled   BOOLEAN      NULL, -- NULL = never disabled; a disabled academy's users can't log in
+  created_at DATETIME(3)  NOT NULL, -- UTC
+  UNIQUE KEY uq_academies_prefix (prefix)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Usernames are unique across every academy: the login page has no academy box.
 CREATE TABLE IF NOT EXISTS users (
   seq      INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id       VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL, -- NULL only for the platform owner
+  KEY idx_users_academy (academy_id),
   name     VARCHAR(100) NOT NULL,
   username VARCHAR(60)  NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL, -- plain text: LOCAL DEMO ONLY
-  role     ENUM('superadmin', 'admin', 'teacher', 'parent') NOT NULL,
+  role     ENUM('owner', 'superadmin', 'admin', 'teacher', 'parent') NOT NULL,
   disabled BOOLEAN NULL           -- teachers and parents; NULL = never disabled
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Databases made before parent accounts existed: allow the "parent" role.
-ALTER TABLE users MODIFY role ENUM('superadmin', 'admin', 'teacher', 'parent') NOT NULL;
+-- Older databases: allow the "parent" and "owner" roles.
+ALTER TABLE users MODIFY role ENUM('owner', 'superadmin', 'admin', 'teacher', 'parent') NOT NULL;
 
 CREATE TABLE IF NOT EXISTS classes (
   seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_classes_academy (academy_id),
   name       VARCHAR(100) NOT NULL,
   teacher_id VARCHAR(64)  NULL, -- the class teacher
   CONSTRAINT fk_classes_teacher FOREIGN KEY (teacher_id) REFERENCES users (id) ON DELETE SET NULL
@@ -39,6 +57,8 @@ CREATE TABLE IF NOT EXISTS classes (
 CREATE TABLE IF NOT EXISTS students (
   seq           INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_students_academy (academy_id),
   roll_number   VARCHAR(20)  NOT NULL DEFAULT '', -- unique per class when filled in (checked by the API)
   name          VARCHAR(100) NOT NULL,
   gender        VARCHAR(10)  NULL,               -- male or female (son or daughter); NULL = not given
@@ -52,13 +72,18 @@ CREATE TABLE IF NOT EXISTS students (
 CREATE TABLE IF NOT EXISTS subjects (
   seq  INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id   VARCHAR(64)  NOT NULL PRIMARY KEY,
-  name VARCHAR(100) NOT NULL UNIQUE
+  academy_id VARCHAR(64) NULL,
+  KEY idx_subjects_academy (academy_id),
+  name VARCHAR(100) NOT NULL,
+  UNIQUE KEY uq_subjects_academy_name (academy_id, name)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- The subjects each class studies, and who teaches each one.
 CREATE TABLE IF NOT EXISTS class_subjects (
   seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_class_subjects_academy (academy_id),
   class_id   VARCHAR(64)  NOT NULL,
   subject_id VARCHAR(64)  NOT NULL,
   teacher_id VARCHAR(64)  NULL,
@@ -72,6 +97,8 @@ CREATE TABLE IF NOT EXISTS class_subjects (
 CREATE TABLE IF NOT EXISTS attendance (
   seq            INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id             VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_attendance_academy (academy_id),
   class_id       VARCHAR(64)  NOT NULL,
   date           DATE         NOT NULL,
   class_name     VARCHAR(100) NOT NULL,
@@ -95,6 +122,8 @@ CREATE TABLE IF NOT EXISTS attendance (
 CREATE TABLE IF NOT EXISTS exams (
   seq           INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_exams_academy (academy_id),
   name          VARCHAR(100) NOT NULL,
   class_id      VARCHAR(64)  NOT NULL,
   class_name    VARCHAR(100) NOT NULL,
@@ -119,6 +148,8 @@ CREATE TABLE IF NOT EXISTS exams (
 CREATE TABLE IF NOT EXISTS marks (
   seq          INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id           VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_marks_academy (academy_id),
   exam_id      VARCHAR(64)  NOT NULL,
   subject_id   VARCHAR(64)  NOT NULL,
   student_id   VARCHAR(64)  NOT NULL,
@@ -138,6 +169,8 @@ CREATE TABLE IF NOT EXISTS marks (
 CREATE TABLE IF NOT EXISTS parent_profiles (
   seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_parent_profiles_academy (academy_id),
   relation   VARCHAR(30)  NOT NULL,             -- Father, Mother, Guardian, ...
   phone      VARCHAR(30)  NOT NULL,
   alt_phone  VARCHAR(30)  NOT NULL DEFAULT '',
@@ -153,6 +186,8 @@ CREATE TABLE IF NOT EXISTS parent_profiles (
 CREATE TABLE IF NOT EXISTS parent_students (
   seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_parent_students_academy (academy_id),
   parent_id  VARCHAR(64)  NOT NULL,
   student_id VARCHAR(64)  NOT NULL,
   UNIQUE KEY uq_parent_student (parent_id, student_id),
@@ -168,6 +203,8 @@ CREATE TABLE IF NOT EXISTS parent_students (
 CREATE TABLE IF NOT EXISTS messages (
   seq         INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id          VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_messages_academy (academy_id),
   parent_id   VARCHAR(64)  NOT NULL,          -- whose conversation it is
   teacher_id  VARCHAR(64)  NULL,              -- NULL: the school office
   from_school BOOLEAN      NOT NULL,          -- TRUE: sent by staff, FALSE: by the parent
@@ -186,6 +223,8 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS diary (
   seq           INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_diary_academy (academy_id),
   class_id      VARCHAR(64)  NOT NULL,
   class_name    VARCHAR(100) NOT NULL,
   subject_id    VARCHAR(64)  NULL,             -- NULL: for the whole class, no subject
@@ -207,6 +246,8 @@ CREATE TABLE IF NOT EXISTS diary (
 CREATE TABLE IF NOT EXISTS leaves (
   seq            INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id             VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_leaves_academy (academy_id),
   student_id     VARCHAR(64)  NOT NULL,
   student_name   VARCHAR(100) NOT NULL,
   class_id       VARCHAR(64)  NOT NULL,
@@ -231,6 +272,8 @@ CREATE TABLE IF NOT EXISTS leaves (
 CREATE TABLE IF NOT EXISTS feedback (
   seq          INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id           VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_feedback_academy (academy_id),
   kind         ENUM('complaint', 'suggestion') NOT NULL,
   subject      VARCHAR(150) NOT NULL,
   body         TEXT         NOT NULL,
@@ -252,6 +295,8 @@ CREATE TABLE IF NOT EXISTS feedback (
 CREATE TABLE IF NOT EXISTS gallery_albums (
   seq           INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id            VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_gallery_albums_academy (academy_id),
   title         VARCHAR(150) NOT NULL,
   description   VARCHAR(500) NOT NULL DEFAULT '',
   date          DATE         NOT NULL,
@@ -265,6 +310,8 @@ CREATE TABLE IF NOT EXISTS gallery_albums (
 CREATE TABLE IF NOT EXISTS gallery_photos (
   seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
   id         VARCHAR(64)  NOT NULL PRIMARY KEY,
+  academy_id VARCHAR(64) NULL,
+  KEY idx_gallery_photos_academy (academy_id),
   album_id   VARCHAR(64)  NOT NULL,
   type       VARCHAR(50)  NOT NULL,            -- image/png, image/jpeg, ...
   created_by VARCHAR(100) NOT NULL,
@@ -273,16 +320,19 @@ CREATE TABLE IF NOT EXISTS gallery_photos (
   CONSTRAINT fk_gallery_photos_album FOREIGN KEY (album_id) REFERENCES gallery_albums (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- School-wide settings: one row per part ("theme", "adminPermissions").
+-- Each academy's settings: one row per part ("theme", "adminPermissions").
 CREATE TABLE IF NOT EXISTS settings (
-  seq   INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
-  name  VARCHAR(50)  NOT NULL PRIMARY KEY,
-  value JSON         NOT NULL
+  seq        INT UNSIGNED NOT NULL AUTO_INCREMENT UNIQUE,
+  academy_id VARCHAR(64)  NOT NULL DEFAULT 'default',
+  name       VARCHAR(50)  NOT NULL,
+  value      JSON         NOT NULL,
+  PRIMARY KEY (academy_id, name)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
--- Uploaded files: the logo, and the gallery's photos.
+-- Uploaded files: each academy's logo and gallery photos, named
+-- "<academy id>:<name>" (such as "default:logo").
 CREATE TABLE IF NOT EXISTS files (
-  name       VARCHAR(50)  NOT NULL PRIMARY KEY,
+  name       VARCHAR(120) NOT NULL PRIMARY KEY,
   type       VARCHAR(50)  NOT NULL,
   data       MEDIUMBLOB   NOT NULL,
   updated_at DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3)

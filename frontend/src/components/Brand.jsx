@@ -4,8 +4,10 @@
 
 import Icon from './Icon.jsx';
 import { logoUrl } from '../api';
+import { useSettings } from '../theme';
 
 export default function Brand({ theme, large = false }) {
+  const { academyId } = useSettings();
   const markClass = [
     'brand-mark',
     `logo-${theme.logoSize}`,
@@ -23,7 +25,7 @@ export default function Brand({ theme, large = false }) {
     <div className="brand" {...nameless}>
       <span className={markClass}>
         {theme.logo ? (
-          <img src={logoUrl(theme.logo)} alt="" />
+          <img src={logoUrl(theme.logo, academyId)} alt="" />
         ) : (
           <Icon name="check" size={large ? 22 : 19} strokeWidth={2.4} />
         )}

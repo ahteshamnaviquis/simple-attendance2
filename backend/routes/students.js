@@ -18,7 +18,7 @@
 
 const express = require('express');
 const { readData, updateData, updateMany } = require('../store');
-const { HttpError, newId, isAdmin, can, requireLogin } = require('../helpers');
+const { HttpError, newId, isAdmin, can, requireLogin, academyPrefix } = require('../helpers');
 const { cleanParentEntries, applyParentEntries } = require('../parentAccounts');
 
 const router = express.Router();
@@ -65,9 +65,10 @@ function collectionsFor(entries) {
 
 // Link the student's parents (when given) and copy the first parent's name and
 // phone onto the student, so screens that show the guardian stay correct.
-function withParents(data, student, entries) {
+// prefix: the academy's username prefix, for new or changed parent usernames.
+function withParents(data, student, entries, prefix) {
   if (!entries) return student;
-  const [firstId] = applyParentEntries(data, student.id, entries);
+  const [firstId] = applyParentEntries(data, student.id, entries, prefix);
   if (!firstId) return student;
   const parent = data.users.find((u) => u.id === firstId);
   const profile = data.parentProfiles.find((p) => p.id === firstId);
@@ -145,11 +146,12 @@ router.get('/', requireLogin, async (req, res) => {
 router.post('/', requireLogin, async (req, res) => {
   const input = cleanStudentInput(req.body);
   const entries = parentEntriesOf(req.user, req.body);
+  const prefix = await academyPrefix();
   const id = newId();
   await updateMany(collectionsFor(entries), async (data) => {
     await checkStudent(req.user, data.students, input);
     const changed = { ...data };
-    const student = withParents(changed, { id, ...input }, entries);
+    const student = withParents(changed, { id, ...input }, entries, prefix);
     changed.students = [...data.students, student];
     return changed;
   });
@@ -160,6 +162,7 @@ router.post('/', requireLogin, async (req, res) => {
 router.put('/:id', requireLogin, async (req, res) => {
   const input = cleanStudentInput(req.body);
   const entries = parentEntriesOf(req.user, req.body);
+  const prefix = await academyPrefix();
   await updateMany(collectionsFor(entries), async (data) => {
     const { students } = data;
     const index = students.findIndex((s) => s.id === req.params.id);
@@ -174,7 +177,7 @@ router.put('/:id', requireLogin, async (req, res) => {
     await checkStudent(req.user, students, input, req.params.id);
 
     const changed = { ...data };
-    const updated = withParents(changed, { ...students[index], ...input }, entries);
+    const updated = withParents(changed, { ...students[index], ...input }, entries, prefix);
     changed.students = students.map((s, i) => (i === index ? updated : s));
     return changed;
   });

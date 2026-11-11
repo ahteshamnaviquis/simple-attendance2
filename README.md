@@ -9,6 +9,39 @@ A small **local prototype**: React frontend + Node.js/Express backend, with data
 
 ## Features
 
+**Platform owner** (the "super super admin", above every academy)
+- Several academies (schools) share one installation and one database. Every record
+  (users, classes, students, reports, exams, marks, parents, messages, diary, leaves,
+  complaints, gallery, settings, logo) belongs to one academy, and nobody in one academy
+  can see or change another's.
+- The owner logs in on the same login page and gets one page, *Academies*: add an
+  academy together with its first super admin, rename it, disable or enable it (a
+  disabled academy's users can't log in; its data is kept), and add, edit or remove its
+  super admins (an academy keeps at least one). The list shows each academy's counts of
+  admins, teachers, classes, students and parents. The owner sees no school data.
+- An academy's super admin then works exactly as before: what they (and their admins
+  and teachers) add belongs to their academy. Each academy has its own settings, so its
+  own school name, colors and logo.
+- Usernames are unique across all academies, so the login page needs no academy box:
+  the username says which academy someone belongs to.
+- **Username prefix:** each academy has 3 letters (from its name: Green Valley School →
+  `GVS`, Daily Attendance → `DAT`), and every username made in it starts with them and
+  a dot: `gvs.sara`. The owner sees the suggestion when adding the academy and can type
+  any other 3 letters (they must, when another academy already has them). After that
+  the prefix never changes. Everywhere else (admins, teachers, parents, super admins)
+  the username box shows the prefix fixed in front, and only the part after the dot
+  can be typed; the backend adds the prefix too (so the mobile app gets it as well).
+  Usernames made before prefixes are renamed when the server starts (`sara` →
+  `dat.sara`; passwords stay the same), so the first academy's people log in with the
+  prefix from then on. A username that would clash with an existing one is left as it
+  is and reported in the server log.
+- Before login, the login page shows the look of the academy last logged in to on that
+  browser. *Manage* on an academy shows a link (`?academy=<id>`) that opens the login
+  page with that academy's look.
+- The owner account (`owner` / `owner123`) is added when the server starts and there
+  is none; set `OWNER_USERNAME`, `OWNER_PASSWORD` and `OWNER_NAME` in `backend/.env` to
+  choose others. It is never offered as a demo quick login.
+
 **Admin**
 - Dashboard for any day (with Prev / Next / Today): students enrolled, teachers, reports
   submitted, present, absent, attendance rate, a warning for classes that haven't
@@ -197,6 +230,7 @@ SimpleAttendence/
 │   │   └── schoolLife.test.js # Diary, leaves, complaints & suggestions, gallery
 │   ├── scripts/
 │   │   ├── addDemoData.js # npm run demo-data: extra teachers, classes, students, 14 days of reports
+│   │   ├── addSchoolLifeDemo.js # npm run demo-school-life: demo diary, leaves, complaints, gallery
 │   │   └── jsonToSql.js   # npm run json-to-sql: JSON data files -> sql/data.sql
 │   ├── routes/
 │   │   ├── admins.js      # /api/admins (super admin only)
@@ -295,6 +329,7 @@ DB_PORT=3306
 DB_USER=root
 DB_PASSWORD=your-mysql-password
 DB_NAME=attendance
+DEMO_LOGIN=true
 ```
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`: the MySQL server and
   database (defaults: `127.0.0.1`, `3306`, `root`, no password, `attendance`). Instead you
@@ -309,6 +344,15 @@ DB_NAME=attendance
 - `BASE_PATH` (optional): the path the API is served under when the web host passes it
   on, such as `/att` for `https://example.com/att/api/...`. The server removes it, so
   `/att/api/login` works like `/api/login`. Leave it out when the API is at the root.
+- `DEMO_LOGIN` (optional): `true` shows a quick login button for every user (admins,
+  teachers and parents) on the login page, so a demo needs no username or password.
+  Leave it out or set `false` to turn it off; the buttons disappear and the backend
+  refuses passwordless logins. Turn it off before real use. On Railway, add or remove
+  the variable. `DEMO_LOGIN_USERS` (optional) limits the buttons to some usernames,
+  separated by commas, such as `superadmin,admin,sara` (the academy prefix can be left out).
+- `OWNER_USERNAME`, `OWNER_PASSWORD`, `OWNER_NAME` (optional): the platform owner's
+  account, made on the first start when there is none (default `owner` / `owner123`).
+  Changing them later does not change an existing owner account.
 
 **`frontend/.env`**
 ```
@@ -358,6 +402,14 @@ tables from `backend/sql/schema.sql`. A **brand-new** database is filled with th
 data from `seedData.js` (the logins below). After that the server never adds sample data
 again.
 
+**Several academies.** Every table has an `academy_id` column, and the `academies`
+table lists the academies. A database made before there were several academies is
+upgraded on start: the columns are added and every existing row, the settings and the
+logo go to the first academy (id `default`, named after its school name). The upgrade
+only changes what is missing, so it is safe on every start. In the code, `store.js`
+limits every read and write to the logged-in user's academy, so the routes did not
+change.
+
 **Load the same data as the JSON files** (the users, classes, students, 25 reports, exams
 and marks in `backend/data`): `backend/sql/data.sql` has all of it as INSERT statements.
 In one step, from the `backend` folder (creates the database and tables if needed, then
@@ -382,6 +434,38 @@ mysql -u root -p attendance -e "source sql/data.sql"
 SQL with `node scripts/jsonToSql.js <folder> <output.sql>`, then load that file the same
 way. `npm run json-to-sql` remakes `sql/data.sql` from `backend/data`.
 
+**Demo data for the diary, leaves, complaints & suggestions and gallery** (run in
+`backend`): `npm run demo-school-life` fills those pages from the classes, subjects,
+teachers, students and parents already in the database: 10 school days of diary entries per
+class, approved/rejected/pending leaves for parents' children, complaints and suggestions
+(some answered), and school and class albums with generated pictures. Its rows have ids
+starting with `demo-`, so running it again adds only what is missing, and a page that
+already has real data is skipped (`--force` fills it anyway). Real data is never changed.
+
+```powershell
+npm run demo-school-life -- --dry-run     # only show what it would add
+npm run demo-school-life                  # add what is missing
+npm run demo-school-life -- --refresh     # replace the demo rows, with dates around today
+npm run demo-school-life -- --remove      # remove every demo row
+npm run demo-school-life -- --only=diary,leaves   # some pages only (diary, leaves, feedback, gallery)
+```
+
+On production, point it at that database. A database that is not on this computer needs
+`--yes`; without it the script only shows what it would do. On Railway, use the MySQL
+service's public `MYSQL_PUBLIC_URL` (from the service's *Variables* tab):
+
+```powershell
+$env:DATABASE_URL = "mysql://user:password@host:port/railway"
+npm run demo-school-life -- --dry-run
+npm run demo-school-life -- --yes
+Remove-Item Env:DATABASE_URL
+```
+
+On cPanel, run `npm run demo-school-life -- --yes` from the app's terminal in the backend
+folder (it uses the app's own `.env`), or set `DATABASE_URL` as above with a remote MySQL
+host that allows your IP. Run it with `--refresh --yes` now and then to move the dates up to
+today.
+
 **Tables:** `users`, `classes`, `students`, `subjects`, `class_subjects`, `attendance`,
 `exams`, `marks`, `parent_profiles`, `parent_students`, `messages`, `diary`, `leaves`, `feedback`,
 `gallery_albums`, `gallery_photos`, `settings` and `files` (the uploaded logo and gallery photos). Lists inside a row (a
@@ -395,8 +479,11 @@ The `mobile` folder is a React Native app (Expo) with the day-to-day features of
 frontend: login, dashboards, submission tracker, attendance form, reports, students,
 classes and teachers, messages with parents (for teachers, admins and the super admin,
 with unread badges), and the parent portal (children, attendance, results and messages).
-Admin tabs follow the super admin's admin permissions. Examinations and marks, subjects,
-the diary, leaves, complaints & suggestions, the gallery, the parents directory, admin accounts, settings and print are web-only.
+Admin tabs follow the super admin's admin permissions. Every role's **More** tab has the
+diary (teachers and admins also write it), leaves (parents apply; the class teacher and
+admins decide), complaints & suggestions (the office replies) and the gallery (view only:
+albums and photos are added on the website). Subjects, the parents directory, admin
+accounts, settings and print are web-only.
 
 **`mobile/.env`**
 ```
@@ -422,6 +509,21 @@ npx expo prebuild --platform android
 cd android
 .\gradlew.bat assembleRelease
 ```
+The live backend address goes in `mobile/.env.production`, which release builds use
+instead of `.env` (build with `$env:NODE_ENV = 'production'`).
+
+On Windows the C++ build fails with "Filename longer than 260 characters" when the project
+is in a deep folder. Build from a copy at a short path instead (a `subst` drive is not
+enough: the tools follow it back to the long path), and put the C++ build folder in
+`C:\cx` by adding `externalNativeBuild { cmake { buildStagingDirectory = file("C:/cx") } }`
+inside `android { ... }` in the copy's `android\app\build.gradle`:
+```powershell
+robocopy D:\path\to\mobile C:\da /MIR /XD android\app\build android\app\.cxx android\build android\.gradle /XF *.apk
+cd C:\da\android
+$env:NODE_ENV = 'production'
+.\gradlew.bat assembleRelease
+```
+
 The APK is `mobile\android\app\build\outputs\apk\release\app-release.apk`. Copy it to
 your phone and open it, allowing "Install unknown apps" when Android asks. The first
 build takes 10+ minutes while Gradle downloads its dependencies. The `android` folder is
@@ -434,21 +536,25 @@ admin accounts, the settings, teachers and examinations. **Admins** (there can b
 always have the dashboard and attendance reports, plus the areas the super admin allows in
 *Settings*: by default students, classes and subjects. The super admin can also hand
 teachers or examinations to admins, or take areas away. If the database has no super
-admin, the server adds the `superadmin` account when it starts.
+admin, the server adds the `dat.superadmin` account when it starts.
+
+Every username starts with the academy's prefix (`dat.` for the starting academy,
+Daily Attendance; see *Platform owner* above).
 
 | Username | Password   | Role    | Class teacher of | Teaches (Grade 9 and 10) |
 |----------|------------|---------|------------------|--------------------------|
-| superadmin | super123 | superadmin |               | |
-| admin    | admin123   | admin   | all              | |
-| sara     | teacher123 | teacher | Grade 9          | English |
-| ali      | teacher123 | teacher | Grade 10         | Mathematics |
-| kamran   | teacher123 | teacher |                  | Urdu |
-| nadia    | teacher123 | teacher |                  | Physics |
-| omar     | teacher123 | teacher |                  | Chemistry |
-| hina     | teacher123 | teacher |                  | Biology |
-| farah    | teacher123 | teacher |                  | Islamiyat, Pakistan Studies |
-| zainab   | teacher123 | teacher |                  | Computer Science |
-| parent   | parent123  | parent  | (children: Ahmed Hassan, Grade 9; Fatima Noor, Grade 10) | |
+| owner    | owner123   | platform owner (all academies) | | |
+| dat.superadmin | super123 | superadmin |               | |
+| dat.admin    | admin123   | admin   | all              | |
+| dat.sara     | teacher123 | teacher | Grade 9          | English |
+| dat.ali      | teacher123 | teacher | Grade 10         | Mathematics |
+| dat.kamran   | teacher123 | teacher |                  | Urdu |
+| dat.nadia    | teacher123 | teacher |                  | Physics |
+| dat.omar     | teacher123 | teacher |                  | Chemistry |
+| dat.hina     | teacher123 | teacher |                  | Biology |
+| dat.farah    | teacher123 | teacher |                  | Islamiyat, Pakistan Studies |
+| dat.zainab   | teacher123 | teacher |                  | Computer Science |
+| dat.parent   | parent123  | parent  | (children: Ahmed Hassan, Grade 9; Fatima Noor, Grade 10) | |
 
 This is the starting data (`backend/seedData.js`), used whenever a data file doesn't
 exist yet: two classes (Grade 9, Grade 10) that both study all nine subjects above. The
@@ -493,9 +599,20 @@ when *Settings* allows them those areas, and the class, subject and student rows
 All routes except `/api/health` and `/api/login` need the `X-User-Id` header (the frontend
 adds it automatically after login).
 
+Every route only sees the logged-in user's academy. Before login, `GET /api/settings`
+and the logo use the academy in `?academy=<id>` or the `X-Academy-Id` header, otherwise
+the first one.
+
 | Method | URL                    | Who            | What it does |
 |--------|------------------------|----------------|--------------|
 | GET    | `/api/health`          | anyone         | `{ status: "ok", time }` |
+| GET    | `/api/platform/academies` | platform owner | Every academy with its super admins and counts |
+| POST   | `/api/platform/academies` | platform owner | `{ name, prefix, superAdmin: { name, username, password } }` adds an academy and its first super admin (prefix: 3 letters, left out = from the name) |
+| PUT    | `/api/platform/academies/:id` | platform owner | `{ name }` renames it |
+| POST   | `/api/platform/academies/:id/disable`, `/enable` | platform owner | Its users can't log in while disabled |
+| POST   | `/api/platform/academies/:id/super-admins` | platform owner | `{ name, username, password }` adds a super admin |
+| PUT    | `/api/platform/super-admins/:id` | platform owner | `{ name, username, password }` (blank password = keep) |
+| DELETE | `/api/platform/super-admins/:id` | platform owner | Not an academy's last super admin |
 | POST   | `/api/login`           | anyone         | `{ username, password }` → the user (no password), or 401 |
 | GET    | `/api/users`           | admin / super admin | All users without passwords |
 | GET    | `/api/settings`        | anyone         | `{ theme, adminPermissions }` (the login page uses the theme) |
@@ -585,35 +702,35 @@ drop databases.
 
 ## Quick test checklist
 
-1. Log in as `sara`. Pick *Grade 9*, enter Total 30, Present 27, Absent 2, and check
+1. Log in as `dat.sara`. Pick *Grade 9*, enter Total 30, Present 27, Absent 2, and check
    the mismatch warning appears. Click *Absent = Total − Present*, add two absent students,
    and save.
 2. Change the date and back. The saved report loads with the "already exists" notice.
 3. *My reports* shows only Sara's class. View the report and click *Print*.
-4. Log out and log in as `superadmin`. *Teachers*: add a teacher. Adding the username
+4. Log out and log in as `dat.superadmin`. *Teachers*: add a teacher. Adding the username
    `sara` again is rejected. *Admins*: add a second admin.
-5. Log in as `admin`. The dashboard shows which classes have reported today. There is no
+5. Log in as `dat.admin`. The dashboard shows which classes have reported today. There is no
    *Teachers* or *Examinations* menu.
 6. *Classes*: add a class assigned to the new teacher, and rename *Grade 9*. In
    *Reports*, the old report still says *Grade 9*.
 7. *Reports*: filter by date and class. Edit a report so present + absent ≠ total, and
    the save is rejected with a clear message.
-8. Log in as `ali`. You don't see Sara's class, reports or students.
+8. Log in as `dat.ali`. You don't see Sara's class, reports or students.
 9. *My students* (teacher) or *Students* (admin): add a student, try a roll number that's
    already used in that class, edit, search, and remove.
-10. As `admin`, *Subjects*: the subjects and each class's subjects and teachers are
+10. As `dat.admin`, *Subjects*: the subjects and each class's subjects and teachers are
     already there. Adding "english" again is rejected.
-11. As `superadmin`, *Examinations* → *Create examination*: tick *Select all classes*. English and
+11. As `dat.superadmin`, *Examinations* → *Create examination*: tick *Select all classes*. English and
     Mathematics load with their teachers, each out of 100 with 33 pass marks; change one
     (for example Mathematics to 75) and create. The details panel shows both subjects as
     Pending.
-12. Log in as `sara`. *Examinations* lists only English, for Grade 9 and Grade 10. Enter
+12. Log in as `dat.sara`. *Examinations* lists only English, for Grade 9 and Grade 10. Enter
     marks (Enter moves to the next student); 120 or a negative number is flagged. *Save
     draft* with some empty, and *Submit marks* stays disabled until every student has a
     mark or Absent. Submit.
-13. Log in as `ali`: only Mathematics is listed. Enter and submit it, with one mark below
+13. Log in as `dat.ali`: only Mathematics is listed. Enter and submit it, with one mark below
     the pass marks.
-14. As `superadmin`: the result sheet shows positions, the low mark in red and that student as
+14. As `dat.superadmin`: the result sheet shows positions, the low mark in red and that student as
     Fail. Before both subjects were submitted, it showed "Awaiting submission" and
     *Publish results* was disabled.
 15. *Publish results*. Marks are locked. *Unpublish*, then *Reopen* English: Sara can

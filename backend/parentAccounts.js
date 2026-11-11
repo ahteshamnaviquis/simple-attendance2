@@ -14,6 +14,7 @@
 //             blank = keep the current one).
 
 const { HttpError, newId } = require('./helpers');
+const { withPrefix } = require('./usernamePrefix');
 
 const RELATIONS = ['Father', 'Mother', 'Guardian', 'Grandparent', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Other'];
 const MAX_PARENTS_PER_STUDENT = 4;
@@ -84,8 +85,11 @@ function checkUsernameFree(users, username, exceptId) {
 
 // Save a parent's details into `data` ({ users, parentProfiles }), adding the
 // account when `parentId` is not given. Returns the parent's id.
-function saveParentDetails(data, details, parentId) {
-  const { user, profile } = details;
+// prefix: the academy's username prefix (usernamePrefix.js).
+function saveParentDetails(data, details, parentId, prefix) {
+  const { profile } = details;
+  const current = parentId && data.users.find((u) => u.id === parentId)?.username;
+  const user = { ...details.user, username: withPrefix(prefix, details.user.username, current) };
   checkUsernameFree(data.users, user.username, parentId);
 
   if (!parentId) {
@@ -132,9 +136,9 @@ function cleanParentEntries(list) {
 // Apply a student's cleaned parent entries to `data` ({ users, parentProfiles,
 // parentStudents }): add or update the parents, and make them exactly the
 // student's parents. Returns the parent ids, in order.
-function applyParentEntries(data, studentId, entries) {
+function applyParentEntries(data, studentId, entries, prefix) {
   const parentIds = entries.map(({ parentId, details }) => {
-    if (details) return saveParentDetails(data, details, parentId);
+    if (details) return saveParentDetails(data, details, parentId, prefix);
     if (!data.users.some((u) => u.id === parentId && u.role === 'parent')) {
       throw new HttpError(400, 'Please choose a parent from the list');
     }

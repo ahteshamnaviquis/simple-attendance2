@@ -5,13 +5,14 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { startServer, stopServer } = require('./testServer');
+const { startServer, stopServer, defaultPrefix } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
 const SARA = 'u2';
 
 let baseUrl;
+let P; // the academy's username prefix
 
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
@@ -38,12 +39,13 @@ const START_DATA = {
 
 test.before(async () => {
   baseUrl = await startServer(START_DATA);
+  P = await defaultPrefix();
 });
 
 test.after(stopServer);
 
 test('the server adds the starting super admin, who can log in', async () => {
-  const res = await api(null, 'POST', '/api/login', { username: 'superadmin', password: 'super123' });
+  const res = await api(null, 'POST', '/api/login', { username: `${P}.superadmin`, password: 'super123' });
   assert.equal(res.status, 200);
   assert.equal(res.body.id, SUPER);
   assert.equal(res.body.role, 'superadmin');
@@ -61,15 +63,15 @@ test('only the super admin manages admins', async () => {
 });
 
 test('super admin adds, edits and removes an admin', async () => {
-  const taken = await api(SUPER, 'POST', '/api/admins', { name: 'Copy', username: 'sara', password: 'p' });
-  assert.equal(taken.status, 409);
   assert.equal((await api(SUPER, 'POST', '/api/admins', { name: 'No Pass', username: 'np' })).status, 400);
 
   const created = await api(SUPER, 'POST', '/api/admins', { name: 'Exam Office', username: 'Exams', password: 'exam123' });
   assert.equal(created.status, 201);
   assert.equal(created.body.role, 'admin');
-  assert.equal(created.body.username, 'exams');
+  assert.equal(created.body.username, `${P}.exams`); // the academy's prefix is added
   const id = created.body.id;
+  const taken = await api(SUPER, 'POST', '/api/admins', { name: 'Copy', username: 'exams', password: 'p' });
+  assert.equal(taken.status, 409);
 
   // The new admin can do admin work (subjects, classes), but not teachers or exams.
   assert.equal((await api(id, 'POST', '/api/subjects', { name: 'English' })).status, 201);
@@ -80,7 +82,7 @@ test('super admin adds, edits and removes an admin', async () => {
   // Blank password keeps the old one.
   const edited = await api(SUPER, 'PUT', `/api/admins/${id}`, { name: 'Exam Office 2', username: 'exams', password: '' });
   assert.equal(edited.status, 200);
-  const login = await api(null, 'POST', '/api/login', { username: 'exams', password: 'exam123' });
+  const login = await api(null, 'POST', '/api/login', { username: `${P}.exams`, password: 'exam123' });
   assert.equal(login.body.name, 'Exam Office 2');
 
   // Teachers and the super admin are not admins here.
@@ -88,7 +90,7 @@ test('super admin adds, edits and removes an admin', async () => {
   assert.equal((await api(SUPER, 'DELETE', `/api/admins/${SUPER}`)).status, 404);
 
   assert.equal((await api(SUPER, 'DELETE', `/api/admins/${id}`)).status, 204);
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'exams', password: 'exam123' })).status, 401);
+  assert.equal((await api(null, 'POST', '/api/login', { username: `${P}.exams`, password: 'exam123' })).status, 401);
 });
 
 test('the super admin handles teachers and exams, and leaves the rest to admins', async () => {

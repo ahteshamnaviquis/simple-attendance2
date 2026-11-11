@@ -26,6 +26,25 @@ module.exports = {
   // Locally 127.0.0.1 keeps the API private to this computer.
   HOST: process.env.RAILWAY_ENVIRONMENT ? '0.0.0.0' : '127.0.0.1',
 
+  // Demo quick login: the login page shows a button for each user, so nobody
+  // has to type a username and password. DEMO_LOGIN=true turns it on; leave it
+  // out (or set false) to turn it off. DEMO_LOGIN_USERS (optional) limits the
+  // buttons to these usernames, separated by commas.
+  DEMO_LOGIN: /^(true|1|yes|on)$/i.test(String(process.env.DEMO_LOGIN || '').trim()),
+  DEMO_LOGIN_USERS: String(process.env.DEMO_LOGIN_USERS || '')
+    .split(',')
+    .map((name) => name.trim().toLowerCase())
+    .filter(Boolean),
+
+  // The platform owner (the "super super admin"), who adds academies and their
+  // super admins. The account is made on the first start when there is none;
+  // after that these values are not used (change the password in the database).
+  OWNER: {
+    name: (process.env.OWNER_NAME || 'Platform Owner').trim(),
+    username: (process.env.OWNER_USERNAME || 'owner').trim().toLowerCase(),
+    password: process.env.OWNER_PASSWORD || 'owner123',
+  },
+
   // The MySQL database. The server creates the database and its tables if they
   // don't exist yet (the user needs permission for that).
   DB: databaseSettings(),

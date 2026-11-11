@@ -10,6 +10,7 @@ import {
   setTeacherDisabled,
   deleteTeacher,
 } from '../../api';
+import UsernameInput from '../../components/UsernameInput.jsx';
 import { getSavedUser } from '../../session';
 
 const EMPTY_FORM = { name: '', username: '', password: '' };
@@ -135,7 +136,13 @@ Their account is deleted and their classes and subjects become unassigned. Old a
           </label>
           <label>
             Username
-            <input name="username" value={form.username} onChange={handleChange} required />
+            <UsernameInput
+              name="username"
+              value={form.username}
+              onChange={(username) => setForm({ ...form, username })}
+              saved={teachers.find((t) => t.id === editingId)?.username}
+              required
+            />
           </label>
           <label>
             Password

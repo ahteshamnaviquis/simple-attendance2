@@ -2,6 +2,8 @@
 // Used on the student form (where parents are added) and the Parents page.
 
 import Icon from './Icon.jsx';
+import UsernameInput from './UsernameInput.jsx';
+import { useSettings } from '../theme';
 
 // Keep in step with RELATIONS in backend/parentAccounts.js.
 export const RELATIONS = ['Father', 'Mother', 'Guardian', 'Grandparent', 'Brother', 'Sister', 'Uncle', 'Aunt', 'Other'];
@@ -60,9 +62,14 @@ export function initials(name) {
 // value: the parent's fields. onChange(newValue). isNew: the password is required.
 // usernameTouched: false = the username follows the name until the admin edits it.
 export default function ParentFields({ value, onChange, isNew, idPrefix }) {
+  const { usernamePrefix } = useSettings();
+
   function set(field, fieldValue) {
     const next = { ...value, [field]: fieldValue };
-    if (field === 'name' && isNew && !value.usernameEdited) next.username = suggestUsername(fieldValue);
+    if (field === 'name' && isNew && !value.usernameEdited) {
+      const suggested = suggestUsername(fieldValue);
+      next.username = suggested && usernamePrefix ? `${usernamePrefix}.${suggested}` : suggested;
+    }
     if (field === 'username') next.usernameEdited = true;
     onChange(next);
   }
@@ -154,7 +161,14 @@ export default function ParentFields({ value, onChange, isNew, idPrefix }) {
         <div className="form-grid">
           <label>
             Username <span className="required">*</span>
-            <input {...field('username')} required autoComplete="off" />
+            <UsernameInput
+              id={`${idPrefix}-username`}
+              value={value.username}
+              onChange={(username) => set('username', username)}
+              saved={!isNew && !value.usernameEdited ? value.username : ''}
+              required
+              autoComplete="off"
+            />
           </label>
           <label>
             Password {isNew && <span className="required">*</span>}

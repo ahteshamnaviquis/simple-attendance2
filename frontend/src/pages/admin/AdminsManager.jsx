@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { getAdmins, createAdmin, updateAdmin, deleteAdmin } from '../../api';
+import UsernameInput from '../../components/UsernameInput.jsx';
 
 const EMPTY_FORM = { name: '', username: '', password: '' };
 
@@ -95,7 +96,13 @@ export default function AdminsManager() {
           </label>
           <label>
             Username
-            <input name="username" value={form.username} onChange={handleChange} required />
+            <UsernameInput
+              name="username"
+              value={form.username}
+              onChange={(username) => setForm({ ...form, username })}
+              saved={admins.find((a) => a.id === editingId)?.username}
+              required
+            />
           </label>
           <label>
             Password

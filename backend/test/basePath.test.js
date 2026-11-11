@@ -7,14 +7,16 @@ const assert = require('node:assert/strict');
 
 process.env.BASE_PATH = '/att/';
 process.env.FRONTEND_URL = 'https://school.example.com/att';
-const { startServer, stopServer } = require('./testServer');
+const { startServer, stopServer, defaultPrefix } = require('./testServer');
 
 let baseUrl;
+let P; // the academy's username prefix: logins are "<P>.sara"
 
 test.before(async () => {
   baseUrl = await startServer({
     users: [{ id: 'u1', name: 'Admin User', username: 'admin', password: 'admin123', role: 'admin' }],
   });
+  P = await defaultPrefix();
 });
 
 test.after(stopServer);
@@ -23,7 +25,7 @@ test('the API answers under the base path', async () => {
   const res = await fetch(`${baseUrl}/att/api/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: 'admin', password: 'admin123' }),
+    body: JSON.stringify({ username: `${P}.admin`, password: 'admin123' }),
   });
   assert.equal(res.status, 200);
   assert.equal((await res.json()).id, 'u1');

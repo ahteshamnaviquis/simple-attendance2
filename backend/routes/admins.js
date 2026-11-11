@@ -5,7 +5,8 @@
 
 const express = require('express');
 const { readData, updateData } = require('../store');
-const { HttpError, newId, publicUser, requireSuperAdmin } = require('../helpers');
+const { HttpError, newId, publicUser, requireSuperAdmin, academyPrefix } = require('../helpers');
+const { withPrefix } = require('../usernamePrefix');
 
 const router = express.Router();
 router.use(requireSuperAdmin);
@@ -51,6 +52,7 @@ router.get('/', async (req, res) => {
 // POST /api/admins
 router.post('/', async (req, res) => {
   const input = cleanAdminInput(req.body, true);
+  input.username = withPrefix(await academyPrefix(), input.username);
   let created;
   await updateData('users', (users) => {
     checkUsernameFree(users, input.username);
@@ -63,9 +65,11 @@ router.post('/', async (req, res) => {
 // PUT /api/admins/:id
 router.put('/:id', async (req, res) => {
   const input = cleanAdminInput(req.body, false);
+  const prefix = await academyPrefix();
   let updated;
   await updateData('users', (users) => {
     const index = findAdminIndex(users, req.params.id);
+    input.username = withPrefix(prefix, input.username, users[index].username);
     checkUsernameFree(users, input.username, req.params.id);
 
     updated = { ...users[index], name: input.name, username: input.username };

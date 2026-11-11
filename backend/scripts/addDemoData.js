@@ -55,12 +55,19 @@ function dateDaysAgo(days) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
+// "sara" is also "dat.sara": the server adds the academy's username prefix
+// (and gives these teachers theirs on its next start).
+function sameUsername(username, name) {
+  const full = username.toLowerCase();
+  return full === name || full.endsWith(`.${name}`);
+}
+
 async function addTeachers() {
   let added = 0;
   await updateData('users', (users) => {
     const result = [...users];
     for (const t of NEW_TEACHERS) {
-      const exists = result.some((u) => u.id === t.id || u.username.toLowerCase() === t.username);
+      const exists = result.some((u) => u.id === t.id || sameUsername(u.username, t.username));
       if (!exists) {
         result.push({ ...t });
         added++;
@@ -212,7 +219,7 @@ async function addClassSubjects() {
     readData('users'),
   ]);
   const teacherId = (username) =>
-    users.find((u) => u.role === 'teacher' && u.username.toLowerCase() === username)?.id ?? null;
+    users.find((u) => u.role === 'teacher' && sameUsername(u.username, username))?.id ?? null;
 
   await updateData('classSubjects', (rows) => {
     const result = [...rows];

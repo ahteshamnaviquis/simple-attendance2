@@ -19,7 +19,7 @@
 //   photo ids are random, so it can't be guessed. Local prototype only.
 
 const express = require('express');
-const { readData, updateData, updateMany, readFile, writeFile } = require('../store');
+const { readData, updateData, updateMany, readFile, writeFile, deleteFile, unscoped, withAcademy } = require('../store');
 const { HttpError, newId, isValidDate, todayString, requireRole } = require('../helpers');
 const { isOffice, readableClassIds, teachingClassIds, cleanText } = require('../schoolAccess');
 const { IMAGE_TYPES } = require('../images');
@@ -135,7 +135,7 @@ router.delete('/albums/:id', requireStaff, async (req, res) => {
   if (!canManage(req.user, album)) throw new HttpError(403, 'You can only remove the albums you made');
   await updateMany(['galleryAlbums', 'galleryPhotos'], async ({ galleryAlbums, galleryPhotos }, conn) => {
     const gone = galleryPhotos.filter((p) => p.albumId === album.id).map((p) => fileName(p.id));
-    if (gone.length) await conn.query('DELETE FROM files WHERE name IN (?)', [gone]);
+    await deleteFile(gone, conn);
     return {
       galleryAlbums: galleryAlbums.filter((a) => a.id !== album.id),
       galleryPhotos: galleryPhotos.filter((p) => p.albumId !== album.id),
@@ -179,15 +179,17 @@ router.delete('/photos/:id', requireStaff, async (req, res) => {
   const album = await findAlbum(req.user, photo.albumId);
   if (!canManage(req.user, album)) throw new HttpError(403, 'You can only remove photos from the albums you made');
   await updateData('galleryPhotos', async (list, conn) => {
-    await conn.query('DELETE FROM files WHERE name = ?', [fileName(photo.id)]);
+    await deleteFile(fileName(photo.id), conn);
     return list.filter((p) => p.id !== photo.id);
   });
   res.json({ ok: true });
 });
 
 // GET /api/gallery/photos/:id/image
+// An <img> sends no login, so the photo's academy is found from the photo itself.
 router.get('/photos/:id/image', async (req, res) => {
-  const file = await readFile(fileName(req.params.id));
+  const photo = (await unscoped(() => readData('galleryPhotos'))).find((p) => p.id === req.params.id);
+  const file = photo && (await withAcademy(photo.academyId, () => readFile(fileName(photo.id))));
   if (!file) throw new HttpError(404, 'Photo not found');
   res
     .set({

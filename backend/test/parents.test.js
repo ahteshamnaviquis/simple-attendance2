@@ -4,7 +4,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { startServer, stopServer, readTable } = require('./testServer');
+const { startServer, stopServer, readTable, defaultPrefix } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
@@ -14,6 +14,7 @@ const PARENT = 'p1'; // Ahmed's and Fatima's parent
 const OTHER_PARENT = 'p2'; // Bilal's parent
 
 let baseUrl;
+let P; // the academy's username prefix
 
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
@@ -146,12 +147,13 @@ const START_DATA = {
 
 test.before(async () => {
   baseUrl = await startServer(START_DATA);
+  P = await defaultPrefix();
 });
 
 test.after(stopServer);
 
 test('a parent logs in, but can not use staff screens', async () => {
-  const login = await api(null, 'POST', '/api/login', { username: 'hassan', password: 'parent123' });
+  const login = await api(null, 'POST', '/api/login', { username: `${P}.hassan`, password: 'parent123' });
   assert.equal(login.status, 200);
   assert.equal(login.body.role, 'parent');
 
@@ -263,10 +265,11 @@ test('parents are added with the student, in one transaction', async () => {
     assert.equal(res.status, 400, JSON.stringify(parent));
     assert.match(res.body.error, message);
   }
-  const taken = await api(ADMIN, 'POST', '/api/students', { ...student, parents: [{ ...NEW_PARENT, username: 'sara' }] });
+  assert.equal((await api(SUPER, 'POST', '/api/teachers', { name: 'Clash', username: 'clash', password: 'c' })).status, 201);
+  const taken = await api(ADMIN, 'POST', '/api/students', { ...student, parents: [{ ...NEW_PARENT, username: 'clash' }] });
   assert.equal(taken.status, 409);
   assert.equal((await readTable('students')).some((s) => s.name === 'Zara Khan'), false);
-  assert.equal((await readTable('users')).some((u) => u.username === 'noor'), false);
+  assert.equal((await readTable('users')).some((u) => u.username === `${P}.noor`), false);
 
   // Teachers can add students, but not parent accounts.
   assert.equal((await api(SARA, 'POST', '/api/students', { ...student, classId: 'c1', parents: [NEW_PARENT] })).status, 403);
@@ -283,12 +286,12 @@ test('parents are added with the student, in one transaction', async () => {
   const noorId = created.body.parents[0].parentId;
 
   const noor = (await api(ADMIN, 'GET', '/api/parents')).body.find((p) => p.id === noorId);
-  assert.equal(noor.username, 'noor');
+  assert.equal(noor.username, `${P}.noor`);
   assert.equal(noor.email, 'noor@example.com');
   assert.equal(noor.cnic, '35202-1234567-1');
   assert.equal(noor.password, undefined);
   assert.deepEqual(noor.children.map((c) => [c.name, c.gender]), [['Zara Khan', 'female']]);
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'noor', password: 'noor123' })).status, 200);
+  assert.equal((await api(null, 'POST', '/api/login', { username: `${P}.noor`, password: 'noor123' })).status, 200);
 
   // A brother joins: link the same parent, so she sees both children.
   const brother = await api(ADMIN, 'POST', '/api/students', {
@@ -312,7 +315,7 @@ test('parents are added with the student, in one transaction', async () => {
   assert.equal(edited.status, 200);
   assert.deepEqual(edited.body.parents.map((p) => [p.name, p.relation]), [['Noor Khan', 'Mother'], ['Imran Khan', 'Father']]);
   assert.equal(edited.body.phone, '0311-5555555');
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'noor', password: 'noor123' })).status, 200);
+  assert.equal((await api(null, 'POST', '/api/login', { username: `${P}.noor`, password: 'noor123' })).status, 200);
 
   // Same parent twice, two new parents with one username, or a non-parent: rejected.
   assert.equal((await api(ADMIN, 'PUT', `/api/students/${zaraId}`, { ...student, parents: [{ parentId: noorId }, { parentId: noorId }] })).status, 400);
@@ -324,7 +327,7 @@ test('parents are added with the student, in one transaction', async () => {
   assert.equal(kept.body.parents.length, 2);
   const unlinked = await api(ADMIN, 'PUT', `/api/students/${zaraId}`, { ...student, parents: [] });
   assert.deepEqual(unlinked.body.parents, []);
-  assert.ok((await readTable('users')).some((u) => u.username === 'imran'));
+  assert.ok((await readTable('users')).some((u) => u.username === `${P}.imran`));
 
   // Teachers see each student's parents (name, relation, phone) but can't change them.
   const sarasView = (await api(SARA, 'GET', '/api/students')).body.find((s) => s.name === 'Ali Khan');
@@ -345,7 +348,7 @@ test('admins edit, disable and remove parents in the directory', async () => {
   assert.equal(edited.status, 200);
   assert.equal(edited.body.relation, 'Father');
   assert.equal((await api(ADMIN, 'PUT', `/api/parents/${PARENT}`, { ...NEW_PARENT, relation: '' })).status, 400);
-  assert.equal((await api(null, 'POST', '/api/login', { username: 'hassan', password: 'parent123' })).status, 200);
+  assert.equal((await api(null, 'POST', '/api/login', { username: `${P}.hassan`, password: 'parent123' })).status, 200);
 
   const temp = await api(ADMIN, 'POST', '/api/students', {
     name: 'Temp Child',
@@ -356,7 +359,7 @@ test('admins edit, disable and remove parents in the directory', async () => {
 
   // Disabled parents can't log in and are logged out.
   assert.equal((await api(ADMIN, 'POST', `/api/parents/${id}/disable`)).body.disabled, true);
-  const blocked = await api(null, 'POST', '/api/login', { username: 'temp', password: 'noor123' });
+  const blocked = await api(null, 'POST', '/api/login', { username: `${P}.temp`, password: 'noor123' });
   assert.equal(blocked.status, 403);
   assert.match(blocked.body.error, /contact the school/);
   assert.equal((await api(id, 'GET', '/api/parent/children')).status, 401);
