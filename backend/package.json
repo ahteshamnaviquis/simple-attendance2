@@ -7,6 +7,9 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
+    "local": "node --env-file=local-db.env server.js",
+    "local:dev": "node --env-file=local-db.env --watch server.js",
+    "local:setup-db": "node --env-file=local-db.env scripts/setupDatabase.js",
     "dev": "node --watch server.js",
     "demo-data": "node scripts/addDemoData.js",
     "seed-subjects": "node scripts/addDemoData.js --subjects-only",
