@@ -413,6 +413,23 @@ While developing the backend, `npm run dev` restarts it automatically when you s
 
 ## Database
 
+**This branch's own local database.** Each branch keeps its data in its own MySQL
+database, named in `backend/local-db.env`: **`attendence_afterSaas`** on this branch
+(`afterSaas`), `attendence_beforeSaas` on `BeforeSaas`. Their data can't be mixed up
+(for example, this branch stores passwords hashed, which `BeforeSaas` can't read).
+From the `backend` folder:
+
+| Command | What it does |
+|---------|--------------|
+| `npm run local:setup-db` | Creates this branch's database and loads `sql/data.sql` (starts over: removes what is there) |
+| `npm run local` | Runs the API on this branch's database |
+| `npm run local:dev` | The same, restarting when a file changes |
+
+They take the database name from `local-db.env` and everything else (host, user,
+password) from `backend/.env`. `npm start` and `npm run setup-db` still use `DB_NAME`
+from `.env`, as on the live site.
+
+
 On start the backend creates the database (`DB_NAME`) if it's missing, and any missing
 tables from `backend/sql/schema.sql`. A **brand-new** database is filled with the starting
 data from `seedData.js` (the logins below). After that the server never adds sample data
