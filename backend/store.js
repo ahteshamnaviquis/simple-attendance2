@@ -65,10 +65,11 @@ function noAcademyError() {
 // academies, which all of them share ("global").
 const COLLECTIONS = {
   academies: { table: 'academies', global: true, props: 'id name prefix:text? disabled:bool? createdAt:timestamp' },
-  users:{ table: 'users', props: 'id name username password role disabled:bool?' },
+  // photo (users and students): { key, type } of their profile photo (photos.js); missing = none.
+  users: { table: 'users', props: 'id name username password role disabled:bool? photo:json?' },
   classes: { table: 'classes', props: 'id name teacherId' },
   // gender: "male" or "female" (shown to parents as son or daughter); missing = not given.
-  students: { table: 'students', props: 'id rollNumber name gender:text? classId guardianName phone' },
+  students: { table: 'students', props: 'id rollNumber name gender:text? classId guardianName phone photo:json?' },
   subjects: { table: 'subjects', props: 'id name' },
   classSubjects: { table: 'class_subjects', props: 'id classId subjectId teacherId' },
   attendance: {
@@ -133,6 +134,8 @@ const ADDED_COLUMNS = [
   { table: 'messages', column: 'teacher_id', definition: 'VARCHAR(64) NULL AFTER parent_id' },
   { table: 'messages', column: 'sender_role', definition: "VARCHAR(20) NOT NULL DEFAULT '' AFTER sender_name" },
   { table: 'academies', column: 'prefix', definition: 'VARCHAR(3) NULL AFTER name' },
+  { table: 'users', column: 'photo', definition: 'JSON NULL AFTER disabled' },
+  { table: 'students', column: 'photo', definition: 'JSON NULL AFTER phone' },
 ];
 
 // The order to fill an empty database in, so every row's parents already exist.

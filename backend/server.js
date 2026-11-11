@@ -7,7 +7,8 @@
 const express = require('express');
 const seedData = require('./seedData');
 const { PORT, HOST, DB, FRONTEND_URLS, BASE_PATH, DEMO_LOGIN, DEMO_LOGIN_USERS, OWNER } = require('./config');
-const { initDatabase, readData, updateData, unscoped, withAcademy, DEFAULT_ACADEMY } = require('./store');
+const { initDatabase, readData, updateData, unscoped, withAcademy, readFile, DEFAULT_ACADEMY } = require('./store');
+const { fileName: photoFileName } = require('./photos');
 const { publicUser, loadCurrentUser, requireRole } = require('./helpers');
 const adminsRouter = require('./routes/admins');
 const settingsRouter = require('./routes/settings');
@@ -154,6 +155,23 @@ app.post('/api/demo-login', async (req, res) => {
   const user = (await demoUsers()).find((u) => u.id === id);
   if (!user) return res.status(404).json({ error: 'That demo user is not available' });
   res.json(publicUser(user));
+});
+
+// GET /api/photos/:academyId/:key - a profile photo (photos.js). An <img> sends
+// no login: the key is random, and each upload gets a new one, so the picture
+// can be kept by the browser for good.
+app.get('/api/photos/:academyId/:key', async (req, res) => {
+  const { academyId, key } = req.params;
+  if (!/^[0-9a-f-]{36}$/.test(key)) return res.status(404).json({ error: 'Photo not found' });
+  const file = await withAcademy(academyId, () => readFile(photoFileName(key)));
+  if (!file) return res.status(404).json({ error: 'Photo not found' });
+  res
+    .set({
+      'Content-Type': file.type,
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'private, max-age=31536000, immutable',
+    })
+    .send(file.data);
 });
 
 // List all users (without passwords). Admins and the super admin only.

@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS users (
   username VARCHAR(60)  NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL, -- plain text: LOCAL DEMO ONLY
   role     ENUM('owner', 'superadmin', 'admin', 'teacher', 'parent') NOT NULL,
-  disabled BOOLEAN NULL           -- teachers and parents; NULL = never disabled
+  disabled BOOLEAN NULL,          -- teachers and parents; NULL = never disabled
+  photo    JSON    NULL           -- profile photo { key, type } (photos.js); NULL = none
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Older databases: allow the "parent" and "owner" roles.
@@ -65,6 +66,7 @@ CREATE TABLE IF NOT EXISTS students (
   class_id      VARCHAR(64)  NOT NULL,
   guardian_name VARCHAR(100) NOT NULL DEFAULT '',
   phone         VARCHAR(30)  NOT NULL DEFAULT '',
+  photo         JSON         NULL,               -- profile photo { key, type }, as users.photo
   KEY idx_students_class (class_id),
   CONSTRAINT fk_students_class FOREIGN KEY (class_id) REFERENCES classes (id)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;

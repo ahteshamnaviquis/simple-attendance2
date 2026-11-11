@@ -7,9 +7,11 @@
 // (teachers), the form has the simple guardian name and phone instead.
 
 import { useEffect, useState } from 'react';
-import { getClasses, getStudents, getParents, createStudent, updateStudent, deleteStudent } from '../api';
+import { getClasses, getStudents, getParents, createStudent, updateStudent, deleteStudent, setPhoto } from '../api';
+import Avatar from './Avatar.jsx';
+import PhotoEditor from './PhotoEditor.jsx';
 import Icon from './Icon.jsx';
-import ParentFields, { EMPTY_PARENT, initials, parentToForm } from './ParentFields.jsx';
+import ParentFields, { EMPTY_PARENT, parentToForm } from './ParentFields.jsx';
 
 const EMPTY_STUDENT = { rollNumber: '', name: '', gender: '', classId: '', guardianName: '', phone: '' };
 const GENDERS = [
@@ -37,6 +39,7 @@ export default function StudentsManager({ canManageParents = false }) {
   const [form, setForm] = useState(EMPTY_STUDENT);
   const [entries, setEntries] = useState([]); // the student's parents on the form
   const [editingId, setEditingId] = useState(null); // null = adding a new student
+  const [pendingPhoto, setPendingPhoto] = useState(null); // a new student's photo, uploaded after adding
   const [showForm, setShowForm] = useState(false);
   const [linking, setLinking] = useState(false); // the "link an existing parent" search is open
   const [saving, setSaving] = useState(false);
@@ -57,6 +60,7 @@ export default function StudentsManager({ canManageParents = false }) {
 
   function openForm(studentForm, parentEntries, id) {
     setEditingId(id);
+    setPendingPhoto(null);
     setForm(studentForm);
     setEntries(parentEntries);
     setLinking(false);
@@ -91,9 +95,16 @@ export default function StudentsManager({ canManageParents = false }) {
     );
   }
 
+  // A student's photo was changed (saved straight away).
+  function handlePhotoSaved(student) {
+    setStudents((list) => list.map((s) => (s.id === student.id ? student : s)));
+    setMessage(student.photo ? `Saved the photo of ${student.name}.` : `Removed the photo of ${student.name}.`);
+  }
+
   function closeForm() {
     setShowForm(false);
     setEditingId(null);
+    setPendingPhoto(null);
     setForm(EMPTY_STUDENT);
     setEntries([]);
     setError('');
@@ -129,6 +140,7 @@ export default function StudentsManager({ canManageParents = false }) {
         closeForm();
       } else {
         const saved = await createStudent(payload);
+        if (pendingPhoto) await setPhoto('students', saved.id, pendingPhoto);
         const added = entries.filter((e) => e.mode === 'new').map((e) => e.details);
         // Keep the form open with the same class for quick entry.
         openForm({ ...EMPTY_STUDENT, classId: form.classId }, canManageParents ? [newParentEntry()] : [], null);
@@ -214,6 +226,15 @@ export default function StudentsManager({ canManageParents = false }) {
                 <p className="cell-sub">Class, roll number and name</p>
               </div>
             </div>
+            <PhotoEditor
+              kind="students"
+              id={editingId}
+              name={form.name}
+              photo={students.find((s) => s.id === editingId)?.photo}
+              onSaved={handlePhotoSaved}
+              pending={pendingPhoto}
+              onPendingChange={setPendingPhoto}
+            />
             <div className="form-grid">
               <label>
                 Class <span className="required">*</span>
@@ -369,8 +390,13 @@ export default function StudentsManager({ canManageParents = false }) {
               <tr key={s.id}>
                 <td>{s.rollNumber || '—'}</td>
                 <td>
-                  <div className="cell-main">{s.name}</div>
-                  {s.gender && <div className="cell-sub">{s.gender === 'male' ? 'Boy' : 'Girl'}</div>}
+                  <span className="person-cell">
+                    <Avatar name={s.name} id={s.id} photo={s.photo} size={32} />
+                    <span>
+                      <div className="cell-main">{s.name}</div>
+                      {s.gender && <div className="cell-sub">{s.gender === 'male' ? 'Boy' : 'Girl'}</div>}
+                    </span>
+                  </span>
                 </td>
                 <td>{s.className}</td>
                 <td>
@@ -425,9 +451,7 @@ function ParentEntry({ entry, number, parent, editingStudentId, onChange, onRemo
   return (
     <div className={isNew ? 'parent-card new' : 'parent-card'}>
       <div className="parent-card-head">
-        <span className="avatar parent-avatar" aria-hidden="true">
-          {initials(entry.details.name || '')}
-        </span>
+        <Avatar name={entry.details.name || ''} id={entry.parentId} photo={parent?.photo} size={36} />
         <div className="parent-card-title">
           <span className="cell-main">
             {name}
@@ -499,9 +523,7 @@ function LinkParent({ parents, onLink, onCancel }) {
       <ul className="link-results">
         {matches.slice(0, 8).map((p) => (
           <li key={p.id}>
-            <span className="avatar parent-avatar" aria-hidden="true">
-              {initials(p.name)}
-            </span>
+            <Avatar name={p.name} id={p.id} photo={p.photo} size={36} />
             <span className="link-result-text">
               <span className="cell-main">
                 {p.name}

@@ -20,6 +20,7 @@ const express = require('express');
 const { readData, updateData, updateMany } = require('../store');
 const { HttpError, newId, isAdmin, can, requireLogin, academyPrefix } = require('../helpers');
 const { cleanParentEntries, applyParentEntries } = require('../parentAccounts');
+const { photoRoutes, deletePhotoOf } = require('../photos');
 
 const router = express.Router();
 
@@ -184,9 +185,24 @@ router.put('/:id', requireLogin, async (req, res) => {
   res.json(await findVisibleStudent(req.user, req.params.id));
 });
 
+// PUT and DELETE /api/students/:id/photo - the student's profile photo
+// (photos.js): whoever may edit the student.
+photoRoutes(router, {
+  collection: 'students',
+  guard: requireLogin,
+  find: async (req, students) => {
+    const index = students.findIndex((s) => s.id === req.params.id);
+    if (index === -1) throw new HttpError(404, 'Student not found');
+    const cls = (await readData('classes')).find((c) => c.id === students[index].classId);
+    if (!canUseClass(req.user, cls)) throw new HttpError(403, 'This student is not in one of your classes');
+    return index;
+  },
+  view: (req, student) => findVisibleStudent(req.user, student.id),
+});
+
 // DELETE /api/students/:id
 router.delete('/:id', requireLogin, async (req, res) => {
-  await updateData('students', async (students) => {
+  await updateData('students', async (students, conn) => {
     const student = students.find((s) => s.id === req.params.id);
     if (!student) throw new HttpError(404, 'Student not found');
 
@@ -195,6 +211,7 @@ router.delete('/:id', requireLogin, async (req, res) => {
     if (!canUseClass(req.user, cls)) {
       throw new HttpError(403, 'This student is not in one of your classes');
     }
+    await deletePhotoOf(student, conn);
     return students.filter((s) => s.id !== req.params.id);
   });
   res.json({ ok: true });

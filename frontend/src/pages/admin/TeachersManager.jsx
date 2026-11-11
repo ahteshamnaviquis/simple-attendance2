@@ -9,8 +9,11 @@ import {
   updateTeacher,
   setTeacherDisabled,
   deleteTeacher,
+  setPhoto,
 } from '../../api';
 import UsernameInput from '../../components/UsernameInput.jsx';
+import Avatar from '../../components/Avatar.jsx';
+import PhotoEditor from '../../components/PhotoEditor.jsx';
 import { getSavedUser } from '../../session';
 
 const EMPTY_FORM = { name: '', username: '', password: '' };
@@ -20,6 +23,7 @@ export default function TeachersManager() {
   const [classes, setClasses] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null); // null = adding a new teacher
+  const [pendingPhoto, setPendingPhoto] = useState(null); // a new teacher's photo, uploaded after adding
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const isSuper = getSavedUser()?.role === 'superadmin';
@@ -40,8 +44,15 @@ export default function TeachersManager() {
     return names.length ? names.join(', ') : '—';
   }
 
+  // A teacher's photo was changed (saved straight away).
+  function handlePhotoSaved(teacher) {
+    setTeachers((list) => list.map((t) => (t.id === teacher.id ? teacher : t)));
+    setMessage(teacher.photo ? `Saved the photo of ${teacher.name}.` : `Removed the photo of ${teacher.name}.`);
+  }
+
   function startEdit(teacher) {
     setEditingId(teacher.id);
+    setPendingPhoto(null);
     setForm({ name: teacher.name, username: teacher.username, password: '' });
     setError('');
     setMessage('');
@@ -49,6 +60,7 @@ export default function TeachersManager() {
 
   function resetForm() {
     setEditingId(null);
+    setPendingPhoto(null);
     setForm(EMPTY_FORM);
     setError('');
   }
@@ -108,7 +120,8 @@ Their account is deleted and their classes and subjects become unassigned. Old a
         await updateTeacher(editingId, form);
         setMessage(`Saved changes to ${form.name}.`);
       } else {
-        await createTeacher(form);
+        const created = await createTeacher(form);
+        if (pendingPhoto) await setPhoto('teachers', created.id, pendingPhoto);
         setMessage(`Added teacher ${form.name}.`);
       }
       resetForm();
@@ -129,6 +142,15 @@ Their account is deleted and their classes and subjects become unassigned. Old a
 
       <form className="card" onSubmit={handleSubmit}>
         <h2>{editingId ? 'Edit teacher' : 'Add teacher'}</h2>
+        <PhotoEditor
+          kind="teachers"
+          id={editingId}
+          name={form.name}
+          photo={teachers.find((t) => t.id === editingId)?.photo}
+          onSaved={handlePhotoSaved}
+          pending={pendingPhoto}
+          onPendingChange={setPendingPhoto}
+        />
         <div className="form-grid">
           <label>
             Name
@@ -185,7 +207,12 @@ Their account is deleted and their classes and subjects become unassigned. Old a
         <tbody>
           {teachers.map((t) => (
             <tr key={t.id} className={t.disabled ? 'disabled-row' : ''}>
-              <td>{t.name}</td>
+              <td>
+                <span className="person-cell">
+                  <Avatar name={t.name} id={t.id} photo={t.photo} size={32} />
+                  {t.name}
+                </span>
+              </td>
               <td>{t.username}</td>
               <td>{classNamesFor(t.id)}</td>
               <td>

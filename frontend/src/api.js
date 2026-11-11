@@ -174,3 +174,12 @@ export const createAcademySuperAdmin = (academyId, account) =>
   request('POST', `/api/platform/academies/${academyId}/super-admins`, account);
 export const updateAcademySuperAdmin = (id, account) => request('PUT', `/api/platform/super-admins/${id}`, account);
 export const deleteAcademySuperAdmin = (id) => request('DELETE', `/api/platform/super-admins/${id}`);
+
+// ---------- Profile photos (teachers, students, parents) ----------
+
+// kind: 'teachers', 'students' or 'parents'. file: the image (File), or null to
+// remove the photo. Returns the saved teacher, student or parent.
+export const setPhoto = (kind, id, file) =>
+  file ? request('PUT', `/api/${kind}/${id}/photo`, file) : request('DELETE', `/api/${kind}/${id}/photo`);
+// The address of a photo ({ key }) of the academy (works in an <img>).
+export const profilePhotoUrl = (academyId, photo) => `${API_URL}/api/photos/${academyId}/${photo.key}`;

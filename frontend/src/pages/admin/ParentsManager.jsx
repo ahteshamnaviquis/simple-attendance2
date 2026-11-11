@@ -6,6 +6,8 @@
 import { useEffect, useState } from 'react';
 import { getParents, updateParent, setParentDisabled, deleteParent } from '../../api';
 import ParentFields, { initials, parentToForm } from '../../components/ParentFields.jsx';
+import Avatar from '../../components/Avatar.jsx';
+import PhotoEditor from '../../components/PhotoEditor.jsx';
 import { childWord } from '../../utils';
 
 export default function ParentsManager({ onMessage }) {
@@ -38,6 +40,12 @@ export default function ParentsManager({ onMessage }) {
     setError('');
     setMessage('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // A parent's photo was changed (saved straight away).
+  function handlePhotoSaved(parent) {
+    setParents((list) => list.map((p) => (p.id === parent.id ? parent : p)));
+    setMessage(parent.photo ? `Saved the photo of ${parent.name}.` : `Removed the photo of ${parent.name}.`);
   }
 
   async function handleSave(event) {
@@ -111,6 +119,13 @@ export default function ParentsManager({ onMessage }) {
             </div>
           </div>
           <section className="form-section">
+            <PhotoEditor
+              kind="parents"
+              id={editing.id}
+              name={editing.details.name}
+              photo={parents.find((p) => p.id === editing.id)?.photo}
+              onSaved={handlePhotoSaved}
+            />
             <ParentFields
               value={editing.details}
               isNew={false}
@@ -160,10 +175,15 @@ export default function ParentsManager({ onMessage }) {
             {shown.map((p) => (
               <tr key={p.id} className={p.disabled ? 'disabled-row' : ''}>
                 <td>
-                  <div className="cell-main">{p.name}</div>
-                  <div className="cell-sub">
-                    {[p.relation, `username ${p.username}`, p.occupation].filter(Boolean).join(' · ')}
-                  </div>
+                  <span className="person-cell">
+                    <Avatar name={p.name} id={p.id} photo={p.photo} size={32} />
+                    <span>
+                      <div className="cell-main">{p.name}</div>
+                      <div className="cell-sub">
+                        {[p.relation, `username ${p.username}`, p.occupation].filter(Boolean).join(' · ')}
+                      </div>
+                    </span>
+                  </span>
                 </td>
                 <td>
                   <div>{p.phone || '—'}</div>
