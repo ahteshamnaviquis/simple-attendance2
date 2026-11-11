@@ -9,7 +9,7 @@
 // It also loads the settings (theme and admin permissions) and shares them.
 // Each academy has its own, so they are loaded again when someone logs in or out.
 //
-// NOTE: this only controls which screens are visible. It is NOT real security.
+// This only decides which screens are shown: the backend checks the login token on every request.
 
 import { useEffect, useState } from 'react';
 import LoginPage from './pages/LoginPage.jsx';
@@ -19,7 +19,7 @@ import TeacherHome from './pages/TeacherHome.jsx';
 import ParentHome from './pages/ParentHome.jsx';
 import OwnerHome from './pages/OwnerHome.jsx';
 import { getSavedUser, saveUser, clearUser, saveAcademy } from './session';
-import { getSettings } from './api';
+import { getSettings, logout } from './api';
 import { applyTheme, DEFAULT_SETTINGS, SettingsContext } from './theme';
 
 export default function App() {
@@ -45,6 +45,7 @@ export default function App() {
   }
 
   function handleLogout() {
+    logout().catch(() => {}); // the token stops working; the screen doesn't wait for it
     clearUser();
     setSettings(null);
     setUser(null);

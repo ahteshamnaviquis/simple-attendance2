@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS users (
   KEY idx_users_academy (academy_id),
   name     VARCHAR(100) NOT NULL,
   username VARCHAR(60)  NOT NULL UNIQUE,
-  password VARCHAR(255) NOT NULL, -- plain text: LOCAL DEMO ONLY
+  password VARCHAR(255) NOT NULL, -- scrypt hash (passwords.js), never plain text
   role     ENUM('owner', 'superadmin', 'admin', 'teacher', 'parent') NOT NULL,
   disabled BOOLEAN NULL           -- teachers and parents; NULL = never disabled
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
@@ -327,6 +327,19 @@ CREATE TABLE IF NOT EXISTS settings (
   name       VARCHAR(50)  NOT NULL,
   value      JSON         NOT NULL,
   PRIMARY KEY (academy_id, name)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- Login sessions. Only the SHA-256 of each token is kept; password_tag ends the
+-- session when the user's password changes (see store.js and passwords.js).
+CREATE TABLE IF NOT EXISTS sessions (
+  token_hash   CHAR(64)    NOT NULL PRIMARY KEY,
+  user_id      VARCHAR(64) NOT NULL,
+  password_tag VARCHAR(32) NOT NULL,
+  created_at   DATETIME(3) NOT NULL, -- UTC
+  last_used_at DATETIME(3) NOT NULL,
+  expires_at   DATETIME(3) NOT NULL,
+  KEY idx_sessions_user (user_id),
+  CONSTRAINT fk_sessions_user FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
 
 -- Uploaded files: each academy's logo and gallery photos, named

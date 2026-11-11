@@ -4,7 +4,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { startServer, stopServer, readTable, readFile } = require('./testServer');
+const { startServer, stopServer, readTable, readFile, tokenFor } = require('./testServer');
 
 const ADMIN = 'u1';
 const SARA = 'u2'; // class teacher of Grade 9 (c1), teaches English there
@@ -18,7 +18,7 @@ async function api(userId, method, url, body, contentType) {
   const raw = Buffer.isBuffer(body);
   const response = await fetch(baseUrl + url, {
     method,
-    headers: { 'Content-Type': contentType || 'application/json', ...(userId && { 'X-User-Id': userId }) },
+    headers: { 'Content-Type': contentType || 'application/json', ...(userId && { Authorization: `Bearer ${await tokenFor(userId)}` }) },
     body: raw ? body : body && JSON.stringify(body),
   });
   return { status: response.status, body: await response.json().catch(() => null) };

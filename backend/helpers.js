@@ -1,7 +1,8 @@
 // Small shared helpers for the API routes.
 
 const crypto = require('crypto');
-const { readData, unscoped, withAcademy, currentAcademy, DEFAULT_ACADEMY } = require('./store');
+const { readData, unscoped, withAcademy, currentAcademy, findSession, DEFAULT_ACADEMY } = require('./store');
+const { passwordTag } = require('./passwords');
 
 // An error with an HTTP status code. Throw it from a route (or from inside
 // updateData) and the error handler in server.js sends it to the browser.
@@ -36,24 +37,34 @@ function isValidDate(text) {
   return !isNaN(date) && date.toISOString().slice(0, 10) === text;
 }
 
-// Middleware: works out who is calling from the X-User-Id header that the
-// frontend sends after login, and puts that user on req.user. The rest of the
+// The login token sent with a request ("Authorization: Bearer <token>"), or ''.
+function tokenOf(req) {
+  const match = /^Bearer\s+(\S+)$/i.exec(req.get('Authorization') || '');
+  return match ? match[1] : '';
+}
+
+// Middleware: works out who is calling from their login token (see
+// createSession in store.js), and puts that user on req.user. The rest of the
 // request then only sees that user's academy (see withAcademy in store.js):
 //   a user of an academy   -> their academy
 //   the platform owner     -> no academy (they use /api/platform, which picks one)
 //   nobody logged in       -> the academy in ?academy= or the X-Academy-Id
 //                             header, otherwise the first one (for the login
 //                             page's look and the logo)
-//
-// NOT REAL SECURITY: anyone can send any id in this header. It only lets the
-// backend apply the role rules for honest users of a local prototype.
+// A session ends (the user is logged out) when it expires, when the user is
+// disabled or removed, or when their password changes.
 async function loadCurrentUser(req, res, next) {
-  const id = req.get('X-User-Id');
   req.user = null;
-  const [users, academies] = await unscoped(() => Promise.all([id ? readData('users') : [], readData('academies')]));
+  req.token = tokenOf(req);
+  const session = await findSession(req.token);
+  const [users, academies] = await unscoped(() =>
+    Promise.all([session ? readData('users') : [], readData('academies')])
+  );
 
   let academyId;
-  const user = id && users.find((u) => u.id === id && !u.disabled); // a disabled user is logged out
+  const user = session && users.find(
+    (u) => u.id === session.userId && !u.disabled && passwordTag(u.password) === session.passwordTag
+  );
   if (user?.role === 'owner') {
     req.user = { ...publicUser(user), permissions: {} };
     academyId = null;

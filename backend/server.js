@@ -7,7 +7,18 @@
 const express = require('express');
 const seedData = require('./seedData');
 const { PORT, HOST, DB, FRONTEND_URLS, BASE_PATH, DEMO_LOGIN, DEMO_LOGIN_USERS, OWNER } = require('./config');
-const { initDatabase, readData, updateData, unscoped, withAcademy, DEFAULT_ACADEMY } = require('./store');
+const {
+  initDatabase,
+  readData,
+  updateData,
+  unscoped,
+  withAcademy,
+  createSession,
+  deleteSession,
+  deleteExpiredSessions,
+  DEFAULT_ACADEMY,
+} = require('./store');
+const { verifyPassword, passwordTag } = require('./passwords');
 const { publicUser, loadCurrentUser, requireRole } = require('./helpers');
 const adminsRouter = require('./routes/admins');
 const settingsRouter = require('./routes/settings');
@@ -55,7 +66,7 @@ app.use((req, res, next) => {
     res.set({
       'Access-Control-Allow-Origin': origin,
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-      'Access-Control-Allow-Headers': 'Content-Type, X-User-Id, X-Academy-Id',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Academy-Id',
       Vary: 'Origin',
     });
   }
@@ -85,23 +96,47 @@ function academyDisabled(user, academies) {
   return !academy || Boolean(academy.disabled);
 }
 
+// Wrong passwords: after MAX_FAILURES for one username from one address in
+// FAILURE_WINDOW, that login is refused until the window has passed. Kept in
+// memory: a restart clears it.
+const MAX_FAILURES = 10;
+const FAILURE_WINDOW = 15 * 60 * 1000;
+const failures = new Map(); // "ip username" -> [times]
+
+function recentFailures(key) {
+  const times = (failures.get(key) ?? []).filter((t) => Date.now() - t < FAILURE_WINDOW);
+  if (times.length) failures.set(key, times);
+  else failures.delete(key);
+  return times;
+}
+
+// The user, logged in: their details (no password) and the token to send with
+// every request after this ("Authorization: Bearer <token>").
+async function startSession(user) {
+  deleteExpiredSessions().catch(() => {}); // tidy up now and then; not needed for this login
+  const token = await createSession(user.id, passwordTag(user.password));
+  return { ...publicUser(user), token };
+}
+
 // Login: check username and password against the users table.
-// Returns the user (without password) on success. No tokens or sessions -
-// the frontend simply remembers who logged in. LOCAL DEMO ONLY.
 app.post('/api/login', async (req, res) => {
   const username = String(req.body?.username || '').trim().toLowerCase();
   const password = String(req.body?.password || '');
   if (!username || !password) {
     return res.status(400).json({ error: 'Please enter username and password' });
   }
+  const key = `${req.ip} ${username}`;
+  if (recentFailures(key).length >= MAX_FAILURES) {
+    return res.status(429).json({ error: 'Too many wrong passwords. Please wait 15 minutes and try again.' });
+  }
 
   const [users, academies] = await everyone();
-  const user = users.find(
-    (u) => u.username.toLowerCase() === username && u.password === password
-  );
-  if (!user) {
+  const user = users.find((u) => u.username.toLowerCase() === username);
+  if (!user || !verifyPassword(password, user.password)) {
+    failures.set(key, [...recentFailures(key), Date.now()]);
     return res.status(401).json({ error: 'Wrong username or password' });
   }
+  failures.delete(key);
   if (academyDisabled(user, academies)) {
     return res.status(403).json({ error: 'This school has been disabled. Please contact the school.' });
   }
@@ -115,7 +150,13 @@ app.post('/api/login', async (req, res) => {
             : 'This account has been disabled. Please contact the super admin.',
       });
   }
-  res.json(publicUser(user));
+  res.json(await startSession(user));
+});
+
+// Logout: the token stops working.
+app.post('/api/logout', async (req, res) => {
+  if (req.token) await deleteSession(req.token);
+  res.status(204).end();
 });
 
 // Demo quick login (DEMO_LOGIN=true in .env): the users the login page offers
@@ -153,7 +194,7 @@ app.post('/api/demo-login', async (req, res) => {
   const id = String(req.body?.userId || '');
   const user = (await demoUsers()).find((u) => u.id === id);
   if (!user) return res.status(404).json({ error: 'That demo user is not available' });
-  res.json(publicUser(user));
+  res.json(await startSession(user));
 });
 
 // List all users (without passwords). Admins and the super admin only.
@@ -241,6 +282,7 @@ async function ensureOwner() {
 }
 
 initDatabase(seedData)
+  .then(deleteExpiredSessions)
   .then(ensureSuperAdmin)
   .then(ensureOwner)
   .then(() => {

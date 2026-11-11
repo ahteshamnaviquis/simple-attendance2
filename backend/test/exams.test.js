@@ -12,7 +12,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { startServer, stopServer, readTable, defaultPrefix } = require('./testServer');
+const { startServer, stopServer, readTable, defaultPrefix, tokenFor } = require('./testServer');
 
 const SUPER = 'u0';
 const ADMIN = 'u1';
@@ -25,7 +25,7 @@ let P; // the academy's username prefix: logins are "<P>.sara"
 async function api(userId, method, url, body) {
   const response = await fetch(baseUrl + url, {
     method,
-    headers: { 'Content-Type': 'application/json', ...(userId && { 'X-User-Id': userId }) },
+    headers: { 'Content-Type': 'application/json', ...(userId && { Authorization: `Bearer ${await tokenFor(userId)}` }) },
     body: body && JSON.stringify(body),
   });
   return { status: response.status, body: await response.json().catch(() => null) };

@@ -12,8 +12,8 @@ async function request(method, path, body) {
     method,
     headers: {
       'Content-Type': isFile ? body.type : 'application/json',
-      // Tells the backend who is logged in. Prototype only - not secure.
-      ...(user && { 'X-User-Id': user.id }),
+      // The login token from /api/login: tells the backend who is logged in.
+      ...(user?.token && { Authorization: `Bearer ${user.token}` }),
       // Before login: which academy's look to show (see session.js).
       ...(!user && getSavedAcademy() && { 'X-Academy-Id': getSavedAcademy() }),
     },
@@ -21,7 +21,8 @@ async function request(method, path, body) {
   });
   const data = await response.json().catch(() => null);
 
-  // The saved user no longer exists (for example the data was reset).
+  // Logged out: the session ended (expired, password changed, account
+  // disabled or removed), or this tab saved its user before logins had tokens.
   if (response.status === 401 && path !== '/api/login') {
     clearUser();
     window.location.reload();
@@ -38,7 +39,10 @@ function query(params) {
   return text ? `?${text}` : '';
 }
 
+// Both return the user with their login token (kept in session.js).
 export const login = (username, password) => request('POST', '/api/login', { username, password });
+// Ends the session on the server: the token stops working.
+export const logout = () => request('POST', '/api/logout');
 // Demo quick login (only when the backend has DEMO_LOGIN=true).
 export const getDemoLogins = () => request('GET', '/api/demo-login');
 export const demoLogin = (userId) => request('POST', '/api/demo-login', { userId });

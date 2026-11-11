@@ -181,8 +181,7 @@ export default function OwnerHome({ user, onLogout }) {
               </label>
             </div>
             <p className="note">
-              Usernames are unique across all academies. Passwords are stored as plain text. This is
-              only acceptable for a local demo.
+              Usernames are unique across all academies.
             </p>
             {error && <p className="error">{error}</p>}
             <div className="actions">

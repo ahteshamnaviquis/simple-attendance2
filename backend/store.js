@@ -23,8 +23,10 @@
 const fs = require('fs');
 const path = require('path');
 const { AsyncLocalStorage } = require('async_hooks');
+const crypto = require('crypto');
 const mysql = require('mysql2/promise');
-const { DB } = require('./config');
+const { DB, SESSION_DAYS } = require('./config');
+const { isHashed, hashPassword } = require('./passwords');
 
 // ---------- Which academy's data ----------
 
@@ -187,7 +189,9 @@ function toRow(name, item) {
   }
   const row = {};
   for (const { prop, column, type } of columns) {
-    const value = item[prop] ?? null;
+    let value = item[prop] ?? null;
+    // Passwords are only ever saved hashed (passwords.js).
+    if (name === 'users' && prop === 'password' && value !== null && !isHashed(value)) value = hashPassword(value);
     if (value === null) row[column] = null;
     else if (type === 'json') row[column] = JSON.stringify(value);
     else if (type === 'timestamp') row[column] = new Date(value).toISOString().slice(0, 23).replace('T', ' ');
@@ -440,7 +444,67 @@ async function initDatabase(startData) {
   }
   await ensureDefaultAcademy();
   await assignMissingPrefixes();
+  await hashPlainPasswords();
   return isNew;
+}
+
+// Passwords saved in plain text by older versions (or loaded from data.sql) are
+// hashed. Everyone keeps logging in with the same password.
+async function hashPlainPasswords() {
+  const [users] = await pool.query("SELECT id, password FROM users WHERE password NOT LIKE 'scrypt$%'");
+  for (const user of users) {
+    await pool.query('UPDATE users SET password = ? WHERE id = ?', [hashPassword(user.password), user.id]);
+  }
+  if (users.length) console.log(`Hashed ${users.length} passwords that were saved in plain text`);
+}
+
+// ---------- Login sessions ----------
+// Logging in makes a random token; the browser or app sends it with every
+// request (Authorization: Bearer <token>). Only its SHA-256 is stored, so the
+// table alone can't be used to log in. A session ends after SESSION_DAYS
+// without use, on logout, or when the user's password changes (passwordTag).
+
+const hashToken = (token) => crypto.createHash('sha256').update(String(token)).digest('hex');
+const sqlTime = (date) => date.toISOString().slice(0, 23).replace('T', ' ');
+const expiry = () => sqlTime(new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000));
+
+async function createSession(userId, passwordTag) {
+  const token = crypto.randomBytes(32).toString('base64url');
+  const now = sqlTime(new Date());
+  await pool.query(
+    'INSERT INTO sessions (token_hash, user_id, password_tag, created_at, last_used_at, expires_at) VALUES (?, ?, ?, ?, ?, ?)',
+    [hashToken(token), userId, passwordTag, now, now, expiry()]
+  );
+  return token;
+}
+
+// The session of a token that hasn't expired: { userId, passwordTag }, or null.
+// Using it keeps it going (checked at most once a minute, to save writes).
+async function findSession(token) {
+  if (!token) return null;
+  const [rows] = await pool.query(
+    'SELECT token_hash, user_id, password_tag, last_used_at FROM sessions WHERE token_hash = ? AND expires_at > UTC_TIMESTAMP(3)',
+    [hashToken(token)]
+  );
+  const session = rows[0];
+  if (!session) return null;
+  if (Date.now() - new Date(`${session.last_used_at.replace(' ', 'T')}Z`) > 60 * 1000) {
+    await pool.query('UPDATE sessions SET last_used_at = ?, expires_at = ? WHERE token_hash = ?', [
+      sqlTime(new Date()),
+      expiry(),
+      session.token_hash,
+    ]);
+  }
+  return { userId: session.user_id, passwordTag: session.password_tag };
+}
+
+async function deleteSession(token) {
+  await pool.query('DELETE FROM sessions WHERE token_hash = ?', [hashToken(token)]);
+}
+
+// Old sessions are removed now and then (on start, and when someone logs in).
+async function deleteExpiredSessions() {
+  await pool.query('DELETE FROM sessions WHERE expires_at <= UTC_TIMESTAMP(3)');
 }
 
 // Academies made before username prefixes get one from their name (see
@@ -571,6 +635,10 @@ function closeDatabase() {
 }
 
 module.exports = {
+  createSession,
+  findSession,
+  deleteSession,
+  deleteExpiredSessions,
   withAcademy,
   unscoped,
   currentAcademy,

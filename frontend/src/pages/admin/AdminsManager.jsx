@@ -116,7 +116,7 @@ export default function AdminsManager() {
           </label>
         </div>
         <p className="note">
-          Passwords are stored as plain text. This is only acceptable for a local demo.
+          Changing a password logs them out everywhere; they log in again with the new one.
         </p>
         {error && <p className="error">{error}</p>}
         <div className="actions">

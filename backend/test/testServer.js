@@ -26,6 +26,7 @@ if (url) {
 process.env.DB_NAME = `attendance_test_${process.pid}_${Date.now()}`;
 
 const store = require('../store');
+const { passwordTag } = require('../passwords');
 
 let server;
 
@@ -63,6 +64,12 @@ module.exports = {
   stopServer,
   readTable: (name) => store.readData(name), // what is saved now, e.g. readTable('marks')
   readFile: (name) => store.readFile(name), // an uploaded file, or null
+  // A login token for a user, as if they had logged in (a new session each time).
+  // The server checks it like any other: a disabled or removed user gets 401.
+  tokenFor: async (userId) => {
+    const user = (await store.unscoped(() => store.readData('users'))).find((u) => u.id === userId);
+    return user ? store.createSession(user.id, passwordTag(user.password)) : 'no-such-user';
+  },
   // The first academy's username prefix: new usernames there are "<prefix>.<name>".
   defaultPrefix: async () => (await store.readData('academies')).find((a) => a.id === store.DEFAULT_ACADEMY)?.prefix,
 };

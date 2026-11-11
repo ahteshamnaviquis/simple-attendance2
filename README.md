@@ -2,10 +2,15 @@
 
 A small **local prototype**: React frontend + Node.js/Express backend, with data stored in MySQL.
 
-> ⚠️ **Local demo only.** Passwords are stored in plain text, and "who is logged in" is just
-> an id the browser sends in a header (`X-User-Id`), which anyone could fake. The roles
-> keep honest users on the right screens. They are not real security. Do not put this on
-> the internet or a shared network, and do not use real passwords.
+> **Logins.** Passwords are stored hashed (scrypt), never as typed; older plain-text
+> passwords are hashed when the server starts. Logging in gives a token that the web and
+> mobile apps send with every request (`Authorization: Bearer <token>`). A login lasts
+> `SESSION_DAYS` (30 by default) after it was last used, and ends on logout, when the
+> password is changed, or when the account or its academy is disabled or removed. After
+> 10 wrong passwords for one username, that login is refused for 15 minutes.
+>
+> ⚠️ Still to do before real use: change the platform owner's default password, use
+> HTTPS only, and turn off `DEMO_LOGIN` (quick login without a password).
 
 ## Features
 
@@ -350,6 +355,7 @@ DEMO_LOGIN=true
   refuses passwordless logins. Turn it off before real use. On Railway, add or remove
   the variable. `DEMO_LOGIN_USERS` (optional) limits the buttons to some usernames,
   separated by commas, such as `superadmin,admin,sara` (the academy prefix can be left out).
+- `SESSION_DAYS` (optional): how many days a login lasts without being used (default 30).
 - `OWNER_USERNAME`, `OWNER_PASSWORD`, `OWNER_NAME` (optional): the platform owner's
   account, made on the first start when there is none (default `owner` / `owner123`).
   Changing them later does not change an existing owner account.
@@ -596,8 +602,11 @@ In the "Who" column, the teacher and exam rows marked "super admin" also accept 
 when *Settings* allows them those areas, and the class, subject and student rows marked
 "admin" need that permission (on by default).
 
-All routes except `/api/health` and `/api/login` need the `X-User-Id` header (the frontend
-adds it automatically after login).
+All routes except `/api/health`, `/api/login`, `/api/demo-login`, the settings, the logo
+and photo images need the login token: `Authorization: Bearer <token>`. `POST /api/login`
+(and `POST /api/demo-login`) return the user with its `token`; `POST /api/logout` ends that
+session. The web and mobile apps send the token automatically. An expired or ended token
+gets 401, and the apps go back to the login screen.
 
 Every route only sees the logged-in user's academy. Before login, `GET /api/settings`
 and the logo use the academy in `?academy=<id>` or the `X-Academy-Id` header, otherwise

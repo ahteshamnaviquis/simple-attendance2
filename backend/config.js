@@ -45,6 +45,9 @@ module.exports = {
     password: process.env.OWNER_PASSWORD || 'owner123',
   },
 
+  // How long a login lasts without being used, in days (each use extends it).
+  SESSION_DAYS: Number(process.env.SESSION_DAYS) || 30,
+
   // The MySQL database. The server creates the database and its tables if they
   // don't exist yet (the user needs permission for that).
   DB: databaseSettings(),

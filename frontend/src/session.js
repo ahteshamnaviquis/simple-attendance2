@@ -1,5 +1,5 @@
 // Remembers the logged-in user in sessionStorage (cleared when the tab closes).
-// This is NOT security - it only decides which screens are shown.
+// It includes the login token the backend checks on every request (api.js).
 
 const STORAGE_KEY = 'attendanceUser';
 
