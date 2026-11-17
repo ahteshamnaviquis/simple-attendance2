@@ -10,12 +10,12 @@ const express = require('express');
 const { updateData, readFile, writeFile, deleteFile, currentAcademy } = require('../store');
 const { HttpError, requireSuperAdmin, academyPrefix } = require('../helpers');
 const { readSettings, cleanSettingsInput } = require('../settings');
-const { IMAGE_TYPES } = require('../images');
+const { IMAGE_TYPES, MAX_UPLOAD_BYTES } = require('../images');
 
 const router = express.Router();
 
 const LOGO_FILE = 'logo';
-const MAX_LOGO_BYTES = 1024 * 1024;
+const MAX_LOGO_BYTES = MAX_UPLOAD_BYTES;
 
 // Allowed logo types (PNG, JPEG, WebP, GIF) and how their files start.
 const LOGO_TYPES = IMAGE_TYPES;

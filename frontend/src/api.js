@@ -115,6 +115,7 @@ export const deleteParent = (id) => request('DELETE', `/api/parents/${id}`);
 export const getMessageThreads = () => request('GET', '/api/messages');
 export const getMessageRecipients = () => request('GET', '/api/messages/parents');
 export const getUnreadMessageCount = () => request('GET', '/api/messages/unread');
+export const getTeacherDashboard = (filters = {}) => request('GET', `/api/teacher-dashboard${query(filters)}`); // { to, days }
 export const getMessageThread = (parentId) => request('GET', `/api/messages/${parentId}`);
 export const sendMessage = (parentIds, body) => request('POST', '/api/messages', { parentIds, body });
 

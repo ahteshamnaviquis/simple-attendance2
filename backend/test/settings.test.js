@@ -163,7 +163,7 @@ test('only the super admin uploads a logo, and only a real image', async () => {
   assert.equal((await uploadLogo(SUPER, 'text/plain', 'hello')).status, 400);
   assert.equal((await uploadLogo(SUPER, 'image/png', Buffer.from('not really a png'))).status, 400);
   assert.equal((await uploadLogo(SUPER, 'image/jpeg', PNG)).status, 400); // type and content disagree
-  const tooBig = Buffer.concat([PNG, Buffer.alloc(1024 * 1024)]);
+  const tooBig = Buffer.concat([PNG, Buffer.alloc(100 * 1024 * 1024)]); // over 100 MB
   assert.equal((await uploadLogo(SUPER, 'image/png', tooBig)).status, 413);
   assert.equal((await api(null, 'GET', '/api/settings')).body.theme.logo, null);
 });
@@ -190,4 +190,19 @@ test('the uploaded logo is served, kept when settings are saved, and can be remo
   assert.equal(removed.body.theme.logo, null);
   assert.equal((await api(null, 'GET', '/api/settings/logo')).status, 404);
   assert.equal(await readFile('logo'), null);
+});
+
+test('a big logo (over 4 MB, saved in pieces) comes back whole, and a smaller one replaces it', async () => {
+  // A PNG header followed by 10 MB of varied bytes: three 4 MB pieces.
+  const filler = Buffer.alloc(10 * 1024 * 1024 + 123);
+  for (let i = 0; i < filler.length; i++) filler[i] = (i * 31 + (i >> 12)) & 0xff;
+  const big = Buffer.concat([PNG, filler]);
+  assert.equal((await uploadLogo(SUPER, 'image/png', big)).status, 200);
+  const served = Buffer.from(await (await fetch(`${baseUrl}/api/settings/logo`)).arrayBuffer());
+  assert.equal(served.length, big.length);
+  assert.ok(served.equals(big));
+
+  assert.equal((await uploadLogo(SUPER, 'image/png', PNG)).status, 200);
+  const small = Buffer.from(await (await fetch(`${baseUrl}/api/settings/logo`)).arrayBuffer());
+  assert.ok(small.equals(PNG));
 });

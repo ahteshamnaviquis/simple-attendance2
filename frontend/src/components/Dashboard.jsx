@@ -19,6 +19,7 @@ import { useEffect, useState } from 'react';
 import { getClasses, getTeachers, getStudents, getReports, getSchoolDays } from '../api';
 import { todayString, addDays, formatLongDate, formatShortDay, attendanceRate } from '../utils';
 import SubmissionTracker from './SubmissionTracker.jsx';
+import PendingClasses from './PendingClasses.jsx';
 import AttendanceForm from './AttendanceForm.jsx';
 import Icon from './Icon.jsx';
 
@@ -212,37 +213,22 @@ export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
         </div>
       </div>
 
-      {/* Pending reports warning */}
+      {/* Classes that have not reported for the chosen day */}
       {!loading && missing.length > 0 && (
-        <div className="alert warning">
-          <span className="alert-icon">
-            <Icon name="alert" strokeWidth={2.6} />
-          </span>
-          <div className="alert-body">
-            <strong>
-              {isAdmin
-                ? `${missing.length} ${missing.length === 1 ? 'class has' : 'classes have'} not submitted attendance`
-                : `You have not submitted attendance for ${missing.length} ${missing.length === 1 ? 'class' : 'classes'}`}
-            </strong>
-            <div className="alert-detail">
-              {missing
-                .map((c) => (isAdmin ? `${c.name} (${c.teacherName || 'no teacher'})` : c.name))
-                .join(' · ')}
-            </div>
-          </div>
-          {onTakeAttendance ? (
-            <button className="small" onClick={onTakeAttendance}>
-              Take attendance
-            </button>
-          ) : (
-            <button
-              className="small"
-              onClick={() => document.getElementById('tracker')?.scrollIntoView({ behavior: 'smooth' })}
-            >
-              Review in tracker
-            </button>
-          )}
-        </div>
+        <PendingClasses
+          missing={missing}
+          total={classes.length}
+          showTeachers={isAdmin}
+          isToday={date === todayString()}
+          action={
+            onTakeAttendance
+              ? { label: 'Take attendance', onClick: onTakeAttendance }
+              : {
+                  label: 'Review in tracker',
+                  onClick: () => document.getElementById('tracker')?.scrollIntoView({ behavior: 'smooth' }),
+                }
+          }
+        />
       )}
 
       {!loading && (

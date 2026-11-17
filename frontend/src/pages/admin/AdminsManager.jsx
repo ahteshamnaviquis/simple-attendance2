@@ -4,6 +4,8 @@
 
 import { useEffect, useState } from 'react';
 import { getAdmins, createAdmin, updateAdmin, deleteAdmin } from '../../api';
+import Avatar from '../../components/Avatar.jsx';
+import { EntityList, EntityRow, Handle } from '../../components/EntityList.jsx';
 import UsernameInput from '../../components/UsernameInput.jsx';
 
 const EMPTY_FORM = { name: '', username: '', password: '' };
@@ -131,38 +133,24 @@ export default function AdminsManager() {
 
       {message && <p className="success">{message}</p>}
 
-      <div className="table-box">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Username</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {admins.map((a) => (
-            <tr key={a.id}>
-              <td>{a.name}</td>
-              <td>{a.username}</td>
-              <td className="nowrap">
-                <button className="secondary small" onClick={() => startEdit(a)}>
-                  Edit
-                </button>{' '}
-                <button className="danger small" onClick={() => handleRemove(a)}>
-                  Remove
-                </button>
-              </td>
-            </tr>
-          ))}
-          {admins.length === 0 && (
-            <tr>
-              <td colSpan="3">No admins yet.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      </div>
+      <EntityList noun="admin" summary={`${admins.length} ${admins.length === 1 ? 'admin' : 'admins'}`} empty="No admins yet.">
+        {admins.map((a) => (
+          <EntityRow
+            key={a.id}
+            media={(size) => <Avatar name={a.name} id={a.id} photo={a.photo} size={size} />}
+            title={a.name}
+            subtitle={a.username}
+            facts={[
+              { label: 'Username', value: <Handle>{a.username}</Handle> },
+              { label: 'Role', value: 'Admin' },
+            ]}
+            actions={[
+              { label: 'Edit', icon: 'edit', onClick: () => startEdit(a), scrollTop: true },
+              { label: 'Remove', icon: 'trash', danger: true, onClick: () => handleRemove(a) },
+            ]}
+          />
+        ))}
+      </EntityList>
     </>
   );
 }

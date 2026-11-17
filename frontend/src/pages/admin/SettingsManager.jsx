@@ -32,7 +32,7 @@ const isHexColor = (text) => /^#[0-9a-f]{6}$/i.test(text);
 
 // The images the backend accepts as a logo, and its size limit.
 const LOGO_FILE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-const MAX_LOGO_BYTES = 1024 * 1024;
+const MAX_LOGO_BYTES = 100 * 1024 * 1024;
 
 // Show the theme on the page, unless a color is half-typed.
 function previewTheme(theme) {
@@ -120,7 +120,7 @@ export default function SettingsManager({ onSaved }) {
     if (!LOGO_FILE_TYPES.includes(file.type)) {
       setLogoStatus({ busy: false, error: 'Please choose a PNG, JPEG, WebP or GIF image', message: '' });
     } else if (file.size > MAX_LOGO_BYTES) {
-      setLogoStatus({ busy: false, error: 'The logo can be at most 1 MB', message: '' });
+      setLogoStatus({ busy: false, error: 'The logo can be at most 100 MB', message: '' });
     } else {
       changeLogo(() => uploadLogo(file), 'Logo uploaded. Everyone sees it now.');
     }
@@ -260,7 +260,7 @@ export default function SettingsManager({ onSaved }) {
               )}
             </div>
             <p className="note">
-              PNG, JPEG, WebP or GIF, up to 1 MB. A square image looks best. Uploading or
+              PNG, JPEG, WebP or GIF, up to 100 MB. A square image looks best. Uploading or
               removing the logo takes effect straight away; the options below are saved
               with the other settings.
             </p>

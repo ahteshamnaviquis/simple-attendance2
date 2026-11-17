@@ -151,6 +151,34 @@ const PATHS = {
   prev: <path d="M15 6l-6 6 6 6" />,
   next: <path d="M9 6l6 6-6 6" />,
   alert: <path d="M12 7v6M12 17h.01" />,
+  edit: (
+    <>
+      <path d="M4 20h4L19 9l-4-4L4 16v4z" />
+      <path d="M13.5 6.5l4 4" />
+    </>
+  ),
+  more: (
+    <>
+      <circle cx="5" cy="12" r="1.2" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.2" fill="currentColor" />
+      <circle cx="19" cy="12" r="1.2" fill="currentColor" />
+    </>
+  ),
+  phone: (
+    <path d="M5 4h3.5l1.7 4.3-2.2 1.4a11 11 0 0 0 6.3 6.3l1.4-2.2L20 15.5V19a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
+  ),
+  mail: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3.5 6.5L12 13l8.5-6.5" />
+    </>
+  ),
+  power: (
+    <>
+      <path d="M12 3v8" />
+      <path d="M6.3 6.8a8 8 0 1 0 11.4 0" />
+    </>
+  ),
 };
 
 export default function Icon({ name, size = 18, strokeWidth = 2 }) {

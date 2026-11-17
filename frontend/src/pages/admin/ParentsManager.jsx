@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { getParents, updateParent, setParentDisabled, deleteParent } from '../../api';
 import ParentFields, { initials, parentToForm } from '../../components/ParentFields.jsx';
 import Avatar from '../../components/Avatar.jsx';
+import { Chip, Detail, EntityList, EntityRow, Handle, Status } from '../../components/EntityList.jsx';
 import PhotoEditor from '../../components/PhotoEditor.jsx';
 import { childWord } from '../../utils';
 
@@ -160,76 +161,59 @@ export default function ParentsManager({ onMessage }) {
         </label>
       </div>
 
-      <div className="table-box">
-        <table>
-          <thead>
-            <tr>
-              <th>Parent</th>
-              <th>Contact</th>
-              <th>Children</th>
-              <th>Status</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {shown.map((p) => (
-              <tr key={p.id} className={p.disabled ? 'disabled-row' : ''}>
-                <td>
-                  <span className="person-cell">
-                    <Avatar name={p.name} id={p.id} photo={p.photo} size={32} />
-                    <span>
-                      <div className="cell-main">{p.name}</div>
-                      <div className="cell-sub">
-                        {[p.relation, `username ${p.username}`, p.occupation].filter(Boolean).join(' · ')}
-                      </div>
-                    </span>
-                  </span>
-                </td>
-                <td>
-                  <div>{p.phone || '—'}</div>
-                  <div className="cell-sub">{[p.altPhone, p.email].filter(Boolean).join(' · ')}</div>
-                </td>
-                <td>
-                  {p.children.length === 0 && <span className="cell-sub">None</span>}
-                  {p.children.map((c) => (
-                    <div key={c.studentId}>
-                      {c.name}{' '}
-                      <span className="cell-sub">
-                        · {c.gender ? `${childWord(c.gender)}, ` : ''}
-                        {c.className}
-                      </span>
-                    </div>
-                  ))}
-                </td>
-                <td>
-                  {p.disabled ? <span className="badge muted">Disabled</span> : <span className="badge good">Active</span>}
-                </td>
-                <td className="nowrap">
-                  <button className="secondary small" onClick={() => onMessage(p.id)}>
-                    Message
-                  </button>{' '}
-                  <button className="secondary small" onClick={() => startEdit(p)}>
-                    Edit
-                  </button>{' '}
-                  <button className="secondary small" onClick={() => handleToggle(p)}>
-                    {p.disabled ? 'Enable' : 'Disable'}
-                  </button>{' '}
-                  <button className="danger small" onClick={() => handleRemove(p)}>
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {shown.length === 0 && (
-              <tr>
-                <td colSpan="5">
-                  {parents.length ? 'No parents match.' : 'No parents yet. Add them with their child on the Students page.'}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <EntityList
+        noun="parent"
+        summary={
+          search
+            ? `${shown.length} of ${parents.length} parents`
+            : `${parents.length} ${parents.length === 1 ? 'parent' : 'parents'}${
+                parents.some((p) => p.disabled) ? ` · ${parents.filter((p) => p.disabled).length} disabled` : ''
+              }`
+        }
+        empty={parents.length ? 'No parents match.' : 'No parents yet. Add them with their child on the Students page.'}
+      >
+        {shown.map((p) => (
+          <EntityRow
+            key={p.id}
+            muted={p.disabled}
+            media={(size) => <Avatar name={p.name} id={p.id} photo={p.photo} size={size} />}
+            title={p.name}
+            subtitle={
+              p.children.length
+                ? `${p.relation ? `${p.relation} of ` : ''}${p.children.map((c) => c.name).join(', ')}`
+                : 'No children linked'
+            }
+            status={<Status active={!p.disabled} />}
+            facts={[
+              {
+                label: 'Children',
+                value: p.children.length ? (
+                  p.children.map((c) => (
+                    <Chip key={c.studentId} tone={c.gender === 'male' ? 'boy' : c.gender === 'female' ? 'girl' : ''}>
+                      <b>{c.name}</b> · {c.gender ? `${childWord(c.gender)}, ` : ''}
+                      {c.className}
+                    </Chip>
+                  ))
+                ) : (
+                  <span className="cell-sub">No children linked</span>
+                ),
+              },
+              { label: 'Relation', value: p.relation },
+              { label: 'Username', value: <Handle>{p.username}</Handle> },
+              { label: 'Phone', value: p.phone && <Detail icon="phone">{p.phone}</Detail> },
+              { label: 'Other phone', value: p.altPhone && <Detail icon="phone">{p.altPhone}</Detail> },
+              { label: 'Email', value: p.email && <Detail icon="mail">{p.email}</Detail> },
+              { label: 'Occupation', value: p.occupation },
+            ]}
+            actions={[
+              { label: 'Message', icon: 'messages', onClick: () => onMessage(p.id) },
+              { label: 'Edit', icon: 'edit', onClick: () => startEdit(p) },
+              { label: p.disabled ? 'Enable login' : 'Disable login', icon: 'power', onClick: () => handleToggle(p) },
+              { label: 'Remove', icon: 'trash', danger: true, onClick: () => handleRemove(p) },
+            ]}
+          />
+        ))}
+      </EntityList>
     </>
   );
 }

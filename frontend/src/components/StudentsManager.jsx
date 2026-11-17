@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { getClasses, getStudents, getParents, createStudent, updateStudent, deleteStudent, setPhoto } from '../api';
 import Avatar from './Avatar.jsx';
+import { Chip, Detail, EntityList, EntityRow } from './EntityList.jsx';
 import PhotoEditor from './PhotoEditor.jsx';
 import Icon from './Icon.jsx';
 import ParentFields, { EMPTY_PARENT, parentToForm } from './ParentFields.jsx';
@@ -374,69 +375,53 @@ export default function StudentsManager({ canManageParents = false }) {
         </label>
       </div>
 
-      <div className="table-box">
-        <table>
-          <thead>
-            <tr>
-              <th>Roll no.</th>
-              <th>Name</th>
-              <th>Class</th>
-              <th>Parents</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {visible.map((s) => (
-              <tr key={s.id}>
-                <td>{s.rollNumber || '—'}</td>
-                <td>
-                  <span className="person-cell">
-                    <Avatar name={s.name} id={s.id} photo={s.photo} size={32} />
-                    <span>
-                      <div className="cell-main">{s.name}</div>
-                      {s.gender && <div className="cell-sub">{s.gender === 'male' ? 'Boy' : 'Girl'}</div>}
-                    </span>
-                  </span>
-                </td>
-                <td>{s.className}</td>
-                <td>
-                  {s.parents.map((p) => (
-                    <div key={p.parentId}>
-                      {p.name}
-                      <span className="cell-sub">
-                        {p.relation && ` · ${p.relation}`}
-                        {p.phone && ` · ${p.phone}`}
+      <EntityList
+        noun="student"
+        summary={`${visible.length} ${visible.length === 1 ? 'student' : 'students'}`}
+        empty="No students found."
+      >
+        {visible.map((s) => (
+          <EntityRow
+            key={s.id}
+            media={(size) => <Avatar name={s.name} id={s.id} photo={s.photo} size={size} />}
+            title={s.name}
+            subtitle={[s.className, s.rollNumber && `Roll no. ${s.rollNumber}`].filter(Boolean).join(' · ')}
+            facts={[
+              {
+                label: 'Class',
+                value: <Chip tone={s.gender === 'male' ? 'boy' : s.gender === 'female' ? 'girl' : ''}>{s.className}</Chip>,
+              },
+              { label: 'Roll number', value: s.rollNumber },
+              { label: 'Gender', value: s.gender && (s.gender === 'male' ? 'Boy' : 'Girl') },
+              {
+                label: s.parents.length > 1 ? 'Parents' : 'Parent',
+                value: s.parents.length ? (
+                  <div className="stack">
+                    {s.parents.map((p) => (
+                      <span key={p.parentId} className="entity-detail">
+                        <b className="entity-strong">{p.name}</b>
+                        {p.relation && <span>· {p.relation}</span>}
+                        {p.phone && <Detail icon="phone">{p.phone}</Detail>}
                       </span>
-                    </div>
-                  ))}
-                  {s.parents.length === 0 &&
-                    (s.guardianName || s.phone ? (
-                      <div>
-                        {s.guardianName || '—'}
-                        {s.phone && <span className="cell-sub"> · {s.phone}</span>}
-                      </div>
-                    ) : (
-                      <span className="cell-sub">—</span>
                     ))}
-                </td>
-                <td className="nowrap">
-                  <button className="secondary small" onClick={() => startEdit(s)}>
-                    Edit
-                  </button>{' '}
-                  <button className="danger small" onClick={() => handleRemove(s)}>
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {visible.length === 0 && (
-              <tr>
-                <td colSpan="5">No students found.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+                  </div>
+                ) : s.guardianName || s.phone ? (
+                  <span className="entity-detail">
+                    {s.guardianName && <b className="entity-strong">{s.guardianName}</b>}
+                    {s.phone && <Detail icon="phone">{s.phone}</Detail>}
+                  </span>
+                ) : (
+                  <span className="cell-sub">No parent details</span>
+                ),
+              },
+            ]}
+            actions={[
+              { label: 'Edit', icon: 'edit', onClick: () => startEdit(s) },
+              { label: 'Remove', icon: 'trash', danger: true, onClick: () => handleRemove(s) },
+            ]}
+          />
+        ))}
+      </EntityList>
     </>
   );
 }

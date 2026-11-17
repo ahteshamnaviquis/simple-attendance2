@@ -12,7 +12,7 @@ import Avatar from './Avatar.jsx';
 import { setPhoto } from '../api';
 
 const TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-const MAX_BYTES = 2 * 1024 * 1024;
+const MAX_BYTES = 100 * 1024 * 1024;
 
 export default function PhotoEditor({ kind, id, name, photo, onSaved, pending, onPendingChange }) {
   const [busy, setBusy] = useState(false);
@@ -45,7 +45,7 @@ export default function PhotoEditor({ kind, id, name, photo, onSaved, pending, o
     event.target.value = ''; // the same file can be chosen again
     if (!file) return;
     if (!TYPES.includes(file.type)) return setError('Please choose a PNG, JPEG, WebP or GIF image');
-    if (file.size > MAX_BYTES) return setError('The photo can be at most 2 MB');
+    if (file.size > MAX_BYTES) return setError('The photo can be at most 100 MB');
     save(file);
   }
 
@@ -70,7 +70,7 @@ export default function PhotoEditor({ kind, id, name, photo, onSaved, pending, o
         {error ? (
           <span className="error">{error}</span>
         ) : (
-          <span className="cell-sub">{id ? 'Saved straight away.' : 'Saved with the form.'} PNG, JPEG, WebP or GIF, up to 2 MB.</span>
+          <span className="cell-sub">{id ? 'Saved straight away.' : 'Saved with the form.'} PNG, JPEG, WebP or GIF, up to 100 MB.</span>
         )}
       </div>
     </div>

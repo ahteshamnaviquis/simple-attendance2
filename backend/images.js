@@ -10,4 +10,7 @@ const IMAGE_TYPES = {
     b.subarray(0, 4).toString('latin1') === 'RIFF' && b.subarray(8, 12).toString('latin1') === 'WEBP',
 };
 
-module.exports = { IMAGE_TYPES };
+// The biggest image anyone may upload (logo, profile photo, gallery photo).
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+
+module.exports = { IMAGE_TYPES, MAX_UPLOAD_BYTES };

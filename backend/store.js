@@ -364,9 +364,16 @@ async function updateData(name, changeFn) {
   return saved[name];
 }
 
-// ---------- Files (the logo and gallery photos) ----------
+// ---------- Files (the logo, profile photos and gallery photos) ----------
 // Each academy's files are stored as "<academy id>:<name>", such as
 // "default:logo"; callers only use the name.
+//
+// A file can be up to 100 MB (images.js). MySQL refuses a single query bigger
+// than its max_allowed_packet (often 16 or 64 MB, and not changeable on shared
+// hosting), so a file is saved in pieces of FILE_PART_BYTES: the first piece in
+// `files`, the rest in `file_parts` (part 1, 2, …), each with its own query.
+// Small files (most of them) have no parts.
+const FILE_PART_BYTES = 4 * 1024 * 1024;
 
 function storedFileName(name) {
   const academy = currentAcademy();
@@ -376,8 +383,12 @@ function storedFileName(name) {
 
 async function readFile(name, conn = pool) {
   if (currentAcademy() === null) return null;
-  const [rows] = await conn.query('SELECT type, data FROM files WHERE name = ?', [storedFileName(name)]);
-  return rows[0] ?? null;
+  const stored = storedFileName(name);
+  const [rows] = await conn.query('SELECT type, data FROM files WHERE name = ?', [stored]);
+  if (!rows[0]) return null;
+  const [parts] = await conn.query('SELECT data FROM file_parts WHERE name = ? ORDER BY part', [stored]);
+  if (parts.length === 0) return rows[0];
+  return { type: rows[0].type, data: Buffer.concat([rows[0].data, ...parts.map((p) => p.data)]) };
 }
 
 // Replaces the file. Callers pass a transaction's connection (see routes/settings.js),
@@ -386,13 +397,20 @@ async function readFile(name, conn = pool) {
 async function writeFile(name, type, data, conn = pool) {
   const stored = storedFileName(name);
   await conn.query('DELETE FROM files WHERE name = ?', [stored]);
-  await conn.query('INSERT INTO files (name, type, data) VALUES (?, ?, ?)', [stored, type, data]);
+  await conn.query('DELETE FROM file_parts WHERE name = ?', [stored]);
+  await conn.query('INSERT INTO files (name, type, data) VALUES (?, ?, ?)', [stored, type, data.subarray(0, FILE_PART_BYTES)]);
+  for (let part = 1; part * FILE_PART_BYTES < data.length; part++) {
+    const piece = data.subarray(part * FILE_PART_BYTES, (part + 1) * FILE_PART_BYTES);
+    await conn.query('INSERT INTO file_parts (name, part, data) VALUES (?, ?, ?)', [stored, part, piece]);
+  }
 }
 
 // names: one name, or a list of them.
 async function deleteFile(names, conn = pool) {
   const stored = [].concat(names).map(storedFileName);
-  if (stored.length) await conn.query('DELETE FROM files WHERE name IN (?)', [stored]);
+  if (stored.length === 0) return;
+  await conn.query('DELETE FROM files WHERE name IN (?)', [stored]);
+  await conn.query('DELETE FROM file_parts WHERE name IN (?)', [stored]);
 }
 
 // ---------- Setting up the database ----------

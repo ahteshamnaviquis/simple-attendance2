@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { getClasses, getTeachers, createClass, updateClass } from '../../api';
+import Avatar from '../../components/Avatar.jsx';
+import { Chip, EntityList, EntityRow, IconTile } from '../../components/EntityList.jsx';
 
 const EMPTY_FORM = { name: '', teacherId: '' };
 
@@ -104,35 +106,30 @@ export default function ClassesManager() {
 
       {message && <p className="success">{message}</p>}
 
-      <div className="table-box">
-      <table>
-        <thead>
-          <tr>
-            <th>Class</th>
-            <th>Teacher</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {classes.map((c) => (
-            <tr key={c.id}>
-              <td>{c.name}</td>
-              <td>{c.teacherName || <span className="note">Not assigned</span>}</td>
-              <td>
-                <button className="secondary small" onClick={() => startEdit(c)}>
-                  Edit
-                </button>
-              </td>
-            </tr>
-          ))}
-          {classes.length === 0 && (
-            <tr>
-              <td colSpan="3">No classes yet.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      </div>
+      <EntityList noun="class" summary={`${classes.length} ${classes.length === 1 ? 'class' : 'classes'}`} empty="No classes yet.">
+        {classes.map((c) => (
+          <EntityRow
+            key={c.id}
+            media={(size) => <IconTile icon="classes" size={size} />}
+            title={c.name}
+            subtitle={c.teacherName || 'No class teacher'}
+            facts={[
+              {
+                label: 'Class teacher',
+                value: c.teacherName ? (
+                  <span className="entity-detail">
+                    <Avatar name={c.teacherName} id={c.teacherId} size={28} />
+                    <span className="entity-strong">{c.teacherName}</span>
+                  </span>
+                ) : (
+                  <Chip tone="muted">Not assigned</Chip>
+                ),
+              },
+            ]}
+            actions={[{ label: 'Edit', icon: 'edit', onClick: () => startEdit(c), scrollTop: true }]}
+          />
+        ))}
+      </EntityList>
     </>
   );
 }

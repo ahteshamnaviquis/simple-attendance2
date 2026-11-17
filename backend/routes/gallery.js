@@ -6,7 +6,7 @@
 //   POST   /albums                  { title, description, date, classId }   classId '' = whole school
 //   PUT    /albums/:id              { title, description, date }            (the class can't change)
 //   DELETE /albums/:id              removes the album and all its photos
-//   POST   /albums/:id/photos       body: one image (PNG, JPEG, WebP or GIF, up to 5 MB) with its Content-Type
+//   POST   /albums/:id/photos       body: one image (PNG, JPEG, WebP or GIF, up to 100 MB) with its Content-Type
 //   DELETE /photos/:id
 //   GET    /photos/:id/image        the image itself
 //
@@ -22,13 +22,13 @@ const express = require('express');
 const { readData, updateData, updateMany, readFile, writeFile, deleteFile, unscoped, withAcademy } = require('../store');
 const { HttpError, newId, isValidDate, todayString, requireRole } = require('../helpers');
 const { isOffice, readableClassIds, teachingClassIds, cleanText } = require('../schoolAccess');
-const { IMAGE_TYPES } = require('../images');
+const { IMAGE_TYPES, MAX_UPLOAD_BYTES } = require('../images');
 
 const router = express.Router();
 const requireUser = requireRole('superadmin', 'admin', 'teacher', 'parent');
 const requireStaff = requireRole('superadmin', 'admin', 'teacher');
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
+const MAX_PHOTO_BYTES = MAX_UPLOAD_BYTES;
 const MAX_PHOTOS_PER_ALBUM = 200;
 const fileName = (photoId) => `gallery-${photoId}`;
 

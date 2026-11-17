@@ -3,6 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { getSubjects, createSubject, updateSubject } from '../../api';
+import { EntityList, EntityRow, IconTile } from '../../components/EntityList.jsx';
 import ClassSubjectsManager from './ClassSubjectsManager.jsx';
 
 export default function SubjectsManager() {
@@ -91,33 +92,21 @@ export default function SubjectsManager() {
 
       {message && <p className="success">{message}</p>}
 
-      <div className="table-box">
-        <table>
-          <thead>
-            <tr>
-              <th>Subject</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {subjects.map((s) => (
-              <tr key={s.id}>
-                <td>{s.name}</td>
-                <td className="num">
-                  <button className="secondary small" onClick={() => startEdit(s)}>
-                    Rename
-                  </button>
-                </td>
-              </tr>
-            ))}
-            {subjects.length === 0 && (
-              <tr>
-                <td colSpan="2">No subjects yet. Add the subjects taught at the academy.</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <EntityList
+        noun="subject"
+        summary={`${subjects.length} ${subjects.length === 1 ? 'subject' : 'subjects'}`}
+        empty="No subjects yet. Add the subjects taught at the academy."
+      >
+        {subjects.map((s) => (
+          <EntityRow
+            key={s.id}
+            media={(size) => <IconTile icon="subjects" size={size} />}
+            title={s.name}
+            facts={[{ label: 'Subject', value: s.name }]}
+            actions={[{ label: 'Rename', icon: 'edit', onClick: () => startEdit(s), scrollTop: true }]}
+          />
+        ))}
+      </EntityList>
 
       <ClassSubjectsManager subjects={subjects} />
     </>

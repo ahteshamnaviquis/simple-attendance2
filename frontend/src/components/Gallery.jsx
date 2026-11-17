@@ -20,7 +20,7 @@ import {
 import Icon from './Icon.jsx';
 import { formatMediumDate, todayString } from '../utils';
 
-const MAX_PHOTO_MB = 5;
+const MAX_PHOTO_MB = 100;
 const IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 export default function Gallery({ user }) {

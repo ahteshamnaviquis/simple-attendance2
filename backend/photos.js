@@ -12,12 +12,12 @@
 const express = require('express');
 const { updateData, writeFile, deleteFile } = require('./store');
 const { HttpError, newId } = require('./helpers');
-const { IMAGE_TYPES } = require('./images');
+const { IMAGE_TYPES, MAX_UPLOAD_BYTES } = require('./images');
 
-const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
+const MAX_PHOTO_BYTES = MAX_UPLOAD_BYTES;
 const fileName = (key) => `photo-${key}`;
 
-// Middleware that reads the uploaded image (PNG, JPEG, WebP or GIF, up to 2 MB).
+// Middleware that reads the uploaded image (PNG, JPEG, WebP or GIF, up to 100 MB).
 const readPhoto = express.raw({ type: Object.keys(IMAGE_TYPES), limit: MAX_PHOTO_BYTES });
 
 function uploadedImage(req) {

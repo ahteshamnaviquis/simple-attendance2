@@ -26,6 +26,7 @@ const diaryRouter = require('./routes/diary');
 const leavesRouter = require('./routes/leaves');
 const feedbackRouter = require('./routes/feedback');
 const galleryRouter = require('./routes/gallery');
+const teacherDashboardRouter = require('./routes/teacherDashboard');
 const platformRouter = require('./routes/platform');
 
 const app = express();
@@ -207,6 +208,7 @@ app.use('/api/diary', diaryRouter);
 app.use('/api/leaves', leavesRouter);
 app.use('/api/feedback', feedbackRouter);
 app.use('/api/gallery', galleryRouter);
+app.use('/api/teacher-dashboard', teacherDashboardRouter);
 app.use('/api/platform', platformRouter);
 
 // Unknown API routes

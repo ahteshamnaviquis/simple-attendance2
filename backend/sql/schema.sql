@@ -339,3 +339,12 @@ CREATE TABLE IF NOT EXISTS files (
   data       MEDIUMBLOB   NOT NULL,
   updated_at DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+-- The rest of a file bigger than 4 MB, in 4 MB pieces (part 1, 2, …); its first
+-- piece is in files. Pieces keep each query under MySQL's max_allowed_packet.
+CREATE TABLE IF NOT EXISTS file_parts (
+  name       VARCHAR(120) NOT NULL,
+  part       INT          NOT NULL,
+  data       MEDIUMBLOB   NOT NULL,
+  PRIMARY KEY (name, part)
+) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;

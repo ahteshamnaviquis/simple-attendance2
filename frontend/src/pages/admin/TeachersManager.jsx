@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import {
   getTeachers,
   getClasses,
+  getClassSubjects,
   createTeacher,
   updateTeacher,
   setTeacherDisabled,
@@ -15,12 +16,14 @@ import UsernameInput from '../../components/UsernameInput.jsx';
 import Avatar from '../../components/Avatar.jsx';
 import PhotoEditor from '../../components/PhotoEditor.jsx';
 import { getSavedUser } from '../../session';
+import { Chip, EntityList, EntityRow, Handle, Status } from '../../components/EntityList.jsx';
 
 const EMPTY_FORM = { name: '', username: '', password: '' };
 
 export default function TeachersManager() {
   const [teachers, setTeachers] = useState([]);
   const [classes, setClasses] = useState([]);
+  const [classSubjects, setClassSubjects] = useState([]);
   const [form, setForm] = useState(EMPTY_FORM);
   const [editingId, setEditingId] = useState(null); // null = adding a new teacher
   const [pendingPhoto, setPendingPhoto] = useState(null); // a new teacher's photo, uploaded after adding
@@ -29,20 +32,29 @@ export default function TeachersManager() {
   const isSuper = getSavedUser()?.role === 'superadmin';
 
   function load() {
-    Promise.all([getTeachers(), getClasses()])
-      .then(([teacherList, classList]) => {
+    Promise.all([getTeachers(), getClasses(), getClassSubjects()])
+      .then(([teacherList, classList, subjectRows]) => {
         setTeachers(teacherList);
         setClasses(classList);
+        setClassSubjects(subjectRows);
       })
       .catch((err) => setError(err.message));
   }
 
   useEffect(load, []);
 
-  function classNamesFor(teacherId) {
-    const names = classes.filter((c) => c.teacherId === teacherId).map((c) => c.name);
-    return names.length ? names.join(', ') : '—';
+  // What a teacher teaches: the classes they are class teacher of, and each
+  // subject with the classes they teach it in.
+  function teachingOf(teacherId) {
+    const own = classes.filter((c) => c.teacherId === teacherId).map((c) => c.name);
+    const classesBySubject = new Map();
+    for (const row of classSubjects.filter((r) => r.teacherId === teacherId)) {
+      classesBySubject.set(row.subjectName, [...(classesBySubject.get(row.subjectName) ?? []), row.className]);
+    }
+    return { own, classesBySubject };
   }
+
+  const disabledCount = teachers.filter((t) => t.disabled).length;
 
   // A teacher's photo was changed (saved straight away).
   function handlePhotoSaved(teacher) {
@@ -193,61 +205,55 @@ Their account is deleted and their classes and subjects become unassigned. Old a
 
       {message && <p className="success">{message}</p>}
 
-      <div className="table-box">
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Username</th>
-            <th>Classes</th>
-            <th>Status</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {teachers.map((t) => (
-            <tr key={t.id} className={t.disabled ? 'disabled-row' : ''}>
-              <td>
-                <span className="person-cell">
-                  <Avatar name={t.name} id={t.id} photo={t.photo} size={32} />
-                  {t.name}
-                </span>
-              </td>
-              <td>{t.username}</td>
-              <td>{classNamesFor(t.id)}</td>
-              <td>
-                {t.disabled ? (
-                  <span className="badge muted">Disabled</span>
-                ) : (
-                  <span className="badge good">Active</span>
-                )}
-              </td>
-              <td className="nowrap">
-                <button className="secondary small" onClick={() => startEdit(t)}>
-                  Edit
-                </button>
-                {isSuper && (
-                  <>
-                    {' '}
-                    <button className="secondary small" onClick={() => handleToggle(t)}>
-                      {t.disabled ? 'Enable' : 'Disable'}
-                    </button>{' '}
-                    <button className="danger small" onClick={() => handleRemove(t)}>
-                      Remove
-                    </button>
-                  </>
-                )}
-              </td>
-            </tr>
-          ))}
-          {teachers.length === 0 && (
-            <tr>
-              <td colSpan="5">No teachers yet.</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-      </div>
+      <EntityList
+        noun="teacher"
+        summary={`${teachers.length} ${teachers.length === 1 ? 'teacher' : 'teachers'}${disabledCount ? ` · ${disabledCount} disabled` : ''}`}
+        empty="No teachers yet."
+      >
+        {teachers.map((t) => {
+          const { own, classesBySubject } = teachingOf(t.id);
+          const subjectNames = [...classesBySubject.keys()];
+          return (
+            <EntityRow
+              key={t.id}
+              muted={t.disabled}
+              media={(size) => <Avatar name={t.name} id={t.id} photo={t.photo} size={size} />}
+              title={t.name}
+              subtitle={subjectNames.length ? subjectNames.join(', ') : own.length ? 'Class teacher' : 'No classes yet'}
+              status={<Status active={!t.disabled} />}
+              facts={[
+                { label: 'Username', value: <Handle>{t.username}</Handle> },
+                {
+                  label: 'Class teacher',
+                  value: own.length ? (
+                    own.map((name) => (
+                      <Chip key={name} tone="accent">
+                        {name}
+                      </Chip>
+                    ))
+                  ) : (
+                    <span className="cell-sub">Not a class teacher</span>
+                  ),
+                },
+                ...[...classesBySubject].map(([subject, classNames]) => ({
+                  label: subject,
+                  value: classNames.map((name) => <Chip key={name}>{name}</Chip>),
+                })),
+                subjectNames.length === 0 && { label: 'Subjects', value: <span className="cell-sub">No subjects yet</span> },
+              ]}
+              actions={[
+                { label: 'Edit', icon: 'edit', onClick: () => startEdit(t), scrollTop: true },
+                ...(isSuper
+                  ? [
+                      { label: t.disabled ? 'Enable login' : 'Disable login', icon: 'power', onClick: () => handleToggle(t) },
+                      { label: 'Remove', icon: 'trash', danger: true, onClick: () => handleRemove(t) },
+                    ]
+                  : []),
+              ]}
+            />
+          );
+        })}
+      </EntityList>
     </>
   );
 }

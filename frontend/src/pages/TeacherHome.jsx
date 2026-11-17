@@ -1,10 +1,11 @@
-// Teacher screens: daily attendance, past reports, examinations, students,
+// Teacher screens: their own dashboard, daily attendance, past reports, examinations, students,
 // messages with the parents of their students, the class diary and the gallery.
 // Teachers only ever see their own assigned classes (the backend filters them).
 
 import { useEffect, useState } from 'react';
 import { getClasses, getUnreadMessageCount } from '../api';
 import Layout from '../components/Layout.jsx';
+import TeacherDashboard from '../components/TeacherDashboard.jsx';
 import AttendanceForm from '../components/AttendanceForm.jsx';
 import Reports from '../components/Reports.jsx';
 import StudentsManager from '../components/StudentsManager.jsx';
@@ -15,6 +16,7 @@ import Gallery from '../components/Gallery.jsx';
 import useUnreadCount from '../useUnreadCount';
 
 const MENU = [
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
   { id: 'attendance', label: 'Daily attendance', icon: 'attendance' },
   { id: 'reports', label: 'My reports', icon: 'reports' },
   { id: 'exams', label: 'Examinations', icon: 'exams' },
@@ -25,7 +27,7 @@ const MENU = [
 ];
 
 export default function TeacherHome({ user, onLogout }) {
-  const [page, setPage] = useState('attendance');
+  const [page, setPage] = useState('dashboard');
   const [classes, setClasses] = useState(null); // null = still loading
   const [error, setError] = useState('');
   const [unread, refreshUnread] = useUnreadCount(getUnreadMessageCount);
@@ -41,6 +43,14 @@ export default function TeacherHome({ user, onLogout }) {
   return (
     <Layout user={user} items={items} current={page} onNavigate={setPage} onLogout={onLogout}>
       {error && <p className="error">{error}</p>}
+
+      {page === 'dashboard' && (
+        <TeacherDashboard
+          user={user}
+          onTakeAttendance={() => setPage('attendance')}
+          onMessages={() => setPage('messages')}
+        />
+      )}
 
       {page === 'attendance' && (
         <>
