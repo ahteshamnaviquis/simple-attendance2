@@ -13,7 +13,14 @@ const START_DATA = {
     { id: 'u1', name: 'Admin User', username: 'admin', password: 'admin123', role: 'admin' },
     { id: 'u2', name: 'Sara Khan', username: 'sara', password: 'teacher123', role: 'teacher' },
     { id: 'u3', name: 'Ali Raza', username: 'ali', password: 'teacher123', role: 'teacher', disabled: true },
+    // No class or subject, and no linked child: not offered.
+    { id: 'u4', name: 'Bilal Shah', username: 'bilal', password: 'teacher123', role: 'teacher' },
+    { id: 'u5', name: 'Hina Malik', username: 'hina', password: 'parent123', role: 'parent' },
+    { id: 'u6', name: 'Zara Ahmed', username: 'zara', password: 'parent123', role: 'parent' },
   ],
+  classes: [{ id: 'c1', name: 'Class 1', teacherId: 'u2' }],
+  students: [{ id: 's1', rollNumber: '1', name: 'Omar', classId: 'c1', guardianName: 'Zara', phone: '1' }],
+  parentStudents: [{ id: 'l1', parentId: 'u6', studentId: 's1' }],
 };
 
 async function call(baseUrl, method, url, body) {
@@ -44,12 +51,12 @@ async function withServer(env, fn) {
   }
 }
 
-test('demo login on: lists active users without passwords and logs in', async () => {
+test('demo login on: lists active users with data, without passwords, and logs in', async () => {
   await withServer({ DEMO_LOGIN: 'true', DEMO_LOGIN_USERS: '' }, async (baseUrl) => {
     const list = await call(baseUrl, 'GET', '/api/demo-login');
     assert.equal(list.status, 200);
     assert.equal(list.body.enabled, true);
-    assert.deepEqual(list.body.users.map((u) => withoutPrefix(u.username)), ['superadmin', 'admin', 'sara']);
+    assert.deepEqual(list.body.users.map((u) => withoutPrefix(u.username)), ['superadmin', 'admin', 'sara', 'zara']);
     assert.ok(list.body.users.every((u) => !('password' in u)));
 
     const login = await call(baseUrl, 'POST', '/api/demo-login', { userId: 'u1' });
@@ -59,6 +66,10 @@ test('demo login on: lists active users without passwords and logs in', async ()
 
     const disabled = await call(baseUrl, 'POST', '/api/demo-login', { userId: 'u3' });
     assert.equal(disabled.status, 404);
+    const noClasses = await call(baseUrl, 'POST', '/api/demo-login', { userId: 'u4' });
+    assert.equal(noClasses.status, 404);
+    const noChildren = await call(baseUrl, 'POST', '/api/demo-login', { userId: 'u5' });
+    assert.equal(noChildren.status, 404);
   });
 });
 

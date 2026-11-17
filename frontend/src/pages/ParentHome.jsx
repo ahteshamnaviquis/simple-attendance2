@@ -1,6 +1,6 @@
 // Parent screens: an overview of each child, their attendance, their published
 // exam results, messages with the school office and their children's teachers,
-// the class diary, leave applications, complaints & suggestions and the gallery. A parent only ever sees their own
+// leave applications, complaints & suggestions and the gallery. A parent only ever sees their own
 // children (the backend checks every request).
 
 import { useEffect, useState } from 'react';
@@ -10,7 +10,6 @@ import ChildOverview from './parent/ChildOverview.jsx';
 import ChildAttendance from './parent/ChildAttendance.jsx';
 import ChildResults from './parent/ChildResults.jsx';
 import ParentMessages from './parent/ParentMessages.jsx';
-import Diary from '../components/Diary.jsx';
 import Leaves from '../components/Leaves.jsx';
 import Feedback from '../components/Feedback.jsx';
 import Gallery from '../components/Gallery.jsx';
@@ -23,7 +22,6 @@ const MENU = [
   { id: 'attendance', label: 'Attendance', icon: 'attendance' },
   { id: 'results', label: 'Results', icon: 'results' },
   { id: 'messages', label: 'Messages', icon: 'messages' },
-  { id: 'diary', label: 'Diary', icon: 'diary' },
   { id: 'leaves', label: 'Leaves', icon: 'leaves' },
   { id: 'feedback', label: 'Complaints & suggestions', icon: 'feedback' },
   { id: 'gallery', label: 'Gallery', icon: 'gallery' },
@@ -80,7 +78,6 @@ export default function ParentHome({ user, onLogout }) {
         <ChildResults key={child.studentId} child={child} switcher={switcher} />
       )}
       {page === 'messages' && <ParentMessages childList={children ?? []} onRead={refreshUnread} />}
-      {page === 'diary' && child && <Diary key={child.studentId} user={user} child={child} switcher={switcher} />}
       {page === 'leaves' && children?.length > 0 && <Leaves user={user} childList={children} />}
       {page === 'feedback' && <Feedback user={user} childList={children ?? []} />}
       {page === 'gallery' && <Gallery user={user} />}

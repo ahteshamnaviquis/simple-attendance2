@@ -125,11 +125,22 @@ app.post('/api/login', async (req, res) => {
 // The platform owner is never offered: they always type their password.
 const ROLE_ORDER = ['superadmin', 'admin', 'teacher', 'parent'];
 
+// Teachers and parents are offered only when they have something to show: a
+// teacher with a class or a subject, a parent with a linked child.
 async function demoUsers() {
   if (!DEMO_LOGIN) return [];
-  const [users, academies] = await everyone();
+  const [[users, academies], [classes, classSubjects, links, students]] = await Promise.all([
+    everyone(),
+    unscoped(() => Promise.all(['classes', 'classSubjects', 'parentStudents', 'students'].map((name) => readData(name)))),
+  ]);
+  const teachersWithClasses = new Set([...classes, ...classSubjects].map((c) => c.teacherId).filter(Boolean));
+  const studentIds = new Set(students.map((s) => s.id));
+  const parentsWithChildren = new Set(links.filter((l) => studentIds.has(l.studentId)).map((l) => l.parentId));
+  const hasData = (u) =>
+    u.role === 'teacher' ? teachersWithClasses.has(u.id) : u.role === 'parent' ? parentsWithChildren.has(u.id) : true;
   return users
     .filter((u) => u.role !== 'owner' && !u.disabled && !academyDisabled(u, academies))
+    .filter(hasData)
     // (DEMO_LOGIN_USERS may leave out the academy prefix: "sara" finds "dat.sara".)
     .filter((u) => !DEMO_LOGIN_USERS.length || DEMO_LOGIN_USERS.some((name) => sameUsername(u.username, name)))
     .sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role) || a.name.localeCompare(b.name));

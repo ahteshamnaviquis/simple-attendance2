@@ -6,7 +6,9 @@
 //   or open again. Open ones come first.
 //
 // childList: the parent's children. onChange: called after a reply, so the
-// menu's open count can update.
+// menu's open count can update. showStats: the office's summary on top
+// (how many complaints and suggestions, how many are still unanswered, and
+// how many each admin resolved).
 
 import { useEffect, useState } from 'react';
 import { deleteFeedback, getFeedback, replyToFeedback, sendFeedback } from '../api';
@@ -15,17 +17,19 @@ import { childLabel, formatDateTime } from '../utils';
 const KIND_LABEL = { complaint: 'Complaint', suggestion: 'Suggestion' };
 const ROLE_LABEL = { parent: 'Parent', teacher: 'Teacher' };
 
-export default function Feedback({ user, childList = [], onChange }) {
+export default function Feedback({ user, childList = [], onChange, showStats = false }) {
   const isOffice = user.role === 'admin' || user.role === 'superadmin';
   const [items, setItems] = useState(null);
   const [filters, setFilters] = useState({ kind: '', status: isOffice ? 'open' : '' });
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [all, setAll] = useState(null); // every item, for the summary
 
   function load() {
     getFeedback(filters)
       .then(setItems)
       .catch((err) => setError(err.message));
+    if (showStats) getFeedback({}).then(setAll).catch((err) => setError(err.message));
   }
 
   useEffect(load, [filters.kind, filters.status]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -49,6 +53,8 @@ export default function Feedback({ user, childList = [], onChange }) {
           </p>
         </div>
       </div>
+
+      {showStats && all && <FeedbackStats items={all} />}
 
       {!isOffice && <FeedbackForm user={user} childList={childList} onSent={changed} onError={setError} />}
 
@@ -88,6 +94,79 @@ export default function Feedback({ user, childList = [], onChange }) {
         ))}
       </div>
     </>
+  );
+}
+
+// The office's summary: totals by type, what is still unanswered, and a chart
+// of how many each admin resolved.
+function FeedbackStats({ items }) {
+  const count = (test) => items.filter(test).length;
+  const unanswered = (f) => f.status === 'open' && !f.reply;
+  const resolvedBy = {};
+  for (const f of items.filter((f) => f.status === 'resolved')) {
+    const who = f.repliedBy || 'Resolved without a reply';
+    resolvedBy[who] = (resolvedBy[who] || 0) + 1;
+  }
+  const bars = Object.entries(resolvedBy).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+
+  return (
+    <div className="dashboard">
+      <div className="kpi-grid">
+        <StatTile
+          label="Complaints"
+          value={count((f) => f.kind === 'complaint')}
+          caption={`${count((f) => f.kind === 'complaint' && unanswered(f))} not answered yet`}
+        />
+        <StatTile
+          label="Suggestions"
+          value={count((f) => f.kind === 'suggestion')}
+          caption={`${count((f) => f.kind === 'suggestion' && unanswered(f))} not answered yet`}
+        />
+        <StatTile
+          label="Resolved"
+          value={count((f) => f.status === 'resolved')}
+          caption={`of ${items.length} in total`}
+        />
+        <StatTile
+          label="Not answered yet"
+          value={count(unanswered)}
+          caption={`${count((f) => f.status === 'open' && f.reply)} answered but still open`}
+        />
+      </div>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2>Resolved by each admin</h2>
+        </div>
+        {bars.length === 0 ? (
+          <p className="cell-sub">Nothing has been resolved yet.</p>
+        ) : (
+          <ul className="hbars">
+            {bars.map(([who, n]) => (
+              <li key={who}>
+                <span className="hbar-label" title={who}>
+                  {who}
+                </span>
+                <span className="hbar-track">
+                  <span className="hbar-fill" style={{ width: `${(n / bars[0][1]) * 100}%` }} />
+                </span>
+                <span className="hbar-value">{n}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function StatTile({ label, value, caption }) {
+  return (
+    <div className="kpi">
+      <div className="kpi-label">{label}</div>
+      <div className="kpi-value">{value}</div>
+      <div className="kpi-caption">{caption}</div>
+    </div>
   );
 }
 

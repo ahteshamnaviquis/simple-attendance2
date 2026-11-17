@@ -1,5 +1,5 @@
-// Dashboard for one chosen day. Used by both roles:
-// - admin:   all classes, students and teachers
+// Dashboard for one chosen day. Used by:
+// - admin and super admin: all classes, students and teachers
 // - teacher: only their own classes and students (the backend filters the data)
 //
 // Shows:
@@ -23,7 +23,7 @@ import AttendanceForm from './AttendanceForm.jsx';
 import Icon from './Icon.jsx';
 
 export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
-  const isAdmin = user.role === 'admin';
+  const isAdmin = user.role !== 'teacher';
   const [date, setDate] = useState(todayString());
   const [chartDays, setChartDays] = useState(7);
   const [classes, setClasses] = useState([]);
@@ -265,9 +265,11 @@ export default function Dashboard({ user, onShowReports, onTakeAttendance }) {
           <section className="panel">
             <div className="panel-head">
               <h2>{isAdmin ? 'Class overview' : 'My classes'}</h2>
-              <button className="secondary small" onClick={onShowReports}>
-                {isAdmin ? 'All reports →' : 'My reports →'}
-              </button>
+              {onShowReports && (
+                <button className="secondary small" onClick={onShowReports}>
+                  {isAdmin ? 'All reports →' : 'My reports →'}
+                </button>
+              )}
             </div>
             <table className="clean">
               <thead>
